@@ -1,0 +1,293 @@
+/*
+ * Copyright (c) 2013-2015 Martin Donath <martin.donath@squidfunk.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+/* All views: general body styles */
+body {
+  margin: 0;
+  font-family: 'Ubuntu-Light', sans-serif, Arial;
+  background-color: #222;
+  color: #FFF;
+}
+
+/* All views: header */
+body > table:first-child {
+  background-color: #0CF;
+}
+
+/* All views: emboss overview */
+body > table:first-child tr:nth-child(3) table {
+  border-spacing: 1px;
+  background-color: #333;
+}
+
+/* All views: Better padding in overview */
+body > table:first-child tr:nth-child(3) table tr td {
+  padding: 5px;
+}
+
+/* All views: remove ugly ruler */
+body > table:first-child tr:nth-child(3) table tr:last-child {
+  display: none;
+}
+
+/* ALl views: remove unnecessary spacing */
+body > br {
+  display: none;
+}
+
+/* All views: standard link format */
+a:link,
+a:visited,
+a:active {
+  text-decoration: none;
+  color: #0F9;
+}
+
+/* All views: standard link - hovered format */
+a:hover {
+  text-decoration: underline;
+}
+
+/* All views: main title format */
+td.title {
+  padding: 50px 11% 20px;
+  font-size: 2em;
+}
+
+/* All views: header item format */
+td.headerItem {
+  width: 10%;
+  vertical-align: top;
+  text-align: right;
+}
+
+/* All views: header item value format */
+td.headerValue {
+  text-align: left;
+  color: #0CF;
+}
+
+/* All views: source/function toggle */
+td.headerValue span {
+  font-size: inherit !important;
+  color: #999;
+}
+
+/* All views: header item coverage table heading */
+td.headerCovTableHead {
+  padding: 0px 5px;
+  text-align: right;
+}
+
+/* All views: header item coverage table entry */
+td.headerCovTableEntry {
+  padding: 5px;
+  text-align: right;
+  background-color: #444;
+  color: #999;
+}
+
+/* All views: narrow hits and total */
+td.headerCovTableHead:nth-child(5),
+td.headerCovTableHead:nth-child(6) {
+  width: 6%;
+}
+
+/* All views: header item coverage table entry for high coverage rate */
+td.headerCovTableEntryHi {
+  padding: 5px;
+  text-align: right;
+  background-color: rgba(0, 255, 144, 0.2);
+  color: #0F9;
+}
+
+/* All views: header item coverage table entry for medium coverage rate */
+td.headerCovTableEntryMed {
+  padding: 5px;
+  text-align: right;
+  background-color: rgba(255, 208, 0, 0.2);
+  color: #FC0;
+}
+
+/* All views: header item coverage table entry for ow coverage rate */
+td.headerCovTableEntryLo {
+  padding: 5px;
+  text-align: right;
+  background-color: rgba(255, 0, 0, 0.2);
+  color: #F00;
+}
+
+/* All views: header legend value for legend entry */
+td.headerValueLeg {
+  padding-top: 4px;
+  text-align: left;
+  color: #000;
+}
+
+/* All views: color of horizontal ruler */
+td.ruler {
+  display: none;
+}
+
+/* All views: version string format */
+td.versionInfo {
+  display: none;
+}
+
+/* Directory view/File view (all)/Test case descriptions:
+   table headline format */
+td.tableHead {
+  padding: 10px;
+  text-align: left;
+  background-color: #0F9;
+  color: #FFFFFF;
+}
+
+/* Icon for sorting */
+span.tableHeadSort {
+  padding-right: 4px;
+  vertical-align: middle;
+}
+
+/* Directory view/File view (all): filename entry format */
+td.coverFile {
+  padding: 5px 10px;
+  text-align: left;
+  font-family: 'Monaco', monospace;
+  font-size: 12px;
+  background-color: #333;
+  color: #FFF;
+}
+
+/* Directory view/File view (all): bar-graph entry format*/
+td.coverBar {
+  padding: 5px 10px;
+  background-color: #333;
+}
+
+/* Directory view/File view (all): bar-graph outline color */
+td.coverBarOutline {
+  background-color: #333;
+}
+
+/* Directory view/File view (all): hide white background */
+td.coverBarOutline img:nth-child(2),
+td.coverBarOutline img[alt="0.0%"] {
+  visibility: hidden;
+}
+
+/* Directory view/File view (all): percentage entry for files with
+   high coverage rate */
+td.coverPerHi,
+td.coverNumHi {
+  padding: 5px 10px;
+  text-align: right;
+  background-color: rgba(0, 255, 144, 0.2);
+  color: #0F9;
+}
+
+/* Directory view/File view (all): percentage entry for files with
+   medium coverage rate */
+td.coverPerMed,
+td.coverNumMed {
+  padding: 5px 10px;
+  text-align: right;
+  background-color: rgba(255, 208, 0, 0.2);
+  color: #FC0;
+}
+
+/* Directory view/File view (all): percentage entry for files with
+   low coverage rate */
+td.coverPerLo,
+td.coverNumLo {
+  padding: 5px 10px;
+  text-align: right;
+  background-color: rgba(255, 0, 0, 0.2);
+  color: #F00;
+}
+
+/* File view (all): source code table */
+body > table:nth-child(2) {
+  width: 100%;
+}
+
+/* Source code view: function entry */
+td.coverFn {
+  padding: 5px 10px;
+  text-align: left;
+  font-family: 'Monaco', monospace;
+  font-size: 12px;
+  background-color: #333;
+  color: #FFF;
+}
+
+/* Source code view: function entry zero count */
+td.coverFnLo {
+  padding: 5px 10px;
+  text-align: right;
+  font-family: 'Monaco', monospace;
+  font-size: 12px;
+  background-color: rgba(255, 0, 0, 0.2);
+  color: #F00;
+}
+
+/* Source code view: function entry nonzero count */
+td.coverFnHi {
+  padding: 5px 10px;
+  text-align: right;
+  font-family: 'Monaco', monospace;
+  font-size: 12px;
+  background-color: rgba(0, 255, 144, 0.2);
+  color: #0F9;
+}
+
+/* Source code view: source code format */
+pre.source {
+  margin-top: 2px;
+  font-family: 'Monaco', monospace;
+  font-size: 12px;
+  line-height: 16px;
+  color: #999;
+}
+
+/* Source code view: line number format */
+span.lineNum {
+  background-color: #333;
+  color: #FFF;
+}
+
+/* Source code view: format for lines which were executed */
+td.lineCov,
+span.lineCov {
+  color: #0F9;
+}
+
+/* Source code view: format for lines which were not executed */
+td.lineNoCov,
+span.lineNoCov {
+  color: #F00;
+}
+
+/* Source code view: format for the source code heading line */
+pre.sourceHeading {
+  display: none;
+}
