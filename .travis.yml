@@ -25,13 +25,18 @@ compiler:
   - clang
   - gcc
 
-# Upgrade autoconf to 2.69, install the latest version of check, the unit
-# testing framework we use, and generate the build environment
+# Install dependencies
 before_install:
+
+  # Upgrade autoconf to 2.69
   - sudo add-apt-repository ppa:dns/gnu -y
   - sudo apt-get update -qq
   - sudo apt-get install --only-upgrade autoconf
+
+  # Install check 0.9.14
   - wget http://downloads.sourceforge.net/check/check-0.9.14.tar.gz
   - tar -xvf check-0.9.14.tar.gz
-  - cd check-0.9.14 && ./configure && make && sudo make install && cd ..
-  - ./autogen.sh
+  - cd check-0.9.14 && ./configure --prefix=/usr && make && sudo make install
+
+  # Generate build environment
+  - cd .. && ./autogen.sh
