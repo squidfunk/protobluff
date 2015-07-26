@@ -27,6 +27,8 @@ compiler:
 
 # Install check for unit testing and generate build environment
 before_install:
+  - sudo add-apt-repository ppa:dns/gnu -y
   - sudo apt-get update -qq
-  - sudo apt-get install -y autoconf check
+  - sudo apt-get install --only-upgrade autoconf
+  - sudo apt-get install -y check
   - ./autogen.sh
