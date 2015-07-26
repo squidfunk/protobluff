@@ -20,15 +20,18 @@
 
 language: c
 
-# Compile with Clang and GCC
+# Always test Clang and GCC
 compiler:
   - clang
   - gcc
 
-# Install check for unit testing and generate build environment
+# Upgrade autoconf to 2.69, install the latest version of check, the unit
+# testing framework we use, and generate the build environment
 before_install:
   - sudo add-apt-repository ppa:dns/gnu -y
   - sudo apt-get update -qq
   - sudo apt-get install --only-upgrade autoconf
-  - sudo apt-get install -y check
+  - wget http://downloads.sourceforge.net/check/check-0.9.14.tar.gz
+  - tar -xvf check-0.9.14.tar.gz
+  - cd check-0.9.14 && ./configure && make && sudo make install
   - ./autogen.sh

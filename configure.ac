@@ -74,7 +74,7 @@ AC_SUBST([protobuf_LIBS])
 AC_SUBST([PROTOC])
 
 # Check for ability to build and run tests
-PKG_CHECK_MODULES([check], [check >= 0.9.8], [],
+PKG_CHECK_MODULES([check], [check >= 0.9.10], [],
 	AC_MSG_WARN([check not found; cannot build tests]))
 AM_CONDITIONAL(HAVE_CHECK, [test -n "$check_LIBS"])
 
