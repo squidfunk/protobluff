@@ -33,5 +33,5 @@ before_install:
   - sudo apt-get install --only-upgrade autoconf
   - wget http://downloads.sourceforge.net/check/check-0.9.14.tar.gz
   - tar -xvf check-0.9.14.tar.gz
-  - cd check-0.9.14 && ./configure && make && sudo make install
+  - cd check-0.9.14 && ./configure && make && sudo make install && cd ..
   - ./autogen.sh
