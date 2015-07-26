@@ -40,21 +40,3 @@ before_install:
 
   # Generate build environment
   - cd .. && ./autogen.sh
-
-# Environment stuff
-env:
-  global:
-    - secure: "oulr96YUK5rkF3ZPXZiGKnjTr6CztZXWt/guWCiIUqPAUhROWvlfd/7yJXnRISiww+C0oZRZZvRB53Sd897O0+1rcBMcwGT/TCbFWajbgkHpY4rGs2rdLkyhibobXEPkwSuuPddrHouJXcwtEsSMxDH1eX2Oy8CTOMU13ySpjhm8BW3aGkZRw3NtAT6xyIA3eHRsjaix5LuHtzliBdUStnfLmZ1GSgIqTWs3qTWsZkEAaNpcCbgWhKJv4V3b9/yIWY92Rs2+fdwDnBaO7NGQlHn0+zMjxltNVnGPIfS6DKQdCikGi1ovnIJYX8EgfRgZZJRUG/0Cjw1LCWx3S8qM5kQly/UcdQzlecV5FLwNjCqGh+/yQY4tsAdbNdZT/5yndU4/sYDkYnMyglIwrgDbBoA3LNe5t3TpwYXabfqowcfOSWW5qKcORtcQnXDdcQocWotCdY8HW6FNODs8HCQv4KsdcjdM/4F7OWMNjT9ZH/EkVzvq9sxIfKHWsNjJOXKIqZ2ASTXGL4bVUgKf1IyZSHgd+gvXokT1UgqW8a0W+b1VA8yW4LXBJaCnlXQHTzKCTgglLigKr1dJDpQ1ql0NNUdqjPSJMXPMQSIG/XGvj0o9u8A8dC0p2UMoEEWDA5HdDUGV+1NaStkg2ISjlUF2CPdvDpT+Kl9h+P72W6ZnRQs="
-
-# Addons
-addons:
-
-  # Coverity integration
-  coverity_scan:
-    project:
-      name: "squidfunk/protobluff"
-      description: "A lightweight Protocol Buffers implementation for C"
-    notification_email: martin.donath@squidfunk.com
-    build_command_prepend: "./configure; make clean"
-    build_command:   "make -j 4"
-    branch_pattern: coverity_scan
