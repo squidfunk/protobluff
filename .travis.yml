@@ -33,6 +33,10 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install --only-upgrade autoconf
 
+  # Prepare coverage reports
+  - sudo apt-get install lcov
+  - gem install coveralls-lcov
+
   # Install check 0.9.14
   - wget http://downloads.sourceforge.net/check/check-0.9.14.tar.gz
   - tar -xvf check-0.9.14.tar.gz
@@ -40,3 +44,11 @@ before_install:
 
   # Generate build environment
   - cd .. && ./autogen.sh
+
+# Perform build and tests
+script: ./configure --enable-coverage && make && make test
+
+# If successful, create and push coverage report
+after_success:
+  - cd tools/coverage && make
+  - coveralls-lcov coverage.info

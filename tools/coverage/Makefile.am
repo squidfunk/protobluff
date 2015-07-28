@@ -26,13 +26,13 @@ if HAVE_COVERAGE
 
 # Generate and display code coverage report
 all-local:
-	@LCOV@ -c --no-external -d @top_builddir@/src -o coverage.log
-	@GENHTML@ coverage.log -o html -c coverage.css
+	@LCOV@ -c --no-external -d @top_builddir@/src -o coverage.info
+	@GENHTML@ coverage.info -o html -c coverage.css
 
 # Reset execution counts
 clean-local:
 	@LCOV@ -z -d @top_builddir@/src
 	rm -rf html
-	rm -f  coverage.log
+	rm -f  coverage.info
 
 endif # HAVE_COVERAGE
