@@ -1,6 +1,7 @@
 # protobluff
 
-[![Build status](https://travis-ci.org/squidfunk/protobluff.svg)](https://travis-ci.org/squidfunk/protobluff)
+[![Build Status](https://travis-ci.org/squidfunk/protobluff.svg)](https://travis-ci.org/squidfunk/protobluff)
+[![Coverage Status](https://coveralls.io/repos/squidfunk/protobluff/badge.svg?branch=master&service=github)](https://coveralls.io/github/squidfunk/protobluff?branch=master)
 
 protobluff is an extremely lightweight Protocol Buffers implementation for C.
 
