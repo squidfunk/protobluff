@@ -20,9 +20,11 @@
  * IN THE SOFTWARE.
  */
 
+#include <iostream>
 #include <vector>
 
 #include <google/protobuf/descriptor.h>
+#include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/io/printer.h>
 
 #include "bin/field.hh"
@@ -133,6 +135,14 @@ namespace Protobluff {
   void Field::
   GenerateDescriptor(io::Printer *printer) const {
     map<string, string> variables;
+
+    /* Emit warning for deprecated field */
+    if (descriptor->options().deprecated())
+      std::cerr << descriptor->file()->name()
+                << ": WARNING - \""
+                << descriptor->name() << "\" in \""
+                << descriptor->containing_type()->full_name()
+                << "\" is deprecated." << std::endl;
 
     /* Extract tag, type and name */
     variables["tag"]  = SimpleItoa(descriptor->number());
