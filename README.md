@@ -5,8 +5,6 @@
 [![Release Status](https://img.shields.io/github/release/squidfunk/protobluff.svg)](https://github.com/squidfunk/protobluff/releases/latest)
 [![License](https://img.shields.io/github/license/squidfunk/protobluff.svg)](https://github.com/squidfunk/protobluff/blob/master/LICENSE)
 
-
-
 protobluff is an extremely lightweight Protocol Buffers implementation for C.
 
 ## Theory of Operation

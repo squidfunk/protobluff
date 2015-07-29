@@ -1,2 +1,7 @@
+protobluff-0.1.1 (2015-07-29)
+  Add support for field deprecations [deprecated = true]
+  Set up continuous integration with travis-ci.org
+  Set up coverage reports with coveralls.io
+
 protobluff-0.1.0 (2015-07-20)
-  Initial release.
+  Initial release
