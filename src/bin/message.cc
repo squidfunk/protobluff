@@ -20,10 +20,13 @@
  * IN THE SOFTWARE.
  */
 
+#include <map>
+#include <string>
 #include <vector>
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/io/printer.h>
+#include <google/protobuf/stubs/common.h>
 
 #include "bin/field.hh"
 #include "bin/message.hh"
@@ -33,7 +36,21 @@
  * Interface
  * ------------------------------------------------------------------------- */
 
-namespace Protobluff {
+namespace protobluff {
+
+  using ::std::map;
+  using ::std::string;
+  using ::std::vector;
+
+  using ::google::protobuf::Descriptor;
+  using ::google::protobuf::FieldDescriptor;
+  using ::google::protobuf::io::Printer;
+  using ::google::protobuf::scoped_array;
+  using ::google::protobuf::scoped_ptr;
+
+  using ::google::protobuf::LowerString;
+  using ::google::protobuf::SimpleItoa;
+  using ::google::protobuf::StringReplace;
 
   /*!
    * Create a message generator.
@@ -61,7 +78,7 @@ namespace Protobluff {
    * \param[in,out] printer Printer
    */
   void Message::
-  GenerateDeclarations(io::Printer *printer) const {
+  GenerateDeclarations(Printer *printer) const {
     map<string, string> variables;
 
     /* Extract full name for signature */
@@ -90,7 +107,7 @@ namespace Protobluff {
    * \param[in,out] printer Printer
    */
   void Message::
-  GenerateDefaults(io::Printer *printer) const {
+  GenerateDefaults(Printer *printer) const {
     for (size_t f = 0; f < descriptor->field_count(); f++)
       if (descriptor->field(f)->has_default_value())
         fields[f]->GenerateDefault(printer);
@@ -106,7 +123,7 @@ namespace Protobluff {
    * \param[in,out] printer Printer
    */
   void Message::
-  GenerateDescriptors(io::Printer *printer) const {
+  GenerateDescriptors(Printer *printer) const {
     map<string, string> variables;
 
     /* Extract full name for signature */
@@ -163,7 +180,7 @@ namespace Protobluff {
    * \param[in,out] printer Printer
    */
   void Message::
-  GenerateDescriptorAssertions(io::Printer *printer) const {
+  GenerateDescriptorAssertions(Printer *printer) const {
     map<string, string> variables;
 
     /* Extract full name for signature */
@@ -193,7 +210,7 @@ namespace Protobluff {
    * \param[in,out] printer Printer
    */
   void Message::
-  GenerateDefinitions(io::Printer *printer) const {
+  GenerateDefinitions(Printer *printer) const {
     map<string, string> variables;
 
     /* Extract full name for signature */
@@ -248,7 +265,7 @@ namespace Protobluff {
    */
   void Message::
   GenerateDefinitions(
-      io::Printer *printer, vector<const FieldDescriptor *> &trace) const {
+      Printer *printer, vector<const FieldDescriptor *> &trace) const {
     for (size_t f = 0; f < descriptor->field_count(); f++)
       fields[f]->GenerateDefinitions(printer, trace);
   }

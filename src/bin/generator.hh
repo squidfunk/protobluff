@@ -23,17 +23,23 @@
 #ifndef PB_PROTOBLUFF_GENERATOR_HH
 #define PB_PROTOBLUFF_GENERATOR_HH
 
+#include <string.h>
+
 #include <google/protobuf/compiler/code_generator.h>
 #include <google/protobuf/descriptor.h>
-
-using namespace google::protobuf;
-using namespace google::protobuf::compiler;
 
 /* ----------------------------------------------------------------------------
  * Interface
  * ------------------------------------------------------------------------- */
 
-namespace Protobluff {
+namespace protobluff {
+
+  using ::std::string;
+
+  using ::google::protobuf::compiler::CodeGenerator;
+  using ::google::protobuf::compiler::OutputDirectory;
+  using ::google::protobuf::FileDescriptor;
+
   class Generator : public CodeGenerator {
 
   public:

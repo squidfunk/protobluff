@@ -20,10 +20,13 @@
  * IN THE SOFTWARE.
  */
 
+#include <string>
+
 #include <google/protobuf/compiler/code_generator.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/io/printer.h>
 #include <google/protobuf/io/zero_copy_stream.h>
+#include <google/protobuf/stubs/common.h>
 
 #include "bin/file.hh"
 #include "bin/generator.hh"
@@ -33,7 +36,18 @@
  * Interface
  * ------------------------------------------------------------------------- */
 
-namespace Protobluff {
+namespace protobluff {
+
+  using ::std::string;
+
+  using ::google::protobuf::compiler::CodeGenerator;
+  using ::google::protobuf::compiler::OutputDirectory;
+  using ::google::protobuf::FileDescriptor;
+  using ::google::protobuf::io::Printer;
+  using ::google::protobuf::io::ZeroCopyOutputStream;
+  using ::google::protobuf::scoped_ptr;
+
+  using ::google::protobuf::StripSuffixString;
 
   /*!
    * Generate Protobluff-compatible source and header files from a file.
@@ -56,17 +70,17 @@ namespace Protobluff {
 
     /* Generate header file */
     {
-      scoped_ptr<io::ZeroCopyOutputStream> output(
+      scoped_ptr<ZeroCopyOutputStream> output(
         output_directory->Open(basename + ".h"));
-      io::Printer printer(output.get(), '`');
+      Printer printer(output.get(), '`');
       file.GenerateHeader(&printer);
     }
 
     /* Generate source file */
     {
-      scoped_ptr<io::ZeroCopyOutputStream> output(
+      scoped_ptr<ZeroCopyOutputStream> output(
         output_directory->Open(basename + ".c"));
-      io::Printer printer(output.get(), '`');
+      Printer printer(output.get(), '`');
       file.GenerateSource(&printer);
     }
     return true;

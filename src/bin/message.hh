@@ -27,16 +27,24 @@
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/io/printer.h>
+#include <google/protobuf/stubs/common.h>
 
 #include "bin/field.hh"
-
-using namespace google::protobuf;
 
 /* ----------------------------------------------------------------------------
  * Interface
  * ------------------------------------------------------------------------- */
 
-namespace Protobluff {
+namespace protobluff {
+
+  using ::std::vector;
+
+  using ::google::protobuf::Descriptor;
+  using ::google::protobuf::FieldDescriptor;
+  using ::google::protobuf::io::Printer;
+  using ::google::protobuf::scoped_array;
+  using ::google::protobuf::scoped_ptr;
+
   class Message {
 
   public:
@@ -46,32 +54,32 @@ namespace Protobluff {
 
     void
     GenerateDeclarations(
-      io::Printer *printer)            /* Printer */
+      Printer *printer)                /* Printer */
     const;
 
     void
     GenerateDefaults(
-      io::Printer *printer)            /* Printer */
+      Printer *printer)                /* Printer */
     const;
 
     void
     GenerateDescriptors(
-      io::Printer *printer)            /* Printer */
+      Printer *printer)                /* Printer */
     const;
 
     void
     GenerateDescriptorAssertions(
-      io::Printer *printer)            /* Printer */
+      Printer *printer)                /* Printer */
     const;
 
     void
     GenerateDefinitions(
-      io::Printer *printer)            /* Printer */
+      Printer *printer)                /* Printer */
     const;
 
     void
     GenerateDefinitions(
-      io::Printer *printer,            /* Printer */
+      Printer *printer,                /* Printer */
       vector<
         const FieldDescriptor *
       > &trace)                        /* Trace */

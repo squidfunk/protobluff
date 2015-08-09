@@ -28,13 +28,17 @@
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/io/printer.h>
 
-using namespace google::protobuf;
-
 /* ----------------------------------------------------------------------------
  * Interface
  * ------------------------------------------------------------------------- */
 
-namespace Protobluff {
+namespace protobluff {
+
+  using ::std::vector;
+
+  using ::google::protobuf::FieldDescriptor;
+  using ::google::protobuf::io::Printer;
+
   class Field {
 
   public:
@@ -45,22 +49,22 @@ namespace Protobluff {
 
     void
     GenerateDefault(
-      io::Printer *printer)            /* Printer */
+      Printer *printer)                /* Printer */
     const;
 
     void
     GenerateDescriptor(
-      io::Printer *printer)            /* Printer */
+      Printer *printer)                /* Printer */
     const;
 
     void
     GenerateDefinitions(
-      io::Printer *printer)            /* Printer */
+      Printer *printer)                /* Printer */
     const;
 
     void
     GenerateDefinitions(
-      io::Printer *printer,            /* Printer */
+      Printer *printer,                /* Printer */
       vector<
         const FieldDescriptor *
       > &trace)                        /* Trace */

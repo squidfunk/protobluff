@@ -25,16 +25,21 @@
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/io/printer.h>
+#include <google/protobuf/stubs/common.h>
 
 #include "bin/message.hh"
-
-using namespace google::protobuf;
 
 /* ----------------------------------------------------------------------------
  * Interface
  * ------------------------------------------------------------------------- */
 
-namespace Protobluff {
+namespace protobluff {
+
+  using ::google::protobuf::FileDescriptor;
+  using ::google::protobuf::io::Printer;
+  using ::google::protobuf::scoped_array;
+  using ::google::protobuf::scoped_ptr;
+
   class File {
 
   public:
@@ -45,12 +50,12 @@ namespace Protobluff {
 
     void
     GenerateHeader(
-      io::Printer *printer)            /* Printer */
+      Printer *printer)                /* Printer */
     const;
 
     void
     GenerateSource(
-      io::Printer *printer)            /* Printer */
+      Printer *printer)                /* Printer */
     const;
 
   private:

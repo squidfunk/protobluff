@@ -21,11 +21,14 @@
  */
 
 #include <iostream>
+#include <map>
+#include <string>
 #include <vector>
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/io/printer.h>
+#include <google/protobuf/stubs/common.h>
 
 #include "bin/field.hh"
 #include "bin/message.hh"
@@ -35,7 +38,28 @@
  * Interface
  * ------------------------------------------------------------------------- */
 
-namespace Protobluff {
+namespace protobluff {
+
+  using ::std::cerr;
+  using ::std::endl;
+  using ::std::map;
+  using ::std::string;
+  using ::std::vector;
+
+  using ::google::protobuf::EnumDescriptor;
+  using ::google::protobuf::EnumValueDescriptor;
+  using ::google::protobuf::FieldDescriptor;
+  using ::google::protobuf::io::Printer;
+  using ::google::protobuf::scoped_ptr;
+
+  using ::google::protobuf::JoinStrings;
+  using ::google::protobuf::LowerString;
+  using ::google::protobuf::SimpleDtoa;
+  using ::google::protobuf::SimpleFtoa;
+  using ::google::protobuf::SimpleItoa;
+  using ::google::protobuf::StringReplace;
+  using ::google::protobuf::StripSuffixString;
+  using ::google::protobuf::UpperString;
 
   /*!
    * Create a field generator.
@@ -52,7 +76,7 @@ namespace Protobluff {
    * \param[in,out] printer Printer
    */
   void Field::
-  GenerateDefault(io::Printer *printer) const {
+  GenerateDefault(Printer *printer) const {
     if (descriptor->has_default_value()) {
       map<string, string> variables;
 
@@ -133,16 +157,16 @@ namespace Protobluff {
    * \param[in,out] printer Printer
    */
   void Field::
-  GenerateDescriptor(io::Printer *printer) const {
+  GenerateDescriptor(Printer *printer) const {
     map<string, string> variables;
 
     /* Emit warning for deprecated field */
     if (descriptor->options().deprecated())
-      std::cerr << descriptor->file()->name()
-                << ": WARNING - \""
-                << descriptor->name() << "\" in \""
-                << descriptor->containing_type()->full_name()
-                << "\" is deprecated." << std::endl;
+      cerr << descriptor->file()->name()
+           << ": WARNING - \""
+           << descriptor->name() << "\" in \""
+           << descriptor->containing_type()->full_name()
+           << "\" is deprecated." << endl;
 
     /* Extract tag, type and name */
     variables["tag"]  = SimpleItoa(descriptor->number());
@@ -228,7 +252,7 @@ namespace Protobluff {
    * \param[in,out] printer Printer
    */
   void Field::
-  GenerateDefinitions(io::Printer *printer) const {
+  GenerateDefinitions(Printer *printer) const {
     map<string, string> variables;
 
     /* Extract full name for signature */
@@ -365,7 +389,7 @@ namespace Protobluff {
    */
   void Field::
   GenerateDefinitions(
-      io::Printer *printer, vector<const FieldDescriptor *> &trace) const {
+      Printer *printer, vector<const FieldDescriptor *> &trace) const {
     map<string, string> variables;
 
     /* Extract full name for signature */

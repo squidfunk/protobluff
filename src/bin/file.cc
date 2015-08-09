@@ -20,11 +20,13 @@
  * IN THE SOFTWARE.
  */
 
-#include <cstdio>
 #include <ctime>
+#include <map>
+#include <string>
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/io/printer.h>
+#include <google/protobuf/stubs/common.h>
 
 #include "bin/file.hh"
 #include "bin/message.hh"
@@ -34,7 +36,19 @@
  * Interface
  * ------------------------------------------------------------------------- */
 
-namespace Protobluff {
+namespace protobluff {
+
+  using ::std::map;
+  using ::std::string;
+
+  using ::google::protobuf::FileDescriptor;
+  using ::google::protobuf::io::Printer;
+  using ::google::protobuf::scoped_array;
+  using ::google::protobuf::scoped_ptr;
+
+  using ::google::protobuf::StripSuffixString;
+  using ::google::protobuf::StringReplace;
+  using ::google::protobuf::UpperString;
 
   /*!
    * Create a file generator.
@@ -62,7 +76,7 @@ namespace Protobluff {
    * \param[in,out] printer Printer
    */
   void File::
-  GenerateHeader(io::Printer *printer) const {
+  GenerateHeader(Printer *printer) const {
     map<string, string> variables;
 
     /* Extract description information */
@@ -161,7 +175,7 @@ namespace Protobluff {
    * \param[in,out] printer Printer
    */
   void File::
-  GenerateSource(io::Printer *printer) const {
+  GenerateSource(Printer *printer) const {
     map<string, string> variables;
 
     /* Extract description information */

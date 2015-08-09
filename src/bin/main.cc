@@ -36,6 +36,6 @@
  * \return           Exit code
  */
 int main(int argc, char *argv[]) {
-  Protobluff::Generator generator;
+  protobluff::Generator generator;
   return PluginMain(argc, argv, &generator);
 }
