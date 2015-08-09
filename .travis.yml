@@ -45,6 +45,12 @@ before_install:
   - cd lcov-1.11 && sudo make install
   - cd ..
 
+  # Install protobuf 2.6.1
+  - wget http://https://github.com/google/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.gz
+  - tar -xvf protobuf-2.6.1.tar.gz
+  - cd protobuf-2.6.1.tar.gz && ./configure --prefix=/usr && make && sudo make install
+  - cd ..
+
   # Install coveralls integration
   - gem install coveralls-lcov
 
