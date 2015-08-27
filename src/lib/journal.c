@@ -112,7 +112,7 @@ pb_journal_log(
     pb_journal_t *journal,
     size_t origin, size_t offset, ptrdiff_t delta) {
   assert(journal && origin <= offset && delta);
-  if (__unlikely(!pb_journal_valid(journal)))
+  if (unlikely_(!pb_journal_valid(journal)))
     return PB_ERROR_INVALID;
 
   /* If no bulk slot is available, grow bulk */
@@ -214,7 +214,7 @@ extern pb_error_t
 pb_journal_align(
     const pb_journal_t *journal, pb_version_t *version, pb_offset_t *offset) {
   assert(journal && offset);
-  if (__unlikely(!pb_journal_valid(journal)))
+  if (unlikely_(!pb_journal_valid(journal)))
     return PB_ERROR_INVALID;
 
   /* Iterate journal entries until we're up-to-date */

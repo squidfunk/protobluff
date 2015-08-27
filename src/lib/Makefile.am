@@ -31,6 +31,7 @@ libprotobluff_la_SOURCES = \
 	binary/stream.c \
 	common.c \
 	cursor.c \
+	enum/descriptor.c \
 	field.c \
 	field/descriptor.c \
 	journal.c \

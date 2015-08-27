@@ -38,16 +38,16 @@
  * ------------------------------------------------------------------------- */
 
 static const uint32_t
-default_uint32 = 1000000000;
+default_uint32 = 1000000000UL;
 
 static const uint64_t
-default_uint64 = 1000000000000000000;
+default_uint64 = 1000000000000000000ULL;
 
 static const int32_t
-default_int32 = -1000000000;
+default_int32 = -1000000000L;
 
 static const int64_t
-default_int64 = -1000000000000000000;
+default_int64 = -1000000000000000000LL;
 
 static const uint8_t
 default_bool = 0;
@@ -61,11 +61,22 @@ default_double = 0.00000001;
 static const pb_string_t
 default_string = pb_string_const("DEFAULT");
 
+static const pb_enum_t
+default_enum = 1L;
+
 /* ----------------------------------------------------------------------------
  * Descriptors
  * ------------------------------------------------------------------------- */
 
-static const pb_message_descriptor_t
+static const pb_enum_descriptor_t
+descriptor_enum = { {
+  (const pb_enum_descriptor_value_t []){
+    { 1L, "V01" },
+    { 2L, "V02" },
+    { 3L, "V03" }
+  }, 3 } };
+
+static pb_message_descriptor_t
 descriptor = { {
   (const pb_field_descriptor_t []){
     {  1, "F01", UINT32,  OPTIONAL, NULL, &default_uint32 },
@@ -76,12 +87,11 @@ descriptor = { {
     {  6, "F06", FLOAT,   OPTIONAL, NULL, &default_float },
     {  7, "F07", DOUBLE,  OPTIONAL, NULL, &default_double },
     {  8, "F08", STRING,  OPTIONAL, NULL, &default_string },
-    {  9, "F09", UINT32,  REPEATED },
+    {  9, "F09", ENUM,    OPTIONAL, &descriptor_enum, &default_enum },
     { 10, "F10", UINT64,  REPEATED },
     { 11, "F11", STRING,  REPEATED },
-    { 12, "F12", MESSAGE, OPTIONAL, &descriptor },
-    { 13, "F13", UINT32,  REPEATED }
-  }, 13 } };
+    { 12, "F12", MESSAGE, OPTIONAL, &descriptor }
+  }, 12 } };
 
 /* ----------------------------------------------------------------------------
  * Tests
@@ -787,6 +797,23 @@ START_TEST(test_match_string) {
 } END_TEST
 
 /*
+ * Compare the value of an enum field with the given value.
+ */
+START_TEST(test_match_enum) {
+  pb_binary_t  binary  = pb_binary_create_empty();
+  pb_message_t message = pb_message_create(&descriptor, &binary);
+  pb_field_t   field   = pb_field_create(&message, 9);
+
+  /* Compare with value of field */
+  fail_unless(pb_field_match(&field, &default_enum));
+
+  /* Free all allocated memory */
+  pb_field_destroy(&field);
+  pb_message_destroy(&message);
+  pb_binary_destroy(&binary);
+} END_TEST
+
+/*
  * Compare the value of an unaligned field with the given value.
  */
 START_TEST(test_match_unaligned) {
@@ -1138,6 +1165,34 @@ START_TEST(test_get_string) {
 } END_TEST
 
 /*
+ * Read the value from an enum field.
+ */
+START_TEST(test_get_enum) {
+  const uint8_t data[] = { 72, 1 };
+  const size_t  size   = 2;
+
+  /* Create binary, message and field */
+  pb_binary_t  binary  = pb_binary_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &binary);
+  pb_field_t   field   = pb_field_create(&message, 9);
+
+  /* Read value from field */
+  pb_enum_t value = 0;
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_field_get(&field, &value));
+  ck_assert_int_eq(1, value);
+
+  /* Assert field size and version */
+  fail_if(pb_field_empty(&field));
+  ck_assert_uint_eq(1, pb_field_size(&field));
+  ck_assert_uint_eq(0, pb_field_version(&field));
+
+  /* Free all allocated memory */
+  pb_field_destroy(&field);
+  pb_message_destroy(&message);
+  pb_binary_destroy(&binary);
+} END_TEST
+
+/*
  * Read the default value from a 32-bit unsigned integer field.
  */
 START_TEST(test_get_default_uint32) {
@@ -1317,6 +1372,30 @@ START_TEST(test_get_default_string) {
   pb_string_t value;
   ck_assert_uint_eq(PB_ERROR_NONE, pb_field_get(&field, &value));
   fail_if(memcmp(default_string.data, value.data, default_string.size));
+
+  /* Free all allocated memory */
+  pb_field_destroy(&field);
+  pb_message_destroy(&message);
+  pb_binary_destroy(&binary);
+} END_TEST
+
+/*
+ * Read the default value from an enum field.
+ */
+START_TEST(test_get_default_enum) {
+  pb_binary_t  binary  = pb_binary_create_empty();
+  pb_message_t message = pb_message_create(&descriptor, &binary);
+  pb_field_t   field   = pb_field_create(&message, 9);
+
+  /* Read default value from field */
+  pb_enum_t value = 0;
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_field_get(&field, &value));
+  ck_assert_int_eq(default_enum, value);
+
+  /* Assert field size and version */
+  fail_if(pb_field_empty(&field));
+  ck_assert_uint_eq(1, pb_field_size(&field));
+  ck_assert_uint_eq(2, pb_field_version(&field));
 
   /* Free all allocated memory */
   pb_field_destroy(&field);
@@ -1665,9 +1744,32 @@ START_TEST(test_put_string) {
 } END_TEST
 
 /*
+ * Write an enum value to a field.
+ */
+START_TEST(test_put_enum) {
+  const uint8_t data[] = { 72, 2 };
+  const size_t  size   = 2;
+
+  /* Create binary, message and field */
+  pb_binary_t  binary  = pb_binary_create_empty();
+  pb_message_t message = pb_message_create(&descriptor, &binary);
+  pb_field_t   field   = pb_field_create(&message, 9);
+
+  /* Write value to field */
+  pb_enum_t value = 2;
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_field_put(&field, &value));
+  fail_if(memcmp(data, pb_binary_data(&binary), size));
+
+  /* Free all allocated memory */
+  pb_field_destroy(&field);
+  pb_message_destroy(&message);
+  pb_binary_destroy(&binary);
+} END_TEST
+
+/*
  * Write a string value to an existing field.
  */
-START_TEST(test_put_pb_string_existing) {
+START_TEST(test_put_string_existing) {
   pb_binary_t  binary  = pb_binary_create_empty();
   pb_message_t message = pb_message_create(&descriptor, &binary);
   pb_field_t   field   = pb_field_create(&message, 8);
@@ -1701,7 +1803,7 @@ START_TEST(test_put_pb_string_existing) {
 /*
  * Write a set of string value to a repeated field.
  */
-START_TEST(test_put_pb_string_repeated) {
+START_TEST(test_put_string_repeated) {
   pb_binary_t  binary  = pb_binary_create_empty();
   pb_message_t message = pb_message_create(&descriptor, &binary);
 
@@ -1779,7 +1881,7 @@ START_TEST(test_put_pb_string_repeated) {
 /*
  * Write a string value incrementally to a field.
  */
-START_TEST(test_put_pb_string_incremental) {
+START_TEST(test_put_string_incremental) {
   pb_binary_t  binary  = pb_binary_create_empty();
   pb_message_t message = pb_message_create(&descriptor, &binary);
   pb_field_t   field   = pb_field_create(&message, 8);
@@ -1953,7 +2055,7 @@ START_TEST(test_clear_string) {
 /*
  * Clear a set of repeated string fields entirely.
  */
-START_TEST(test_clear_pb_string_repeated) {
+START_TEST(test_clear_string_repeated) {
   pb_binary_t  binary  = pb_binary_create_empty();
   pb_message_t message = pb_message_create(&descriptor, &binary);
   pb_field_t   fields[100];
@@ -1998,7 +2100,7 @@ START_TEST(test_clear_pb_string_repeated) {
 /*
  * Clear an unaligned string field entirely.
  */
-START_TEST(test_clear_pb_string_unaligned) {
+START_TEST(test_clear_string_unaligned) {
   const uint8_t data[] = { 66, 9, 83, 79, 77, 69, 32, 68, 65, 84, 65 };
   const size_t  size   = 11;
 
@@ -2313,6 +2415,7 @@ main(void) {
   tcase_add_test(tcase, test_match_float);
   tcase_add_test(tcase, test_match_double);
   tcase_add_test(tcase, test_match_string);
+  tcase_add_test(tcase, test_match_enum);
   tcase_add_test(tcase, test_match_unaligned);
   tcase_add_test(tcase, test_match_unaligned_invalid);
   tcase_add_test(tcase, test_match_invalid);
@@ -2330,6 +2433,7 @@ main(void) {
   tcase_add_test(tcase, test_get_float);
   tcase_add_test(tcase, test_get_double);
   tcase_add_test(tcase, test_get_string);
+  tcase_add_test(tcase, test_get_enum);
   tcase_add_test(tcase, test_get_default_uint32);
   tcase_add_test(tcase, test_get_default_uint64);
   tcase_add_test(tcase, test_get_default_int32);
@@ -2338,6 +2442,7 @@ main(void) {
   tcase_add_test(tcase, test_get_default_float);
   tcase_add_test(tcase, test_get_default_double);
   tcase_add_test(tcase, test_get_default_string);
+  tcase_add_test(tcase, test_get_default_enum);
   tcase_add_test(tcase, test_get_unaligned);
   tcase_add_test(tcase, test_get_unaligned_invalid);
   tcase_add_test(tcase, test_get_invalid);
@@ -2355,9 +2460,10 @@ main(void) {
   tcase_add_test(tcase, test_put_float);
   tcase_add_test(tcase, test_put_double);
   tcase_add_test(tcase, test_put_string);
-  tcase_add_test(tcase, test_put_pb_string_existing);
-  tcase_add_test(tcase, test_put_pb_string_repeated);
-  tcase_add_test(tcase, test_put_pb_string_incremental);
+  tcase_add_test(tcase, test_put_enum);
+  tcase_add_test(tcase, test_put_string_existing);
+  tcase_add_test(tcase, test_put_string_repeated);
+  tcase_add_test(tcase, test_put_string_incremental);
   tcase_add_test(tcase, test_put_unaligned);
   tcase_add_test(tcase, test_put_unaligned_invalid);
   tcase_add_test(tcase, test_put_invalid);
@@ -2367,8 +2473,8 @@ main(void) {
   tcase = tcase_create("clear");
   tcase_add_test(tcase, test_clear);
   tcase_add_test(tcase, test_clear_string);
-  tcase_add_test(tcase, test_clear_pb_string_repeated);
-  tcase_add_test(tcase, test_clear_pb_string_unaligned);
+  tcase_add_test(tcase, test_clear_string_repeated);
+  tcase_add_test(tcase, test_clear_string_unaligned);
   tcase_add_test(tcase, test_clear_unaligned);
   tcase_add_test(tcase, test_clear_unaligned_invalid);
   tcase_add_test(tcase, test_clear_invalid);

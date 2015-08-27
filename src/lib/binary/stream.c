@@ -43,7 +43,7 @@
 extern pb_error_t
 pb_binary_stream_skip(pb_binary_stream_t *stream, size_t bytes) {
   assert(stream);
-  if (__unlikely(pb_binary_stream_left(stream) < bytes)) {
+  if (unlikely_(pb_binary_stream_left(stream) < bytes)) {
     stream->offset = pb_binary_stream_size(stream);
     return PB_ERROR_UNDERRUN;
   }
@@ -117,7 +117,7 @@ pb_binary_stream_skip_length(pb_binary_stream_t *stream) {
 extern pb_error_t
 pb_binary_stream_read(pb_binary_stream_t *stream, uint8_t *value) {
   assert(stream && value);
-  if (__unlikely(pb_binary_stream_skip(stream, 1)))
+  if (unlikely_(pb_binary_stream_skip(stream, 1)))
     return PB_ERROR_UNDERRUN;
   *value = pb_binary_data_at(stream->binary, stream->offset - 1);
   return PB_ERROR_NONE;
@@ -133,7 +133,7 @@ pb_binary_stream_read(pb_binary_stream_t *stream, uint8_t *value) {
 extern pb_error_t
 pb_binary_stream_read_fixed32(pb_binary_stream_t *stream, void *value) {
   assert(stream && value);
-  if (__unlikely(pb_binary_stream_skip(stream, 4)))
+  if (unlikely_(pb_binary_stream_skip(stream, 4)))
     return PB_ERROR_UNDERRUN;
   memcpy(value, pb_binary_data_from(stream->binary, stream->offset - 4), 4);
   return PB_ERROR_NONE;
@@ -149,7 +149,7 @@ pb_binary_stream_read_fixed32(pb_binary_stream_t *stream, void *value) {
 extern pb_error_t
 pb_binary_stream_read_fixed64(pb_binary_stream_t *stream, void *value) {
   assert(stream && value);
-  if (__unlikely(pb_binary_stream_skip(stream, 8)))
+  if (unlikely_(pb_binary_stream_skip(stream, 8)))
     return PB_ERROR_UNDERRUN;
   memcpy(value, pb_binary_data_from(stream->binary, stream->offset - 8), 8);
   return PB_ERROR_NONE;
@@ -165,9 +165,9 @@ pb_binary_stream_read_fixed64(pb_binary_stream_t *stream, void *value) {
 extern pb_error_t
 pb_binary_stream_read_varint8(pb_binary_stream_t *stream, void *value) {
   assert(stream && value);
-  if (__unlikely(pb_binary_stream_read(stream, value)))
+  if (unlikely_(pb_binary_stream_read(stream, value)))
     return PB_ERROR_UNDERRUN;
-  if (__unlikely(*(uint8_t *)value & 0x80))
+  if (unlikely_(*(uint8_t *)value & 0x80))
     return PB_ERROR_OVERFLOW;
   return PB_ERROR_NONE;
 }
@@ -184,10 +184,10 @@ pb_binary_stream_read_varint32(pb_binary_stream_t *stream, void *value) {
   assert(stream && value);
   uint8_t byte, offset = 0; *(uint32_t *)value = 0;
   do {
-    if (__unlikely(pb_binary_stream_read(stream, &byte)))
+    if (unlikely_(pb_binary_stream_read(stream, &byte)))
       return PB_ERROR_UNDERRUN;
     *(uint32_t *)value |= (uint32_t)(byte & 0x7F) << offset;
-    if (__unlikely((offset += 7) > 31 && (byte & 0x80)))
+    if (unlikely_((offset += 7) > 31 && (byte & 0x80)))
       return PB_ERROR_OVERFLOW;
   } while (byte & 0x80);
   return PB_ERROR_NONE;
@@ -205,10 +205,10 @@ pb_binary_stream_read_varint64(pb_binary_stream_t *stream, void *value) {
   assert(stream && value);
   uint8_t byte, offset = 0; *(uint64_t *)value = 0;
   do {
-    if (__unlikely(pb_binary_stream_read(stream, &byte)))
+    if (unlikely_(pb_binary_stream_read(stream, &byte)))
       return PB_ERROR_UNDERRUN;
     *(uint64_t *)value |= (uint64_t)(byte & 0x7F) << offset;
-    if (__unlikely((offset += 7) > 63 && (byte & 0x80)))
+    if (unlikely_((offset += 7) > 63 && (byte & 0x80)))
       return PB_ERROR_OVERFLOW;
   } while (byte & 0x80);
   return PB_ERROR_NONE;
@@ -259,9 +259,9 @@ extern pb_error_t
 pb_binary_stream_read_length(pb_binary_stream_t *stream, void *value) {
   assert(stream && value);
   uint32_t bytes; pb_error_t error;
-  if (__unlikely((error = pb_binary_stream_read_varint32(stream, &bytes))))
+  if (unlikely_((error = pb_binary_stream_read_varint32(stream, &bytes))))
     return error;
-  if (__unlikely(pb_binary_stream_skip(stream, bytes)))
+  if (unlikely_(pb_binary_stream_skip(stream, bytes)))
     return PB_ERROR_UNDERRUN;
   *(pb_string_t *)value = pb_string_init(pb_binary_data_from(
     stream->binary, stream->offset - bytes), bytes);

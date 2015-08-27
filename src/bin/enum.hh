@@ -20,18 +20,17 @@
  * IN THE SOFTWARE.
  */
 
-#include <cassert>
+#ifndef PB_PROTOBLUFF_ENUM_HH
+#define PB_PROTOBLUFF_ENUM_HH
+
+#include <map>
 #include <string>
 
-#include <google/protobuf/compiler/code_generator.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/io/printer.h>
-#include <google/protobuf/io/zero_copy_stream.h>
 #include <google/protobuf/stubs/common.h>
 
-#include "bin/file.hh"
-#include "bin/generator.hh"
-#include "bin/strutil.hh"
+#include "bin/enum_value.hh"
 
 /* ----------------------------------------------------------------------------
  * Interface
@@ -39,52 +38,44 @@
 
 namespace protobluff {
 
+  using ::std::map;
   using ::std::string;
 
-  using ::google::protobuf::compiler::CodeGenerator;
-  using ::google::protobuf::compiler::OutputDirectory;
-  using ::google::protobuf::FileDescriptor;
+  using ::google::protobuf::EnumDescriptor;
   using ::google::protobuf::io::Printer;
-  using ::google::protobuf::io::ZeroCopyOutputStream;
+  using ::google::protobuf::scoped_array;
   using ::google::protobuf::scoped_ptr;
 
-  using ::google::protobuf::StripSuffixString;
+  class Enum {
 
-  /*!
-   * Generate Protobluff-compatible source and header files from a file.
-   *
-   * \param[in]  descriptor File descriptor
-   * \param[in]  parameter  Command-line parameters
-   * \param[in]  directory  Output directory
-   * \param[out] error      Error pointer
-   */
-  bool Generator::
-  Generate(
-      const FileDescriptor *descriptor, const string &parameter,
-      OutputDirectory *directory, string *error) const {
-    assert(descriptor && directory && error);
+  public:
+    explicit
+    Enum(
+      const EnumDescriptor
+        *descriptor);                  /* Enum descriptor */
 
-    /* Construct basename for source and header files */
-    string basename = StripSuffixString(descriptor->name(), ".proto") + ".pb";
+    void
+    GenerateDeclaration(
+      Printer *printer)                /* Printer */
+    const;
 
-    /* Create file generator from descriptor */
-    File file (descriptor);
+    void
+    GenerateDescriptor(
+      Printer *printer)                /* Printer */
+    const;
 
-    /* Generate header file */
-    {
-      scoped_ptr<ZeroCopyOutputStream> output(
-        directory->Open(basename + ".h"));
-      Printer printer (output.get(), '`');
-      file.GenerateHeader(&printer);
-    }
+    void
+    GenerateValues(
+      Printer *printer)                /* Printer */
+    const;
 
-    /* Generate source file */
-    {
-      scoped_ptr<ZeroCopyOutputStream> output(
-        directory->Open(basename + ".c"));
-      Printer printer (output.get(), '`');
-      file.GenerateSource(&printer);
-    }
-    return true;
-  }
+  private:
+    const EnumDescriptor *descriptor_; /* Enum descriptor */
+    scoped_array<
+      scoped_ptr<EnumValue>
+    > values_;                         /* Enum value generators */
+    map<string, string> variables_;    /* Variables */
+  };
 }
+
+#endif /* PB_PROTOBLUFF_ENUM_HH */

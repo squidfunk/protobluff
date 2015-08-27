@@ -90,7 +90,7 @@ pb_message_destroy(
   pb_message_t *message);              /* Message */
 
 PB_EXPORT pb_error_t
-pb_message_validate(
+pb_message_check(
   const pb_message_t *message);        /* Message */
 
 PB_EXPORT int

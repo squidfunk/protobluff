@@ -184,7 +184,7 @@ pb_message_destroy(pb_message_t *message) {
 }
 
 /*!
- * Validate a message.
+ * Check a message.
  *
  * Fields do not necessarily occur in ascending order, so they are checked in
  * order of their appearance. Repeated fields may occur multiple times, required
@@ -195,9 +195,9 @@ pb_message_destroy(pb_message_t *message) {
  * \return            Error code
  */
 extern pb_error_t
-pb_message_validate(const pb_message_t *message) {
+pb_message_check(const pb_message_t *message) {
   assert(message);
-  if (__unlikely(!pb_message_valid(message)))
+  if (unlikely_(!pb_message_valid(message)))
     return PB_ERROR_INVALID;
   pb_error_t error = PB_ERROR_NONE;
 
@@ -235,7 +235,7 @@ pb_message_validate(const pb_message_t *message) {
       /* Recurse, if submessage */
       if (pb_field_descriptor_type(descriptor) == PB_TYPE_MESSAGE) {
         pb_message_t submessage = pb_message_create_from_cursor(&cursor);
-        error = pb_message_validate(&submessage);
+        error = pb_message_check(&submessage);
         pb_message_destroy(&submessage);
       }
     } while (!error && pb_cursor_next(&cursor));
@@ -310,7 +310,7 @@ pb_message_match(pb_message_t *message, pb_tag_t tag, const void *value) {
 #ifndef NDEBUG
 
   /* Check is only necessary in debug mode */
-  if (__unlikely(!pb_message_valid(message)))
+  if (unlikely_(!pb_message_valid(message)))
     return 0;
 
   /* Assert non-message field */
@@ -345,7 +345,7 @@ pb_message_match(pb_message_t *message, pb_tag_t tag, const void *value) {
 extern pb_error_t
 pb_message_get(pb_message_t *message, pb_tag_t tag, void *value) {
   assert(message && tag && value);
-  if (__unlikely(!pb_message_valid(message)))
+  if (unlikely_(!pb_message_valid(message)))
     return PB_ERROR_INVALID;
   pb_error_t error = PB_ERROR_NONE;
 
@@ -363,7 +363,7 @@ pb_message_get(pb_message_t *message, pb_tag_t tag, void *value) {
   } else if ((error = pb_cursor_error(&cursor)) == PB_ERROR_OFFSET) {
 
     /* Extract default value, if present */
-    if (__unlikely(!pb_field_descriptor_default(descriptor))) {
+    if (unlikely_(!pb_field_descriptor_default(descriptor))) {
       error = PB_ERROR_ABSENT;
     } else {
       memcpy(value, pb_field_descriptor_default(descriptor),
@@ -396,7 +396,7 @@ pb_message_get(pb_message_t *message, pb_tag_t tag, void *value) {
 extern pb_error_t
 pb_message_put(pb_message_t *message, pb_tag_t tag, const void *value) {
   assert(message && tag && value);
-  if (__unlikely(!pb_message_valid(message)))
+  if (unlikely_(!pb_message_valid(message)))
     return PB_ERROR_INVALID;
   pb_error_t error = PB_ERROR_NONE;
 
@@ -415,7 +415,7 @@ pb_message_put(pb_message_t *message, pb_tag_t tag, const void *value) {
   } else {
     pb_message_t submessage = pb_message_copy(value);
     assert(pb_message_binary(message) != pb_message_binary(&submessage));
-    if (__unlikely(!pb_message_valid(&submessage) ||
+    if (unlikely_(!pb_message_valid(&submessage) ||
                     pb_message_align(&submessage))) {
       error = PB_ERROR_INVALID;
 
@@ -452,7 +452,7 @@ pb_message_put(pb_message_t *message, pb_tag_t tag, const void *value) {
 extern pb_error_t
 pb_message_erase(pb_message_t *message, pb_tag_t tag) {
   assert(message && tag);
-  if (__unlikely(!pb_message_valid(message)))
+  if (unlikely_(!pb_message_valid(message)))
     return PB_ERROR_INVALID;
   pb_error_t error = PB_ERROR_NONE;
 
@@ -510,7 +510,7 @@ pb_message_raw(pb_message_t *message, pb_tag_t tag) {
 #ifndef NDEBUG
 
   /* Check is only necessary in debug mode */
-  if (__unlikely(!pb_message_valid(message)))
+  if (unlikely_(!pb_message_valid(message)))
     return NULL;
 
   /* Assert non-repeated non-message field */

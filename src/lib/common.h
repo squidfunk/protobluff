@@ -33,7 +33,7 @@
 /*
  * Branch-prediction helpers.
  */
-#define   __likely(condition) __builtin_expect((condition), 1)
-#define __unlikely(condition) __builtin_expect((condition), 0)
+#define   likely_(condition) __builtin_expect((condition), 1)
+#define unlikely_(condition) __builtin_expect((condition), 0)
 
 #endif /* PB_COMMON_H */

@@ -50,6 +50,17 @@
   #define PB_EXPORT
 #endif
 
+/*
+ * Declare a function to be automatically run upon application start up.
+ * Heavily used for Protocol Buffers extensions.
+ */
+#if defined(__GNUC__) && __GNUC__ >= 4
+  #define PB_CONSTRUCTOR __attribute__((constructor))
+#else
+  #define PB_CONSTRUCTOR
+  #warning "Automatic initialization of extensions not supported"
+#endif
+
 /* ----------------------------------------------------------------------------
  * Compiler attributes
  * ------------------------------------------------------------------------- */
@@ -122,6 +133,7 @@ typedef enum pb_label_t {
  * ------------------------------------------------------------------------- */
 
 typedef uint32_t pb_tag_t;             /*!< Tag type */
+typedef int32_t  pb_enum_t;            /*!< Enum type */
 typedef size_t   pb_version_t;         /*!< Version */
 
 /* ------------------------------------------------------------------------- */

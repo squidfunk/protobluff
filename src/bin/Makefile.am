@@ -27,6 +27,9 @@ if HAVE_PROTOBUF
 # Build generator executable
 bin_PROGRAMS = protoc-gen-protobluff
 protoc_gen_protobluff_SOURCES = \
+	enum.cc \
+	enum_value.cc \
+	extension.cc \
 	field.cc \
 	file.cc \
 	generator.cc \

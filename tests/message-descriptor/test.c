@@ -34,7 +34,7 @@
  * Descriptors
  * ------------------------------------------------------------------------- */
 
-static const pb_message_descriptor_t
+static pb_message_descriptor_t
 descriptor = { {
   (const pb_field_descriptor_t []){
     {  1, "F01", UINT32,  OPTIONAL },
@@ -51,19 +51,47 @@ descriptor = { {
     { 12, "F12", MESSAGE, REPEATED, &descriptor }
   }, 12 } };
 
-/* ------------------------------------------------------------------------- */
-
-static const pb_message_descriptor_t
+static pb_message_descriptor_t
 descriptor_empty = {};
 
-/* ------------------------------------------------------------------------- */
-
-static const pb_message_descriptor_t
+static pb_message_descriptor_t
 descriptor_scattered = { {
   (const pb_field_descriptor_t []){
     {  2, "F02", UINT64,  OPTIONAL },
     {  8, "F08", STRING,  OPTIONAL }
   }, 2 } };
+
+static pb_message_descriptor_t
+descriptor_extension = { {
+  (const pb_field_descriptor_t []){
+    { 20, "F20", UINT32,  OPTIONAL },
+    { 21, "F21", UINT64,  OPTIONAL }
+  }, 2, } };
+
+static pb_message_descriptor_t
+descriptor_extension_nested = { {
+  (const pb_field_descriptor_t []){
+    { 30, "F30", MESSAGE,  OPTIONAL, &descriptor }
+  }, 1, } };
+
+/* ----------------------------------------------------------------------------
+ * Fixtures
+ * ------------------------------------------------------------------------- */
+
+/*!
+ * Setup
+ */
+static void
+setup() {}
+
+/*!
+ * Teardown
+ */
+static void
+teardown() {
+  pb_message_descriptor_reset(&descriptor);
+  pb_message_descriptor_reset(&descriptor_extension);
+}
 
 /* ----------------------------------------------------------------------------
  * Tests
@@ -142,6 +170,36 @@ START_TEST(test_iterator_empty) {
 } END_TEST
 
 /*
+ * Register an extension for the given message descriptor.
+ */
+START_TEST(test_extend) {
+  ck_assert_ptr_eq(NULL, pb_message_descriptor_extension(&descriptor));
+
+  /* Extend descriptor */
+  pb_message_descriptor_extend(&descriptor, &descriptor_extension);
+  ck_assert_ptr_eq(&descriptor_extension,
+    pb_message_descriptor_extension(&descriptor));
+  ck_assert_ptr_eq(NULL,
+    pb_message_descriptor_extension(&descriptor_extension));
+
+  /* Extend descriptor with same extension */
+  pb_message_descriptor_extend(&descriptor, &descriptor_extension);
+  ck_assert_ptr_eq(&descriptor_extension,
+    pb_message_descriptor_extension(&descriptor));
+  ck_assert_ptr_eq(NULL,
+    pb_message_descriptor_extension(&descriptor_extension));
+
+  /* Extend descriptor with another extension */
+  pb_message_descriptor_extend(&descriptor, &descriptor_extension_nested);
+  ck_assert_ptr_eq(&descriptor_extension,
+    pb_message_descriptor_extension(&descriptor));
+  ck_assert_ptr_eq(&descriptor_extension_nested,
+    pb_message_descriptor_extension(&descriptor_extension));
+  ck_assert_ptr_eq(NULL,
+    pb_message_descriptor_extension(&descriptor_extension_nested));
+} END_TEST
+
+/*
  * Retrieve the field descriptor for a given tag from a message descriptor.
  */
 START_TEST(test_field_by_tag) {
@@ -191,6 +249,28 @@ START_TEST(test_field_by_tag_scattered_absent) {
 } END_TEST
 
 /*
+ * Retrieve a field descriptor from an extended message descriptor.
+ */
+START_TEST(test_field_by_tag_extended) {
+  ck_assert_ptr_eq(NULL,
+    pb_message_descriptor_field_by_tag(&descriptor, 20));
+
+  /* Extend descriptor and retrieve field */
+  pb_message_descriptor_extend(&descriptor, &descriptor_extension);
+  ck_assert_ptr_eq(&(descriptor_extension.field.data[0]),
+    pb_message_descriptor_field_by_tag(&descriptor, 20));
+  ck_assert_ptr_eq(NULL,
+    pb_message_descriptor_field_by_tag(&descriptor, 30));
+
+  /* Extend descriptor and retrieve field again */
+  pb_message_descriptor_extend(&descriptor, &descriptor_extension_nested);
+  ck_assert_ptr_eq(&(descriptor_extension.field.data[0]),
+    pb_message_descriptor_field_by_tag(&descriptor, 20));
+  ck_assert_ptr_eq(&(descriptor_extension_nested.field.data[0]),
+    pb_message_descriptor_field_by_tag(&descriptor, 30));
+} END_TEST
+
+/*
  * Retrieve the field descriptor for a given name from a message descriptor.
  */
 START_TEST(test_field_by_name) {
@@ -220,6 +300,51 @@ START_TEST(test_field_by_name_empty) {
     pb_message_descriptor_field_by_name(&descriptor_empty, "F00"));
 } END_TEST
 
+/*
+ * Retrieve the field descriptor for a given name from a message descriptor.
+ */
+START_TEST(test_field_by_name_scattered) {
+  ck_assert_ptr_eq(&(descriptor_scattered.field.data[0]),
+    pb_message_descriptor_field_by_name(&descriptor_scattered, "F02"));
+  ck_assert_ptr_eq(&(descriptor_scattered.field.data[1]),
+    pb_message_descriptor_field_by_name(&descriptor_scattered, "F08"));
+} END_TEST
+
+/*
+ * Retrieve an absent field descriptor from a message descriptor.
+ */
+START_TEST(test_field_by_name_scattered_absent) {
+  ck_assert_ptr_eq(NULL,
+    pb_message_descriptor_field_by_name(&descriptor_scattered, "F01"));
+  ck_assert_ptr_eq(NULL,
+    pb_message_descriptor_field_by_name(&descriptor_scattered, "F03"));
+  ck_assert_ptr_eq(NULL,
+    pb_message_descriptor_field_by_name(&descriptor_scattered, "F07"));
+  ck_assert_ptr_eq(NULL,
+    pb_message_descriptor_field_by_name(&descriptor_scattered, "F09"));
+} END_TEST
+
+/*
+ * Retrieve a field descriptor from an extended message descriptor.
+ */
+START_TEST(test_field_by_name_extended) {
+  ck_assert_ptr_eq(NULL,
+    pb_message_descriptor_field_by_name(&descriptor, "F20"));
+
+  /* Extend descriptor and retrieve field */
+  pb_message_descriptor_extend(&descriptor, &descriptor_extension);
+  ck_assert_ptr_eq(&(descriptor_extension.field.data[0]),
+    pb_message_descriptor_field_by_name(&descriptor, "F20"));
+  ck_assert_ptr_eq(NULL,
+    pb_message_descriptor_field_by_name(&descriptor, "F30"));
+
+  /* Extend descriptor and retrieve field again */
+  pb_message_descriptor_extend(&descriptor, &descriptor_extension_nested);
+  ck_assert_ptr_eq(&(descriptor_extension.field.data[0]),
+    pb_message_descriptor_field_by_name(&descriptor, "F20"));
+  ck_assert_ptr_eq(&(descriptor_extension_nested.field.data[0]),
+    pb_message_descriptor_field_by_name(&descriptor, "F30"));
+} END_TEST
 
 /* ----------------------------------------------------------------------------
  * Program
@@ -242,6 +367,12 @@ main(void) {
   tcase_add_test(tcase, test_iterator_empty);
   suite_add_tcase(suite, tcase);
 
+  /* Add tests to test case "extend" */
+  tcase = tcase_create("extend");
+  tcase_add_test(tcase, test_extend);
+  tcase_add_checked_fixture(tcase, setup, teardown);
+  suite_add_tcase(suite, tcase);
+
   /* Add tests to test case "field-by-tag" */
   tcase = tcase_create("field-by-tag");
   tcase_add_test(tcase, test_field_by_tag);
@@ -249,6 +380,8 @@ main(void) {
   tcase_add_test(tcase, test_field_by_tag_empty);
   tcase_add_test(tcase, test_field_by_tag_scattered);
   tcase_add_test(tcase, test_field_by_tag_scattered_absent);
+  tcase_add_test(tcase, test_field_by_tag_extended);
+  tcase_add_checked_fixture(tcase, setup, teardown);
   suite_add_tcase(suite, tcase);
 
   /* Add tests to test case "field-by-name" */
@@ -256,6 +389,10 @@ main(void) {
   tcase_add_test(tcase, test_field_by_name);
   tcase_add_test(tcase, test_field_by_name_absent);
   tcase_add_test(tcase, test_field_by_name_empty);
+  tcase_add_test(tcase, test_field_by_name_scattered);
+  tcase_add_test(tcase, test_field_by_name_scattered_absent);
+  tcase_add_test(tcase, test_field_by_name_extended);
+  tcase_add_checked_fixture(tcase, setup, teardown);
   suite_add_tcase(suite, tcase);
 
   /* Create a test suite runner in no-fork mode */

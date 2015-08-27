@@ -225,18 +225,18 @@ pb_binary_write(
     pb_binary_t *binary, size_t start, size_t end,
     const uint8_t data[], size_t size) {
   assert(binary && data && size);
-  if (__unlikely(!pb_binary_valid(binary)))
+  if (unlikely_(!pb_binary_valid(binary)))
     return PB_ERROR_INVALID;
 
   /* Check valid range */
-  if (__unlikely(start > end || end > binary->size))
+  if (unlikely_(start > end || end > binary->size))
     return PB_ERROR_OFFSET;
 
   /* Resize binary and move data if necessary */
   ptrdiff_t delta = size - (end - start);
   if (delta) {
     pb_binary_internal_t *internal = binary->_;
-    if (__unlikely(internal == &internal_zero_copy))
+    if (unlikely_(internal == &internal_zero_copy))
       return PB_ERROR_ALLOC;
 
     /* Binary grows, so grow space and then move data */
@@ -286,18 +286,18 @@ pb_binary_write(
 extern pb_error_t
 pb_binary_clear(pb_binary_t *binary, size_t start, size_t end) {
   assert(binary);
-  if (__unlikely(!pb_binary_valid(binary)))
+  if (unlikely_(!pb_binary_valid(binary)))
     return PB_ERROR_INVALID;
 
   /* Check valid range */
-  if (__unlikely(start > end || end > binary->size))
+  if (unlikely_(start > end || end > binary->size))
     return PB_ERROR_OFFSET;
 
   /* Resize binary and move data if necessary */
   ptrdiff_t delta = start - end;
   if (delta) {
     pb_binary_internal_t *internal = binary->_;
-    if (__unlikely(internal == &internal_zero_copy))
+    if (unlikely_(internal == &internal_zero_copy))
       return PB_ERROR_ALLOC;
 
     /* Binary shrinks, so move data and then shrink space */

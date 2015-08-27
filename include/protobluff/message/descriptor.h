@@ -45,6 +45,8 @@ typedef struct pb_message_descriptor_t {
       *const data;                     /*!< Field descriptors */
     const size_t size;                 /*!< Field descriptor count */
   } field;
+  struct pb_message_descriptor_t
+    *extension;                        /*!< Message descriptor extension */
 } pb_message_descriptor_t;
 
 typedef struct pb_message_descriptor_iter_t {
@@ -69,6 +71,11 @@ pb_message_descriptor_field_by_name(
     *descriptor,                       /* Message descriptor */
   const char name[]);                  /* Name */
 
+PB_EXPORT void
+pb_message_descriptor_extend(
+  pb_message_descriptor_t *descriptor, /* Message descriptor */
+  pb_message_descriptor_t *extension); /* Message descriptor extension */
+
 /* ----------------------------------------------------------------------------
  * Macros
  * ------------------------------------------------------------------------- */
@@ -90,6 +97,15 @@ pb_message_descriptor_field_by_name(
  */
 #define pb_message_descriptor_empty(descriptor) \
   (assert(descriptor), !pb_message_descriptor_size(descriptor))
+
+/*!
+ * Retrieve the (first) extension of a message descriptor.
+ *
+ * \param[in] descriptor Message descriptor
+ * \return               Message descriptor extension
+ */
+#define pb_message_descriptor_extension(descriptor) \
+  (assert(descriptor), (descriptor)->extension)
 
 /* ------------------------------------------------------------------------- */
 

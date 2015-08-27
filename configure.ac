@@ -24,7 +24,7 @@
 
 AC_PREREQ(2.69)
 
-AC_INIT([protobluff], [0.1.0], [martin.donath@squidfunk.com])
+AC_INIT([protobluff], [0.2.0], [martin.donath@squidfunk.com])
 AM_INIT_AUTOMAKE([subdir-objects foreign])
 
 : ${CFLAGS=""}
@@ -44,8 +44,8 @@ AC_CONFIG_MACRO_DIR([m4])
 # Dependencies
 # -----------------------------------------------------------------------------
 
-# Library versioning as <current:age:revision>
-AC_SUBST([VERSION_INFO], [0:0:0])
+# Library versioning as <current:revision:age>
+AC_SUBST([VERSION_INFO], [1:0:0])
 
 # Checks for programs
 AC_PROG_AWK
@@ -186,6 +186,7 @@ AC_CONFIG_FILES([ \
 	tests/binary-buffer/Makefile \
 	tests/binary-stream/Makefile \
 	tests/cursor/Makefile \
+	tests/enum-descriptor/Makefile \
 	tests/field/Makefile \
 	tests/journal/Makefile \
 	tests/message/Makefile \

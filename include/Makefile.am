@@ -29,6 +29,8 @@ nobase_include_HEADERS = \
 	protobluff/common.h \
 	protobluff/cursor.h \
 	protobluff/descriptor.h \
+	protobluff/enum.h \
+	protobluff/enum/descriptor.h \
 	protobluff/field.h \
 	protobluff/field/descriptor.h \
 	protobluff/message.h \

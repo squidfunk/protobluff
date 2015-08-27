@@ -51,7 +51,7 @@ static pb_cursor_t
 resolve(pb_message_t *message, const pb_tag_t tags[], size_t size) {
   assert(message && tags && size);
   pb_cursor_t cursor = pb_cursor_create_invalid();
-  if (__unlikely(!pb_message_valid(message)))
+  if (unlikely_(!pb_message_valid(message)))
     return cursor;
 
   /* Resolve message recursively */
@@ -169,7 +169,7 @@ pb_message_nested_get(
 
   /* Use cursor to omit field creation */
   pb_cursor_t cursor = resolve(message, tags, --size);
-  if (__unlikely(!pb_cursor_valid(&cursor))) {
+  if (unlikely_(!pb_cursor_valid(&cursor))) {
     if ((error = pb_cursor_error(&cursor)) == PB_ERROR_OFFSET)
       error = PB_ERROR_ABSENT;
   } else {

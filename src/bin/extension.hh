@@ -20,8 +20,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef PB_PROTOBLUFF_MESSAGE_HH
-#define PB_PROTOBLUFF_MESSAGE_HH
+#ifndef PB_PROTOBLUFF_EXTENSION_HH
+#define PB_PROTOBLUFF_EXTENSION_HH
 
 #include <map>
 #include <string>
@@ -29,10 +29,7 @@
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/io/printer.h>
-#include <google/protobuf/stubs/common.h>
 
-#include "bin/enum.hh"
-#include "bin/extension.hh"
 #include "bin/field.hh"
 
 /* ----------------------------------------------------------------------------
@@ -48,40 +45,25 @@ namespace protobluff {
   using ::google::protobuf::Descriptor;
   using ::google::protobuf::FieldDescriptor;
   using ::google::protobuf::io::Printer;
-  using ::google::protobuf::scoped_array;
-  using ::google::protobuf::scoped_ptr;
 
-  class Message {
+  class Extension {
 
   public:
+
     explicit
-    Message(
-      const Descriptor *descriptor);   /* Descriptor */
-
-    bool
-    HasEnums()
-    const;
-
-    const vector<const Enum *>
-    GetEnums()
-    const;
-
-    bool
-    HasExtensions()
-    const;
-
-    const vector<const Extension *>
-    GetExtensions()
-    const;
+    Extension(
+      const Descriptor *descriptor,    /* Descriptor */
+      const Descriptor
+        *scope = NULL);                /* Scope descriptor */
 
     bool
     HasDefaults()
     const;
 
     void
-    GenerateDeclaration(
-      Printer *printer)                /* Printer */
-    const;
+    AddField(
+      const FieldDescriptor
+        *descriptor);                  /* Field descriptor */
 
     void
     GenerateDefaults(
@@ -94,37 +76,21 @@ namespace protobluff {
     const;
 
     void
-    GenerateDescriptorAssertion(
+    GenerateInitializer(
       Printer *printer)                /* Printer */
     const;
 
     void
     GenerateDefinitions(
       Printer *printer)                /* Printer */
-    const;
-
-    void
-    GenerateDefinitions(
-      Printer *printer,                /* Printer */
-      vector<
-        const FieldDescriptor *
-      > &trace)                        /* Trace */
     const;
 
   private:
     const Descriptor *descriptor_;     /* Descriptor */
-    scoped_array<
-      scoped_ptr<Field>
-    > fields_;                         /* Field generators */
-    scoped_array<
-      scoped_ptr<Message>
-    > nested_;                         /* Nested message generators */
-    scoped_array<
-      scoped_ptr<Enum>
-    > enums_;                          /* Enum generators */
-    vector<Extension *> extensions_;   /* Extension generators */
+    const Descriptor *scope_;          /* Scope descriptor */
+    vector<Field *> fields_;           /* Field generators */
     map<string, string> variables_;    /* Variables */
   };
 }
 
-#endif /* PB_PROTOBLUFF_MESSAGE_HH */
+#endif /* PB_PROTOBLUFF_EXTENSION_HH */

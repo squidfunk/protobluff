@@ -37,16 +37,16 @@
  * ------------------------------------------------------------------------- */
 
 static const uint32_t
-default_uint32 = 1000000000;
+default_uint32 = 1000000000UL;
 
 static const uint64_t
-default_uint64 = 1000000000000000000;
+default_uint64 = 1000000000000000000ULL;
 
 /* ----------------------------------------------------------------------------
  * Descriptors
  * ------------------------------------------------------------------------- */
 
-static const pb_message_descriptor_t
+static pb_message_descriptor_t
 descriptor = { {
   (const pb_field_descriptor_t []){
     {  1, "F01", UINT32,  OPTIONAL, NULL, &default_uint32 },

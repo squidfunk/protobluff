@@ -204,7 +204,7 @@ pb_part_dump(
 /*!
  * Create a binary stream from a part.
  *
- * This extension is located here, since it is highly dependent on the part
+ * This macro is located here, since it is highly dependent on the part
  * implementation while using no binary stream internals.
  *
  * \warning This function does no runtime check for an aligned part, as it is

@@ -20,16 +20,9 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef PB_INCLUDE_H
-#define PB_INCLUDE_H
+#ifndef PB_ENUM_DESCRIPTOR_H
+#define PB_ENUM_DESCRIPTOR_H
 
-#include <protobluff/allocator.h>
-#include <protobluff/binary.h>
-#include <protobluff/common.h>
-#include <protobluff/cursor.h>
-#include <protobluff/enum.h>
-#include <protobluff/field.h>
-#include <protobluff/message.h>
-#include <protobluff/string.h>
+#include <protobluff/enum/descriptor.h>
 
-#endif /* PB_INCLUDE_H */
+#endif /* PB_ENUM_DESCRIPTOR_H */

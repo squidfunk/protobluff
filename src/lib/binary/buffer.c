@@ -41,7 +41,7 @@ extern pb_error_t
 pb_binary_buffer_write_varint8(
     pb_binary_buffer_t *buffer, const void *value) {
   assert(buffer && value);
-  if (__unlikely(!pb_binary_buffer_left(buffer)))
+  if (unlikely_(!pb_binary_buffer_left(buffer)))
     return PB_ERROR_OVERFLOW;
   buffer->data[buffer->size++] = *(const uint8_t *)value;
   return PB_ERROR_NONE;
@@ -60,7 +60,7 @@ pb_binary_buffer_write_varint32(
   assert(buffer && value);
   uint32_t temp = *(const uint32_t *)value;
   do {
-    if (__unlikely(!pb_binary_buffer_left(buffer)))
+    if (unlikely_(!pb_binary_buffer_left(buffer)))
       return PB_ERROR_OVERFLOW;
     buffer->data[buffer->size++] = (uint8_t)((temp & 0x7F) | 0x80);
   } while ((temp >>= 7));
@@ -81,7 +81,7 @@ pb_binary_buffer_write_varint64(
   assert(buffer && value);
   uint64_t temp = *(const uint64_t *)value;
   do {
-    if (__unlikely(!pb_binary_buffer_left(buffer)))
+    if (unlikely_(!pb_binary_buffer_left(buffer)))
       return PB_ERROR_OVERFLOW;
     buffer->data[buffer->size++] = (uint8_t)((temp & 0x7F) | 0x80);
   } while ((temp >>= 7));

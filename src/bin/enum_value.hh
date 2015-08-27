@@ -20,20 +20,16 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef PB_PROTOBLUFF_MESSAGE_HH
-#define PB_PROTOBLUFF_MESSAGE_HH
+#ifndef PB_PROTOBLUFF_ENUM_VALUE_HH
+#define PB_PROTOBLUFF_ENUM_VALUE_HH
 
 #include <map>
 #include <string>
-#include <vector>
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/io/printer.h>
-#include <google/protobuf/stubs/common.h>
 
-#include "bin/enum.hh"
-#include "bin/extension.hh"
-#include "bin/field.hh"
+#include "bin/enum_value.hh"
 
 /* ----------------------------------------------------------------------------
  * Interface
@@ -43,50 +39,17 @@ namespace protobluff {
 
   using ::std::map;
   using ::std::string;
-  using ::std::vector;
 
-  using ::google::protobuf::Descriptor;
-  using ::google::protobuf::FieldDescriptor;
+  using ::google::protobuf::EnumValueDescriptor;
   using ::google::protobuf::io::Printer;
-  using ::google::protobuf::scoped_array;
-  using ::google::protobuf::scoped_ptr;
 
-  class Message {
+  class EnumValue {
 
   public:
     explicit
-    Message(
-      const Descriptor *descriptor);   /* Descriptor */
-
-    bool
-    HasEnums()
-    const;
-
-    const vector<const Enum *>
-    GetEnums()
-    const;
-
-    bool
-    HasExtensions()
-    const;
-
-    const vector<const Extension *>
-    GetExtensions()
-    const;
-
-    bool
-    HasDefaults()
-    const;
-
-    void
-    GenerateDeclaration(
-      Printer *printer)                /* Printer */
-    const;
-
-    void
-    GenerateDefaults(
-      Printer *printer)                /* Printer */
-    const;
+    EnumValue(
+      const EnumValueDescriptor
+        *descriptor);                  /* Enum value descriptor */
 
     void
     GenerateDescriptor(
@@ -94,37 +57,25 @@ namespace protobluff {
     const;
 
     void
-    GenerateDescriptorAssertion(
+    GenerateValue(
       Printer *printer)                /* Printer */
     const;
 
-    void
-    GenerateDefinitions(
-      Printer *printer)                /* Printer */
-    const;
-
-    void
-    GenerateDefinitions(
-      Printer *printer,                /* Printer */
-      vector<
-        const FieldDescriptor *
-      > &trace)                        /* Trace */
-    const;
+    friend bool
+    EnumValueComparator(
+      const EnumValue *x,              /* Enum value generator */
+      const EnumValue *y);             /* Enum value generator */
 
   private:
-    const Descriptor *descriptor_;     /* Descriptor */
-    scoped_array<
-      scoped_ptr<Field>
-    > fields_;                         /* Field generators */
-    scoped_array<
-      scoped_ptr<Message>
-    > nested_;                         /* Nested message generators */
-    scoped_array<
-      scoped_ptr<Enum>
-    > enums_;                          /* Enum generators */
-    vector<Extension *> extensions_;   /* Extension generators */
+    const EnumValueDescriptor
+      *descriptor_;                    /* Enum value descriptor */
     map<string, string> variables_;    /* Variables */
   };
+
+  bool
+  EnumValueComparator(
+    const EnumValue *x,                /* Enum value generator */
+    const EnumValue *y);               /* Enum value generator */
 }
 
-#endif /* PB_PROTOBLUFF_MESSAGE_HH */
+#endif /* PB_PROTOBLUFF_ENUM_VALUE_HH */

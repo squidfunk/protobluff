@@ -177,22 +177,30 @@ PKG_CHECK_MODULES([protobluff], [libprotobluff])
 ### Already supported
 
 1. Message definitions
-2. Submessage definitions
+2. Nested submessage definitions
 3. All scalar types
 4. Enumerations
 5. Strings and binaries
 6. Optional, required and repeated fields
 7. Imports
 8. Packages
+9. Extensions and nested extensions
+10. Deprecation warnings
 
 ### Not yet supported
 
-1. Circular (sub)message definitions
-2. Deprecation warnings
-3. Message extensions
-4. Packed fields
-5. RPC (probably as an extensions to protobluff)
-6. General proto3 support
+1. Packed fields
+2. Oneofs
+3. Services (using gRPC and/or ZMQ)
+4. Groups (unsure)
+5. General proto3 support (unsure)
+
+### Roadmap
+
+1. Oneofs
+2. Streaming API
+3. Packed fields
+4. Services
 
 ## License
 

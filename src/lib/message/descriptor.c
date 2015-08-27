@@ -79,7 +79,9 @@ pb_message_descriptor_field_by_tag(
       break;
     }
   }
-  return NULL;
+  return pb_message_descriptor_extension(descriptor) ?
+    pb_message_descriptor_field_by_tag(
+      pb_message_descriptor_extension(descriptor), tag) : NULL;
 }
 
 /*!
@@ -101,5 +103,43 @@ pb_message_descriptor_field_by_name(
       continue;
     return &(descriptor->field.data[f]);
   }
-  return NULL;
+  return pb_message_descriptor_extension(descriptor) ?
+    pb_message_descriptor_field_by_name(
+      pb_message_descriptor_extension(descriptor), name) : NULL;
+}
+
+/*!
+ * Register an extension for the given message descriptor.
+ *
+ * Extensions are implemented as a linked list of message descriptors - if
+ * multiple extensions are registered for a message descriptor, they are
+ * chained together. Before registering an extension, it is checked that the
+ * extension is not already registered.
+ *
+ * \param[in,out] descriptor Message descriptor
+ * \param[in,out] extension  Message descriptor extension
+ */
+extern void
+pb_message_descriptor_extend(
+    pb_message_descriptor_t *descriptor, pb_message_descriptor_t *extension) {
+  assert(descriptor && extension);
+  while (descriptor->extension) {
+    if (descriptor->extension == extension)
+      return;
+    descriptor = descriptor->extension;
+  }
+  descriptor->extension = extension;
+}
+
+/*!
+ * Reset a message descriptors' extension.
+ *
+ * This method is only needed for testing purposes, and thus not exported.
+ *
+ * \param[in,out] descriptor Message descriptor
+ */
+extern void
+pb_message_descriptor_reset(pb_message_descriptor_t *descriptor) {
+  assert(descriptor);
+  descriptor->extension = NULL;
 }

@@ -23,10 +23,16 @@
 #ifndef PB_PROTOBLUFF_FILE_HH
 #define PB_PROTOBLUFF_FILE_HH
 
+#include <map>
+#include <string>
+#include <vector>
+
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/io/printer.h>
 #include <google/protobuf/stubs/common.h>
 
+#include "bin/enum.hh"
+#include "bin/extension.hh"
 #include "bin/message.hh"
 
 /* ----------------------------------------------------------------------------
@@ -34,6 +40,10 @@
  * ------------------------------------------------------------------------- */
 
 namespace protobluff {
+
+  using ::std::map;
+  using ::std::string;
+  using ::std::vector;
 
   using ::google::protobuf::FileDescriptor;
   using ::google::protobuf::io::Printer;
@@ -48,6 +58,18 @@ namespace protobluff {
       const FileDescriptor
         *descriptor);                  /* File descriptor */
 
+    bool
+    HasEnums()
+    const;
+
+    bool
+    HasExtensions()
+    const;
+
+    bool
+    HasDefaults()
+    const;
+
     void
     GenerateHeader(
       Printer *printer)                /* Printer */
@@ -59,11 +81,26 @@ namespace protobluff {
     const;
 
   private:
-    const FileDescriptor *descriptor;  /* File descriptor */
+    const FileDescriptor *descriptor_; /* File descriptor */
     scoped_array<
       scoped_ptr<Message>
-    > messages;                        /* Message generators */
-    char datetime[64];                 /* Datetime string */
+    > messages_;                       /* Message generators */
+    scoped_array<
+      scoped_ptr<Enum>
+    > enums_;                          /* Enum generators */
+    vector<Extension *> extensions_;   /* Extension generators */
+    map<string, string> variables_;    /* Variables */
+
+    void
+    PrintDisclaimer(
+      Printer *printer)                /* Printer */
+    const;
+
+    void
+    PrintBanner(
+      Printer *printer,                /* Printer */
+      const char title[])              /* Title */
+    const;
   };
 }
 

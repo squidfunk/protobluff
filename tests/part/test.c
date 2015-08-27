@@ -50,7 +50,7 @@ allocator_realloc_fail(void *data, void *block, size_t size) {
  * Descriptors
  * ------------------------------------------------------------------------- */
 
-static const pb_message_descriptor_t
+static pb_message_descriptor_t
 descriptor = { {
   (const pb_field_descriptor_t []){
     {  1, "F01", UINT32,  OPTIONAL },

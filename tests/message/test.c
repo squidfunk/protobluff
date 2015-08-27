@@ -40,16 +40,16 @@
  * ------------------------------------------------------------------------- */
 
 static const uint32_t
-default_uint32 = 1000000000;
+default_uint32 = 1000000000UL;
 
 static const uint64_t
-default_uint64 = 1000000000000000000;
+default_uint64 = 1000000000000000000ULL;
 
 static const int32_t
-default_int32 = -1000000000;
+default_int32 = -1000000000L;
 
 static const int64_t
-default_int64 = -1000000000000000000;
+default_int64 = -1000000000000000000L;
 
 static const uint8_t
 default_bool =  0;
@@ -67,7 +67,7 @@ default_string = pb_string_const("DEFAULT");
  * Descriptors
  * ------------------------------------------------------------------------- */
 
-static const pb_message_descriptor_t
+static pb_message_descriptor_t
 descriptor = { {
   (const pb_field_descriptor_t []){
     {  1, "F01", UINT32,  OPTIONAL, NULL, &default_uint32 },
@@ -84,14 +84,12 @@ descriptor = { {
     { 12, "F12", MESSAGE, REPEATED, &descriptor }
   }, 12 } };
 
-/* ------------------------------------------------------------------------- */
-
-static const pb_message_descriptor_t
-descriptor_validate = { {
+static pb_message_descriptor_t
+descriptor_check = { {
   (const pb_field_descriptor_t []){
     {  1, "F01", UINT32,  REQUIRED, &default_uint32 },
     {  2, "F02", UINT64,  REQUIRED },
-    {  4, "F03", MESSAGE, REPEATED, &descriptor_validate }
+    {  4, "F03", MESSAGE, REPEATED, &descriptor_check }
   }, 3 } };
 
 /* ----------------------------------------------------------------------------
@@ -1131,22 +1129,22 @@ START_TEST(test_copy) {
 } END_TEST
 
 /*
- * Validate a message.
+ * Check a message.
  */
-START_TEST(test_validate) {
+START_TEST(test_check) {
   const uint8_t data[] = { 8, 127, 16, 127, 34, 4, 8, 127, 16, 127 };
   const size_t  size   = 10;
 
   /* Create binary and message */
   pb_binary_t  binary  = pb_binary_create(data, size);
-  pb_message_t message = pb_message_create(&descriptor_validate, &binary);
+  pb_message_t message = pb_message_create(&descriptor_check, &binary);
 
   /* Assert message validity and error */
   fail_unless(pb_message_valid(&message));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
 
-  /* Validate message */
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_validate(&message));
+  /* Check message */
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_check(&message));
 
   /* Free all allocated memory */
   pb_message_destroy(&message);
@@ -1154,9 +1152,9 @@ START_TEST(test_validate) {
 } END_TEST
 
 /*
- * Validate an empty message.
+ * Check an empty message.
  */
-START_TEST(test_validate_empty) {
+START_TEST(test_check_empty) {
   pb_binary_t  binary  = pb_binary_create_empty();
   pb_message_t message = pb_message_create(&descriptor, &binary);
 
@@ -1164,8 +1162,8 @@ START_TEST(test_validate_empty) {
   fail_unless(pb_message_valid(&message));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
 
-  /* Validate message */
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_validate(&message));
+  /* Check message */
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_check(&message));
 
   /* Free all allocated memory */
   pb_message_destroy(&message);
@@ -1173,18 +1171,18 @@ START_TEST(test_validate_empty) {
 } END_TEST
 
 /*
- * Validate an empty message with required fields.
+ * Check an empty message with required fields.
  */
-START_TEST(test_validate_empty_required) {
+START_TEST(test_check_empty_required) {
   pb_binary_t  binary  = pb_binary_create_empty();
-  pb_message_t message = pb_message_create(&descriptor_validate, &binary);
+  pb_message_t message = pb_message_create(&descriptor_check, &binary);
 
   /* Assert message validity and error */
   fail_unless(pb_message_valid(&message));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
 
-  /* Validate message */
-  ck_assert_uint_eq(PB_ERROR_ABSENT, pb_message_validate(&message));
+  /* Check message */
+  ck_assert_uint_eq(PB_ERROR_ABSENT, pb_message_check(&message));
 
   /* Assert message validity and error again */
   fail_unless(pb_message_valid(&message));
@@ -1196,9 +1194,9 @@ START_TEST(test_validate_empty_required) {
 } END_TEST
 
 /*
- * Validate a message with an empty submessage.
+ * Check a message with an empty submessage.
  */
-START_TEST(test_validate_nested_empty) {
+START_TEST(test_check_nested_empty) {
   const uint8_t data[] = { 8, 127, 16, 127, 90, 0 };
   const size_t  size   = 6;
 
@@ -1210,8 +1208,8 @@ START_TEST(test_validate_nested_empty) {
   fail_unless(pb_message_valid(&message));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
 
-  /* Validate message */
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_validate(&message));
+  /* Check message */
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_check(&message));
 
   /* Free all allocated memory */
   pb_message_destroy(&message);
@@ -1219,22 +1217,22 @@ START_TEST(test_validate_nested_empty) {
 } END_TEST
 
 /*
- * Validate a message with an empty submessage.
+ * Check a message with an empty submessage.
  */
-START_TEST(test_validate_nested_empty_required) {
+START_TEST(test_check_nested_empty_required) {
   const uint8_t data[] = { 8, 127, 16, 127, 34, 0 };
   const size_t  size   = 6;
 
   /* Create binary and message */
   pb_binary_t  binary  = pb_binary_create(data, size);
-  pb_message_t message = pb_message_create(&descriptor_validate, &binary);
+  pb_message_t message = pb_message_create(&descriptor_check, &binary);
 
   /* Assert message validity and error */
   fail_unless(pb_message_valid(&message));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
 
-  /* Validate message */
-  ck_assert_uint_eq(PB_ERROR_ABSENT, pb_message_validate(&message));
+  /* Check message */
+  ck_assert_uint_eq(PB_ERROR_ABSENT, pb_message_check(&message));
 
   /* Assert message validity and error again */
   fail_unless(pb_message_valid(&message));
@@ -1246,15 +1244,15 @@ START_TEST(test_validate_nested_empty_required) {
 } END_TEST
 
 /*
- * Validate an unaligned message.
+ * Check an unaligned message.
  */
-START_TEST(test_validate_unaligned) {
+START_TEST(test_check_unaligned) {
   const uint8_t data[] = { 8, 127, 16, 127, 34, 4, 8, 127, 16, 127 };
   const size_t  size   = 10;
 
   /* Create binary and message */
   pb_binary_t  binary  = pb_binary_create(data, size);
-  pb_message_t message = pb_message_create(&descriptor_validate, &binary);
+  pb_message_t message = pb_message_create(&descriptor_check, &binary);
 
   /* Write value to message */
   uint32_t value = 127;
@@ -1264,8 +1262,8 @@ START_TEST(test_validate_unaligned) {
   fail_unless(pb_message_valid(&message));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
 
-  /* Validate message */
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_validate(&message));
+  /* Check message */
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_check(&message));
 
   /* Free all allocated memory */
   pb_message_destroy(&message);
@@ -1273,39 +1271,39 @@ START_TEST(test_validate_unaligned) {
 } END_TEST
 
 /*
- * Validate an invalid message.
+ * Check an invalid message.
  */
-START_TEST(test_validate_invalid) {
+START_TEST(test_check_invalid) {
   pb_message_t message = pb_message_create_invalid();
 
   /* Assert message validity and error */
   fail_if(pb_message_valid(&message));
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_message_error(&message));
 
-  /* Validate message */
-  ck_assert_uint_eq(PB_ERROR_INVALID, pb_message_validate(&message));
+  /* Check message */
+  ck_assert_uint_eq(PB_ERROR_INVALID, pb_message_check(&message));
 
   /* Free all allocated memory */
   pb_message_destroy(&message);
 } END_TEST
 
 /*
- * Validate a message with invalid repeated fields.
+ * Check a message with invalid repeated fields.
  */
-START_TEST(test_validate_invalid_repeated) {
+START_TEST(test_check_invalid_repeated) {
   const uint8_t data[] = { 8, 127, 8, 127 };
   const size_t  size   = 4;
 
   /* Create binary and message */
   pb_binary_t  binary  = pb_binary_create(data, size);
-  pb_message_t message = pb_message_create(&descriptor_validate, &binary);
+  pb_message_t message = pb_message_create(&descriptor_check, &binary);
 
   /* Assert message validity and error */
   fail_unless(pb_message_valid(&message));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
 
-  /* Validate message */
-  ck_assert_uint_eq(PB_ERROR_INVALID, pb_message_validate(&message));
+  /* Check message */
+  ck_assert_uint_eq(PB_ERROR_INVALID, pb_message_check(&message));
 
   /* Assert message validity and error again */
   fail_unless(pb_message_valid(&message));
@@ -1317,9 +1315,9 @@ START_TEST(test_validate_invalid_repeated) {
 } END_TEST
 
 /*
- * Validate a message with invalid tags.
+ * Check a message with invalid tags.
  */
-START_TEST(test_validate_invalid_tag) {
+START_TEST(test_check_invalid_tag) {
   const uint8_t data[] = { 112, 127 };
   const size_t  size   = 2;
 
@@ -1331,8 +1329,8 @@ START_TEST(test_validate_invalid_tag) {
   fail_unless(pb_message_valid(&message));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
 
-  /* Validate message */
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_validate(&message));
+  /* Check message */
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_check(&message));
 
   /* Free all allocated memory */
   pb_message_destroy(&message);
@@ -1340,9 +1338,9 @@ START_TEST(test_validate_invalid_tag) {
 } END_TEST
 
 /*
- * Validate a message with invalid length-prefix data.
+ * Check a message with invalid length-prefix data.
  */
-START_TEST(test_validate_invalid_length) {
+START_TEST(test_check_invalid_length) {
   uint8_t data[] = { 66, 100, 83, 79, 77, 69, 32, 68, 65, 84, 65 };
   size_t  size   = 11;
 
@@ -1350,8 +1348,8 @@ START_TEST(test_validate_invalid_length) {
   pb_binary_t  binary  = pb_binary_create_zero_copy(data, size);
   pb_message_t message = pb_message_create(&descriptor, &binary);
 
-  /* Validate message */
-  ck_assert_uint_eq(PB_ERROR_UNDERRUN, pb_message_validate(&message));
+  /* Check message */
+  ck_assert_uint_eq(PB_ERROR_UNDERRUN, pb_message_check(&message));
 
   /* Assert message validity and error */
   fail_unless(pb_message_valid(&message));
@@ -3007,18 +3005,18 @@ main(void) {
   tcase_add_test(tcase, test_copy);
   suite_add_tcase(suite, tcase);
 
-  /* Add tests to test case "validate" */
-  tcase = tcase_create("validate");
-  tcase_add_test(tcase, test_validate);
-  tcase_add_test(tcase, test_validate_empty);
-  tcase_add_test(tcase, test_validate_empty_required);
-  tcase_add_test(tcase, test_validate_nested_empty);
-  tcase_add_test(tcase, test_validate_nested_empty_required);
-  tcase_add_test(tcase, test_validate_unaligned);
-  tcase_add_test(tcase, test_validate_invalid);
-  tcase_add_test(tcase, test_validate_invalid_repeated);
-  tcase_add_test(tcase, test_validate_invalid_tag);
-  tcase_add_test(tcase, test_validate_invalid_length);
+  /* Add tests to test case "check" */
+  tcase = tcase_create("check");
+  tcase_add_test(tcase, test_check);
+  tcase_add_test(tcase, test_check_empty);
+  tcase_add_test(tcase, test_check_empty_required);
+  tcase_add_test(tcase, test_check_nested_empty);
+  tcase_add_test(tcase, test_check_nested_empty_required);
+  tcase_add_test(tcase, test_check_unaligned);
+  tcase_add_test(tcase, test_check_invalid);
+  tcase_add_test(tcase, test_check_invalid_repeated);
+  tcase_add_test(tcase, test_check_invalid_tag);
+  tcase_add_test(tcase, test_check_invalid_length);
   suite_add_tcase(suite, tcase);
 
   /* Add tests to test case "has" */

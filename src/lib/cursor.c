@@ -150,7 +150,7 @@ pb_cursor_destroy(pb_cursor_t *cursor) {
 extern int
 pb_cursor_next(pb_cursor_t *cursor) {
   assert(cursor);
-  if (__unlikely(!pb_cursor_valid(cursor)))
+  if (unlikely_(!pb_cursor_valid(cursor)))
     return 0;
 
   /* If alignment yields an invalid result the current part was most probably
@@ -330,7 +330,7 @@ pb_cursor_get(pb_cursor_t *cursor, void *value) {
     const pb_field_descriptor_t *descriptor =
       pb_message_descriptor_field_by_tag(
         pb_message_descriptor(&(cursor->message)), cursor->current.tag);
-    if (__unlikely(!descriptor)) {
+    if (unlikely_(!descriptor)) {
       error = PB_ERROR_DESCRIPTOR;
 
     /* Check type and read value */
@@ -366,7 +366,7 @@ pb_cursor_put(pb_cursor_t *cursor, const void *value) {
     const pb_field_descriptor_t *descriptor =
       pb_message_descriptor_field_by_tag(
         pb_message_descriptor(&(cursor->message)), cursor->current.tag);
-    if (__unlikely(!descriptor)) {
+    if (unlikely_(!descriptor)) {
       error = PB_ERROR_DESCRIPTOR;
 
     /* Create field and write value */
@@ -379,7 +379,7 @@ pb_cursor_put(pb_cursor_t *cursor, const void *value) {
     } else {
       pb_message_t submessage = pb_message_copy(value);
       assert(pb_cursor_binary(cursor) != pb_message_binary(&submessage));
-      if (__unlikely(!pb_message_valid(&submessage) ||
+      if (unlikely_(!pb_message_valid(&submessage) ||
                       pb_message_align(&submessage)))
         return PB_ERROR_INVALID;
 
@@ -416,7 +416,7 @@ pb_cursor_erase(pb_cursor_t *cursor) {
     const pb_field_descriptor_t *descriptor =
       pb_message_descriptor_field_by_tag(
         pb_message_descriptor(&(cursor->message)), cursor->current.tag);
-    if (__unlikely(!descriptor)) {
+    if (unlikely_(!descriptor)) {
       error = PB_ERROR_DESCRIPTOR;
 
     /* Clear field */
@@ -485,7 +485,7 @@ pb_cursor_align(pb_cursor_t *cursor) {
 
   /* Align cursor and current part, if currently unaligned */
   const pb_part_t *part = pb_message_part(&(cursor->message));
-  if (__unlikely(!pb_part_aligned(part))) {
+  if (unlikely_(!pb_part_aligned(part))) {
     pb_version_t version = pb_cursor_version(cursor);
     if (!(error = pb_message_align(&(cursor->message)))) {
       pb_binary_t *binary = pb_cursor_binary(cursor);

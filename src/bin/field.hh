@@ -23,6 +23,8 @@
 #ifndef PB_PROTOBLUFF_FIELD_HH
 #define PB_PROTOBLUFF_FIELD_HH
 
+#include <map>
+#include <string>
 #include <vector>
 
 #include <google/protobuf/descriptor.h>
@@ -34,6 +36,8 @@
 
 namespace protobluff {
 
+  using ::std::map;
+  using ::std::string;
   using ::std::vector;
 
   using ::google::protobuf::FieldDescriptor;
@@ -46,6 +50,10 @@ namespace protobluff {
     Field(
       const FieldDescriptor
         *descriptor);                  /* Field descriptor */
+
+    bool
+    HasDefault()
+    const;
 
     void
     GenerateDefault(
@@ -70,9 +78,25 @@ namespace protobluff {
       > &trace)                        /* Trace */
     const;
 
+    friend bool
+    FieldComparator(
+      const Field *x,                  /* Field generator */
+      const Field *y);                 /* Field generator */
+
   private:
-    const FieldDescriptor *descriptor; /* Field descriptor */
+    const FieldDescriptor
+      *descriptor_;                    /* Field descriptor */
+    map<string, string> variables_;    /* Variables */
+
+    bool
+    ShouldTrace()
+    const;
   };
+
+  bool
+  FieldComparator(
+    const Field *x,                    /* Field generator */
+    const Field *y);                   /* Field generator */
 }
 
 #endif /* PB_PROTOBLUFF_FIELD_HH */

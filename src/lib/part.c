@@ -72,7 +72,7 @@ adjust_prefix(pb_part_t *part, ptrdiff_t *delta) {
   if (!(error = pb_binary_buffer_write_varint32(&buffer, &bytes))) {
     ptrdiff_t adjust = pb_binary_buffer_size(&buffer)
                      + part->offset.diff.length;
-    if (__likely(!adjust)) {
+    if (likely_(!adjust)) {
       error = pb_binary_write(part->binary,
         part->offset.start + part->offset.diff.length, part->offset.start,
           pb_binary_buffer_data(&buffer), pb_binary_buffer_size(&buffer));
@@ -89,7 +89,7 @@ adjust_prefix(pb_part_t *part, ptrdiff_t *delta) {
         error = pb_binary_write(part->binary,
           part->offset.start + part->offset.diff.length, part->offset.start,
             pb_binary_buffer_data(&buffer), pb_binary_buffer_size(&buffer));
-        if (__unlikely(error)) {
+        if (unlikely_(error)) {
           pb_journal_revert(journal);                        /* LCOV_EXCL_LINE */
 
         /* Update offsets */
@@ -209,7 +209,7 @@ adjust_recursive(
           pb_binary_stream_binary(stream), temp.offset.start);
         error = adjust_recursive(part, &substream, delta);
         pb_binary_stream_destroy(&substream);
-        if (__unlikely(error))
+        if (unlikely_(error))
           break;                                           /* LCOV_EXCL_LINE */
 
         /* Parts may be unaligned due to length prefix update */
@@ -229,7 +229,7 @@ adjust_recursive(
   }
 
   /* Invalidate part on error */
-  if (__unlikely(error))
+  if (unlikely_(error))
     pb_part_invalidate(part);                              /* LCOV_EXCL_LINE */
   return error;
 }
@@ -310,7 +310,7 @@ init(pb_part_t *part, const pb_field_descriptor_t *descriptor) {
       error = pb_binary_write(part->binary,
         part->offset.start, part->offset.end,
           pb_binary_buffer_data(&buffer), pb_binary_buffer_size(&buffer));
-      if (__unlikely(error)) {
+      if (unlikely_(error)) {
         pb_journal_revert(journal);                        /* LCOV_EXCL_LINE */
 
       /* Update offsets */
@@ -562,7 +562,7 @@ pb_part_write(pb_part_t *part, const uint8_t data[], size_t size) {
   if (!error) {
     error = pb_binary_write(part->binary,
       part->offset.start, part->offset.end, data, size);
-    if (__unlikely(error)) {
+    if (unlikely_(error)) {
       pb_journal_revert(journal);
 
     /* Update offsets */
@@ -600,7 +600,7 @@ pb_part_clear(pb_part_t *part) {
   ptrdiff_t delta = -(pb_part_size(part)) + part->offset.diff.tag;
   if (delta) {
     pb_journal_t *journal = pb_binary_journal(part->binary);
-    if (__unlikely(!pb_journal_valid(journal)))
+    if (unlikely_(!pb_journal_valid(journal)))
       return PB_ERROR_INVALID;
 
     /* Clear data from binary and perform manual alignment */
@@ -609,7 +609,7 @@ pb_part_clear(pb_part_t *part) {
     if (!error) {
       error = pb_binary_clear(part->binary, part->offset.start
         + part->offset.diff.tag, part->offset.end);
-      if (__unlikely(error)) {
+      if (unlikely_(error)) {
         pb_journal_revert(journal);                        /* LCOV_EXCL_LINE */
         return error;                                      /* LCOV_EXCL_LINE */
 

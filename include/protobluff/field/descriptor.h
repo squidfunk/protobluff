@@ -30,12 +30,6 @@
 #include <protobluff/common.h>
 
 /* ----------------------------------------------------------------------------
- * Forward declarations
- * ------------------------------------------------------------------------- */
-
-struct pb_message_descriptor_t;
-
-/* ----------------------------------------------------------------------------
  * Type definitions
  * ------------------------------------------------------------------------- */
 
@@ -110,8 +104,8 @@ pb_field_descriptor_wiretype(
  * \return               Referenced descriptor
  */
 #define pb_field_descriptor_reference(descriptor) \
-  (assert((descriptor) && (descriptor)->type == PB_TYPE_MESSAGE), \
-    (descriptor)->refer)
+  (assert((descriptor) && ((descriptor)->type == PB_TYPE_MESSAGE || \
+    (descriptor)->type == PB_TYPE_ENUM)), (descriptor)->refer)
 
 /*!
  * Retrieve the default value of a field descriptor.

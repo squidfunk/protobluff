@@ -25,4 +25,13 @@
 
 #include <protobluff/message/descriptor.h>
 
+/* ----------------------------------------------------------------------------
+ * Interface
+ * ------------------------------------------------------------------------- */
+
+extern void
+pb_message_descriptor_reset(
+  pb_message_descriptor_t
+    *descriptor);                      /* Descriptor */
+
 #endif /* PB_MESSAGE_DESCRIPTOR_H */

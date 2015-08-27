@@ -40,24 +40,24 @@ typedef struct pb_string_t {
  * Macros
  * ------------------------------------------------------------------------- */
 
-#define __pb_string_binary(data, size) \
+#define pb_string_binary_(data, size) \
   ((pb_string_t){ (size) ? (uint8_t *)(data) : NULL, (size) })
 
-#define __pb_string_printable(data) \
-  (__pb_string_binary((data), strlen(data)))
+#define pb_string_printable_(data) \
+  (pb_string_binary_((data), strlen(data)))
 
 /* ------------------------------------------------------------------------- */
 
-#define __pb_string_args_method(_0, _2, _1, n, args...) n
+#define pb_string_args_method_(_0, _2, _1, n, args...) n
 
-#define __pb_string_args(args...) \
-  __pb_string_args_method(0, args, binary, printable, 0)
+#define pb_string_args_(args...) \
+  pb_string_args_method_(0, args, binary, printable, 0)
 
-#define __pb_string_method(method, args...) \
-  __pb_string_ ## method(args)
+#define pb_string_method_(method, args...) \
+  pb_string_ ## method ## _(args)
 
-#define __string(method, args...) \
-  __pb_string_method(method, args)
+#define pb_string_(method, args...) \
+  pb_string_method_(method, args)
 
 /* ------------------------------------------------------------------------- */
 
@@ -87,6 +87,6 @@ typedef struct pb_string_t {
  * \return         String
  */
 #define pb_string_init(args...) \
-  (__string(__pb_string_args(args), args))
+  (pb_string_(pb_string_args_(args), args))
 
 #endif /* PB_INCLUDE_STRING_H */

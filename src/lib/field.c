@@ -31,6 +31,7 @@
 #include "lib/binary/stream.h"
 #include "lib/common.h"
 #include "lib/cursor.h"
+#include "lib/enum/descriptor.h"
 #include "lib/field.h"
 #include "lib/field/descriptor.h"
 #include "lib/message.h"
@@ -184,8 +185,8 @@ pb_field_create_from_cursor(pb_cursor_t *cursor) {
   if (pb_cursor_valid(cursor)) {
     const pb_message_t *message = pb_cursor_message(cursor);
     const pb_field_descriptor_t *descriptor =
-      pb_message_descriptor_field_by_tag(pb_message_descriptor(message),
-        pb_cursor_tag(cursor));
+      pb_message_descriptor_field_by_tag(
+        pb_message_descriptor(message), pb_cursor_tag(cursor));
     if (descriptor)
       if (pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE) {
         pb_field_t field = {
@@ -225,7 +226,7 @@ pb_field_destroy(pb_field_t *field) {
 extern int
 pb_field_match(pb_field_t *field, const void *value) {
   assert(field && value);
-  if (__unlikely(!pb_field_valid(field) || pb_field_align(field)))
+  if (unlikely_(!pb_field_valid(field) || pb_field_align(field)))
     return 0;
 
   /* Directly compare fixed-size fields */
@@ -235,7 +236,7 @@ pb_field_match(pb_field_t *field, const void *value) {
 
   /* Allocate enough temporary space for field-agnostic compare */
   void *temp = alloca(size);
-  if (__unlikely(pb_field_get(field, temp)))
+  if (unlikely_(pb_field_get(field, temp)))
     return 0;
 
   /* Compare field value according to type */
@@ -262,7 +263,7 @@ pb_field_match(pb_field_t *field, const void *value) {
 extern pb_error_t
 pb_field_get(pb_field_t *field, void *value) {
   assert(field && value);
-  if (__unlikely(!pb_field_valid(field) || pb_field_align(field)))
+  if (unlikely_(!pb_field_valid(field) || pb_field_align(field)))
     return PB_ERROR_INVALID;
   pb_error_t error = PB_ERROR_NONE;
 
@@ -289,17 +290,30 @@ pb_field_get(pb_field_t *field, void *value) {
 extern pb_error_t
 pb_field_put(pb_field_t *field, const void *value) {
   assert(field && value);
-  if (__unlikely(!pb_field_valid(field)))
+  if (unlikely_(!pb_field_valid(field)))
     return PB_ERROR_INVALID;
   pb_error_t error = PB_ERROR_NONE;
 
   /* Write new value according to wiretype */
+
+  pb_type_t type = pb_field_descriptor_type(field->descriptor);
   switch (pb_field_descriptor_wiretype(field->descriptor)) {
 
-    /* Write a variabled-sized integer through a buffer */
+    /* Write a variable-sized integer through a buffer */
     case PB_WIRETYPE_VARINT: {
+
+      #ifndef NDEBUG
+
+          /* Assert valid value for enum field */
+          if (type == PB_TYPE_ENUM)
+            assert(pb_enum_descriptor_value_by_number(
+              pb_field_descriptor_reference(field->descriptor),
+                *(const pb_enum_t *)value));
+
+      #endif /* NDEBUG */
+
+      /* Create buffer and write variable-sized integer */
       pb_binary_buffer_t buffer = pb_binary_buffer_create();
-      pb_type_t type = pb_field_descriptor_type(field->descriptor);
       if (write_jump[type] && !(error = write_jump[type](&buffer, value)))
         error = pb_part_write(&(field->part),
           pb_binary_buffer_data(&buffer),

@@ -27,6 +27,7 @@ SUBDIRS = \
 	binary-buffer \
 	binary-stream \
 	cursor \
+	enum-descriptor \
 	field \
 	journal \
 	message \
@@ -44,6 +45,7 @@ TESTS = \
 	binary-buffer/test \
 	binary-stream/test \
 	cursor/test \
+	enum-descriptor/test \
 	field/test \
 	journal/test \
 	message/test \

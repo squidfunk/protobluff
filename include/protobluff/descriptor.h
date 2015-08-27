@@ -24,6 +24,7 @@
 #define PB_INCLUDE_DESCRIPTOR_H
 
 #include <protobluff/common.h>
+#include <protobluff/enum/descriptor.h>
 #include <protobluff/field/descriptor.h>
 #include <protobluff/message/descriptor.h>
 
