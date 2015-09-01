@@ -57,6 +57,13 @@ pb_binary_write(
 
 PB_WARN_UNUSED_RESULT
 extern pb_error_t
+pb_binary_append(
+  pb_binary_t *binary,                 /* Binary */
+  const uint8_t data[],                /* Binary data */
+  size_t size);                        /* Binary size */
+
+PB_WARN_UNUSED_RESULT
+extern pb_error_t
 pb_binary_clear(
   pb_binary_t *binary,                 /* Binary */
   size_t start,                        /* Start offset */

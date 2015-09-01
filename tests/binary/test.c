@@ -649,6 +649,186 @@ START_TEST(test_write_fail_zero_copy) {
 } END_TEST
 
 /*
+ * Append data to a binary.
+ */
+START_TEST(test_append) {
+  const uint8_t data[] = "SOME DATA";
+  const size_t  size   = 9;
+
+  /* Create binary */
+  pb_binary_t binary = pb_binary_create(data, size);
+
+  /* Assert binary validity and error */
+  fail_unless(pb_binary_valid(&binary));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_binary_error(&binary));
+
+  /* Update binary: "SOME DATA" => "SOME DATA IS AWESOME" */
+  uint8_t new_data[] = " IS AWESOME";
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_binary_append(&binary, new_data, 11));
+
+  /* Assert binary size */
+  fail_if(pb_binary_empty(&binary));
+  ck_assert_uint_eq(size + 11, pb_binary_size(&binary));
+
+  /* Assert new contents and different location */
+  fail_if(memcmp("SOME DATA IS AWESOME",
+    pb_binary_data(&binary), size + 11));
+  ck_assert_ptr_ne(new_data, pb_binary_data(&binary));
+  ck_assert_ptr_ne(data,     pb_binary_data(&binary));
+
+  /* Free all allocated memory */
+  pb_binary_destroy(&binary);
+} END_TEST
+
+/*
+ * Append data to an empty binary.
+ */
+START_TEST(test_append_empty) {
+  const uint8_t data[] = "SOME DATA";
+  const size_t  size   = 9;
+
+  /* Create binary */
+  pb_binary_t binary = pb_binary_create_empty();
+
+  /* Assert binary validity and error */
+  fail_unless(pb_binary_valid(&binary));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_binary_error(&binary));
+
+  /* Update binary: "" => "SOME DATA" */
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_binary_append(&binary, data, size));
+
+  /* Assert binary size */
+  fail_if(pb_binary_empty(&binary));
+  ck_assert_uint_eq(size, pb_binary_size(&binary));
+
+  /* Assert same contents but different location */
+  fail_if(memcmp(data, pb_binary_data(&binary), size));
+  ck_assert_ptr_ne(data, pb_binary_data(&binary));
+
+  /* Free all allocated memory */
+  pb_binary_destroy(&binary);
+} END_TEST
+
+/*
+ * Append data to an invalid binary.
+ */
+START_TEST(test_append_invalid) {
+  pb_binary_t binary = pb_binary_create_invalid();
+
+  /* Assert binary validity and error */
+  fail_if(pb_binary_valid(&binary));
+  ck_assert_uint_eq(PB_ERROR_ALLOC, pb_binary_error(&binary));
+
+  /* Try to update binary */
+  uint8_t data[] = "THIS WON'T WORK ANYWAY";
+  ck_assert_uint_eq(PB_ERROR_INVALID,
+    pb_binary_append(&binary, data, 22));
+
+  /* Assert binary validity and error again */
+  fail_if(pb_binary_valid(&binary));
+  ck_assert_uint_eq(PB_ERROR_ALLOC, pb_binary_error(&binary));
+
+  /* Assert binary size */
+  fail_unless(pb_binary_empty(&binary));
+  ck_assert_uint_eq(0, pb_binary_size(&binary));
+
+  /* Assert empty binary */
+  ck_assert_ptr_eq(NULL, pb_binary_data(&binary));
+
+  /* Free all allocated memory */
+  pb_binary_destroy(&binary);
+} END_TEST
+
+/*
+ * Append data to a binary for which allocation failed.
+ */
+START_TEST(test_append_fail_alloc) {
+  const uint8_t data[] = "SOME DATA";
+  const size_t  size   = 9;
+
+  /* Patch allocator */
+  pb_allocator_t allocator = {
+    .proc = {
+      .alloc   = allocator_alloc_fail,
+      .realloc = allocator_default.proc.realloc,
+      .free    = allocator_default.proc.free
+    }
+  };
+
+  /* Create binary */
+  pb_binary_t binary =
+    pb_binary_create_with_allocator(&allocator, data, size);
+
+  /* Assert binary validity and error */
+  fail_if(pb_binary_valid(&binary));
+  ck_assert_uint_eq(PB_ERROR_ALLOC, pb_binary_error(&binary));
+
+  /* Try to update binary */
+  uint8_t new_data[] = "THIS WILL FAIL";
+  ck_assert_uint_eq(PB_ERROR_INVALID,
+    pb_binary_append(&binary, new_data, 14));
+
+  /* Assert binary validity and error again */
+  fail_if(pb_binary_valid(&binary));
+  ck_assert_uint_eq(PB_ERROR_ALLOC, pb_binary_error(&binary));
+
+  /* Assert binary size */
+  fail_unless(pb_binary_empty(&binary));
+  ck_assert_uint_eq(0, pb_binary_size(&binary));
+
+  /* Assert empty binary */
+  ck_assert_ptr_eq(NULL, pb_binary_data(&binary));
+
+  /* Free all allocated memory */
+  pb_binary_destroy(&binary);
+} END_TEST
+
+/*
+ * Append data to a binary for which reallocation will always fail.
+ */
+START_TEST(test_append_fail_realloc) {
+  const uint8_t data[] = "SOME DATA";
+  const size_t  size   = 9;
+
+  /* Patch allocator */
+  pb_allocator_t allocator = {
+    .proc = {
+      .alloc   = allocator_default.proc.alloc,
+      .realloc = allocator_realloc_fail,
+      .free    = allocator_default.proc.free
+    }
+  };
+
+  /* Create binary */
+  pb_binary_t binary =
+    pb_binary_create_with_allocator(&allocator, data, size);
+
+  /* Assert binary validity and error */
+  fail_unless(pb_binary_valid(&binary));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_binary_error(&binary));
+
+  /* Iteratively grow binary */
+  uint8_t new_data[] = "THIS WILL FAIL";
+  for (size_t s = 10; s < 14; s++) {
+    ck_assert_uint_eq(PB_ERROR_ALLOC,
+      pb_binary_append(&binary, new_data, s));
+
+    /* Assert binary size */
+    fail_if(pb_binary_empty(&binary));
+    ck_assert_uint_eq(size, pb_binary_size(&binary));
+  }
+
+  /* Assert binary validity and error again */
+  fail_unless(pb_binary_valid(&binary));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_binary_error(&binary));
+
+  /* Free all allocated memory */
+  pb_binary_destroy(&binary);
+} END_TEST
+
+/*
  * Clear data from a binary.
  */
 START_TEST(test_clear) {
@@ -970,6 +1150,15 @@ main(void) {
   tcase_add_test(tcase, test_write_fail_alloc);
   tcase_add_test(tcase, test_write_fail_realloc);
   tcase_add_test(tcase, test_write_fail_zero_copy);
+  suite_add_tcase(suite, tcase);
+
+  /* Add tests to test case "append" */
+  tcase = tcase_create("append");
+  tcase_add_test(tcase, test_append);
+  tcase_add_test(tcase, test_append_empty);
+  tcase_add_test(tcase, test_append_invalid);
+  tcase_add_test(tcase, test_append_fail_alloc);
+  tcase_add_test(tcase, test_append_fail_realloc);
   suite_add_tcase(suite, tcase);
 
   /* Add tests to test case "clear" */

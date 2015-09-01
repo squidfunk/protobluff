@@ -291,7 +291,7 @@ pb_binary_append(
   if (unlikely_(!pb_binary_valid(binary)))
     return PB_ERROR_INVALID;
 
-  /* Ensure non-zero-copy binary */
+  /* Assert non-zero-copy binary */
   pb_binary_internal_t *internal = binary->_;
   assert(internal != &internal_zero_copy);
 
