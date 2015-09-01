@@ -30,7 +30,6 @@
 #include <protobluff/binary.h>
 
 #include "lib/allocator.h"
-#include "lib/binary/buffer.h"
 #include "lib/common.h"
 #include "lib/journal.h"
 
@@ -60,6 +59,12 @@ PB_WARN_UNUSED_RESULT
 extern pb_error_t
 pb_binary_clear(
   pb_binary_t *binary,                 /* Binary */
+  size_t start,                        /* Start offset */
+  size_t end);                         /* End offset */
+
+extern void
+pb_binary_dump_range(
+  const pb_binary_t *binary,           /* Binary */
   size_t start,                        /* Start offset */
   size_t end);                         /* End offset */
 

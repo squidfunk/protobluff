@@ -22,6 +22,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -273,6 +274,43 @@ pb_binary_write(
 }
 
 /*!
+ * Append data to a binary.
+ *
+ * The binary's internal state is fully recoverable. If allocation fails upon
+ * growing the binary, the binary is not altered.
+ *
+ * \param[in,out] binary Binary
+ * \param[in]     data[] Binary data
+ * \param[in]     size   Binary size
+ * \return               Error code
+ */
+extern pb_error_t
+pb_binary_append(
+    pb_binary_t *binary, const uint8_t data[], size_t size) {
+  assert(binary && data && size);
+  if (unlikely_(!pb_binary_valid(binary)))
+    return PB_ERROR_INVALID;
+
+  /* Ensure non-zero-copy binary */
+  pb_binary_internal_t *internal = binary->_;
+  assert(internal != &internal_zero_copy);
+
+  /* Binary grows, so grow space and then move data */
+  uint8_t *new_data = pb_allocator_realloc(internal->allocator,
+    binary->data, binary->size + size);
+  if (new_data) {
+    binary->data = new_data;
+  } else {
+    return PB_ERROR_ALLOC;
+  }
+
+  /* Finally, copy data and update binary size */
+  memcpy(&(binary->data[binary->size]), data, size);
+  binary->size += size;
+  return PB_ERROR_NONE;
+}
+
+/*!
  * Clear data from a binary.
  *
  * This method may not be called on zero-copy binaries, as they cannot change
@@ -321,3 +359,73 @@ pb_binary_clear(pb_binary_t *binary, size_t start, size_t end) {
   }
   return PB_ERROR_NONE;
 }
+
+/* LCOV_EXCL_START >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> */
+
+/*!
+ * Dump a binary.
+ *
+ * \warning This function may not be used in production, and is therefore also
+ * excluded from coverage analysis. It is only meant for debugging!
+ *
+ * \param[in] binary Binary
+ */
+extern void
+pb_binary_dump(const pb_binary_t *binary) {
+  pb_binary_dump_range(binary, 0, binary->size);
+}
+
+/*!
+ * Dump a binary within a given range.
+ *
+ * \warning This function may not be used in production, and is therefore also
+ * excluded from coverage analysis. It is only meant for debugging!
+ *
+ * \param[in] binary Binary
+ * \param[in] start  Start offset
+ * \param[in] end    End offset
+ */
+extern void
+pb_binary_dump_range(const pb_binary_t *binary, size_t start, size_t end) {
+  assert(binary);
+  assert(pb_binary_valid(binary));
+  assert(start <= end && end <= binary->size);
+
+  /* Print statistics */
+  fprintf(stderr, "\n");
+  fprintf(stderr, " % 4zd  offset start\n", start);
+  fprintf(stderr, " % 4zd  offset end\n", end);
+  fprintf(stderr, " % 4zd  length\n", end - start);
+
+  /* Print delimiter */
+  fprintf(stderr, " ----  --------------------------------------- "
+                  " -------------------\n");
+
+  /* Now iterate binary in blocks */
+  for (size_t o = start, width = 10; o < end; o += width) {
+
+    /* Dump numeric representation */
+    fprintf(stderr, " % 4zd ", o - start);
+    for (size_t p = o; p < o + width && p < end; ++p)
+      fprintf(stderr, "% 4d", pb_binary_data_at(binary, p));
+
+    /* Fill up missing characters */
+    if (o + width > end)
+      for (size_t f = width - (end - start) % width; f > 0; f--)
+        fprintf(stderr, "    ");
+
+    /* Dump ASCII representation */
+    fprintf(stderr, "  ");
+    for (size_t p = o; p < o + width && p < end; ++p)
+      fprintf(stderr, "%c ", pb_binary_data_at(binary, p) > 31 &&
+        pb_binary_data_at(binary, p) < 127
+          ? pb_binary_data_at(binary, p)
+          : '.');
+
+    /* Reset and break */
+    fprintf(stderr, "\n");
+  }
+  fprintf(stderr, "\n");
+}
+
+/* LCOV_EXCL_STOP <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */

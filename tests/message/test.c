@@ -28,6 +28,7 @@
 #include <protobluff/descriptor.h>
 
 #include "lib/binary.h"
+#include "lib/binary/buffer.h"
 #include "lib/common.h"
 #include "lib/cursor.h"
 #include "lib/field.h"

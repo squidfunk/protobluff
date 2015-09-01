@@ -80,6 +80,10 @@ PB_EXPORT pb_error_t
 pb_binary_error(
   const pb_binary_t *binary);          /* Binary */
 
+PB_EXPORT void
+pb_binary_dump(
+  const pb_binary_t *binary);          /* Binary */
+
 /* ----------------------------------------------------------------------------
  * Macros
  * ------------------------------------------------------------------------- */

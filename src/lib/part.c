@@ -657,8 +657,7 @@ pb_part_align(pb_part_t *part) {
  * To perform a non-destructive alignment before printing, a copy is created to
  * be used for all subsequent operations.
  *
- * \warning This function may not be used in production, and is therefore also
- * excluded from coverage analysis. It is only meant for debugging!
+ * \warning Don't use this in production, only for debugging.
  *
  * \param[in] part Part
  */
@@ -666,53 +665,15 @@ extern void
 pb_part_dump(const pb_part_t *part) {
   assert(part);
   assert(pb_part_valid(part));
-  fprintf(stderr, "\n");
 
   /* Non-destructive alignment for printing */
   pb_part_t copy = pb_part_copy(part);
   if (!pb_part_aligned(&copy) && pb_part_align(&copy)) {
     fprintf(stderr, "ERROR - libprotobluff: invalid part\n");
   } else {
-    const size_t start = copy.offset.start,
-                 end   = copy.offset.end;
-
-    /* Print statistics */
-    fprintf(stderr, " % 4zd  offset start\n", start);
-    fprintf(stderr, " % 4zd  offset end\n", end);
-    fprintf(stderr, " % 4zd  length\n", end - start);
-
-    /* Print delimiter */
-    fprintf(stderr, " ----  --------------------------------------- "
-                    " -------------------\n");
-
-    /* Now iterate binary in blocks */
-    const pb_binary_t *binary = pb_part_binary(&copy);
-    for (size_t o = start, width = 10; o < end; o += width) {
-
-      /* Dump numeric representation */
-      fprintf(stderr, " % 4zd ", o - start);
-      for (size_t p = o; p < o + width && p < end; ++p)
-        fprintf(stderr, "% 4d", pb_binary_data_at(binary, p));
-
-      /* Fill up missing characters */
-      if (o + width > end)
-        for (size_t f = width - (end - start) % width; f > 0; f--)
-          fprintf(stderr, "    ");
-
-      /* Dump ASCII representation */
-      fprintf(stderr, "  ");
-      for (size_t p = o; p < o + width && p < end; ++p)
-        fprintf(stderr, "%c ", pb_binary_data_at(binary, p) > 31 &&
-          pb_binary_data_at(binary, p) < 127
-            ? pb_binary_data_at(binary, p)
-            : '.');
-
-      /* Reset and break */
-      fprintf(stderr, "\n");
-    }
+    pb_binary_dump_range(part->binary, copy.offset.start, copy.offset.end);
   }
   pb_part_destroy(&copy);
-  fprintf(stderr, "\n");
 }
 
 /* LCOV_EXCL_STOP <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
