@@ -116,7 +116,7 @@ namespace protobluff {
     }
 
     /* Extract default definition */
-    if (descriptor_->has_default_value() || descriptor_->enum_type()) {
+    if (HasDefault()) {
       vector<string> parts;
 
       /* Push name of containing type and variable to parts */
@@ -237,7 +237,8 @@ namespace protobluff {
    */
   bool Field::
   HasDefault() const {
-    return descriptor_->has_default_value() || descriptor_->enum_type();
+    return descriptor_->has_default_value() ||
+      (descriptor_->enum_type() && descriptor_->is_optional());
   }
 
   /*!
@@ -248,7 +249,7 @@ namespace protobluff {
   void Field::
   GenerateDefault(Printer *printer) const {
     assert(printer);
-    if (descriptor_->has_default_value() || descriptor_->enum_type()) {
+    if (HasDefault()) {
       printer->Print(variables_,
         "/* `signature` : default */\n"
         "static const `default.type`\n"
@@ -287,15 +288,26 @@ namespace protobluff {
 
     /* Generate field descriptor for enum */
     } else if (descriptor_->enum_type()) {
-      printer->Print(variables_,
-        "\n"
-        "/* `label` `type` `name` = `tag` */\n"
-        "{ .tag   = `descriptor.tag`,\n"
-        "  .name  = \"`descriptor.name`\",\n"
-        "  .type  = `descriptor.type`,\n"
-        "  .label = `descriptor.label`,\n"
-        "  .refer = &`descriptor.symbol`_descriptor,\n"
-        "  .value = &`default.symbol`_default }");
+      if (descriptor_->is_optional()) {
+        printer->Print(variables_,
+          "\n"
+          "/* `label` `type` `name` = `tag` */\n"
+          "{ .tag   = `descriptor.tag`,\n"
+          "  .name  = \"`descriptor.name`\",\n"
+          "  .type  = `descriptor.type`,\n"
+          "  .label = `descriptor.label`,\n"
+          "  .refer = &`descriptor.symbol`_descriptor,\n"
+          "  .value = &`default.symbol`_default }");
+      } else {
+        printer->Print(variables_,
+          "\n"
+          "/* `label` `type` `name` = `tag` */\n"
+          "{ .tag   = `descriptor.tag`,\n"
+          "  .name  = \"`descriptor.name`\",\n"
+          "  .type  = `descriptor.type`,\n"
+          "  .label = `descriptor.label`,\n"
+          "  .refer = &`descriptor.symbol`_descriptor }");
+      }
 
     /* Generate field descriptor with default value */
     } else if (descriptor_->has_default_value()) {
