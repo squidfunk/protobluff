@@ -439,8 +439,8 @@ namespace protobluff {
       case FieldDescriptor::TYPE_DOUBLE:
         printer->Print(variables_,
           "/* `signature` : raw */\n"
-          "#define `define.message`_raw_`define.name`(message) \\\n"
-          "  (`define.message`_descriptor_assert(message), \\\n"
+          "#define `define.symbol`_raw_`define.name`(message) \\\n"
+          "  (`define.symbol`_descriptor_assert(message), \\\n"
           "    (pb_message_raw((message), `define.tag`)))\n"
           "\n");
         break;
