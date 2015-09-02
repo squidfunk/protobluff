@@ -36,9 +36,9 @@
 static pb_enum_descriptor_t
 descriptor = { {
   (const pb_enum_descriptor_value_t []){
+    { 0L, "V00" },
     { 1L, "V01" },
-    { 2L, "V02" },
-    { 3L, "V03" }
+    { 2L, "V02" }
   }, 3 } };
 
 static pb_enum_descriptor_t
@@ -68,10 +68,10 @@ START_TEST(test_iterator) {
 
   /* Walk through enum descriptor values forwards */
   fail_unless(pb_enum_descriptor_iter_begin(&it));
-  for (size_t v = 1; v <= 3; v++, pb_enum_descriptor_iter_next(&it)) {
+  for (size_t v = 0; v < 3; v++, pb_enum_descriptor_iter_next(&it)) {
     const pb_enum_descriptor_value_t *descriptor =
       pb_enum_descriptor_iter_current(&it);
-    ck_assert_uint_eq(v - 1, pb_enum_descriptor_iter_pos(&it));
+    ck_assert_uint_eq(v, pb_enum_descriptor_iter_pos(&it));
 
     /* Assemble value name */
     char name[5];
@@ -87,10 +87,11 @@ START_TEST(test_iterator) {
 
   /* Walk through enum descriptor values backwards */
   fail_unless(pb_enum_descriptor_iter_end(&it));
-  for (size_t v = 3; v >= 1; v--, pb_enum_descriptor_iter_prev(&it)) {
+  size_t v = 2;
+  do {
     const pb_enum_descriptor_value_t *descriptor =
       pb_enum_descriptor_iter_current(&it);
-    ck_assert_uint_eq(v - 1, pb_enum_descriptor_iter_pos(&it));
+    ck_assert_uint_eq(v, pb_enum_descriptor_iter_pos(&it));
 
     /* Assemble value name */
     char name[5];
@@ -99,7 +100,7 @@ START_TEST(test_iterator) {
     /* Assert value number and name */
     ck_assert_uint_eq(v, pb_enum_descriptor_value_number(descriptor));
     fail_if(strcmp(name, pb_enum_descriptor_value_name(descriptor)));
-  }
+  } while (v--, pb_enum_descriptor_iter_prev(&it));
 
   /* Assert enum descriptor iterator validity again */
   fail_if(pb_enum_descriptor_iter_prev(&it));
@@ -131,8 +132,8 @@ START_TEST(test_iterator_empty) {
  * Retrieve the value for a given number from an enum descriptor.
  */
 START_TEST(test_value_by_number) {
-  for (size_t v = 1; v <= 3; v++)
-    ck_assert_ptr_eq(&(descriptor.value.data[v - 1]),
+  for (size_t v = 0; v < 3; v++)
+    ck_assert_ptr_eq(&(descriptor.value.data[v]),
       pb_enum_descriptor_value_by_number(&descriptor, v));
 } END_TEST
 
@@ -180,12 +181,12 @@ START_TEST(test_value_by_number_scattered_absent) {
  * Retrieve the value for a given name from an enum descriptor.
  */
 START_TEST(test_value_by_name) {
-  for (size_t v = 1; v <= 3; v++) {
+  for (size_t v = 0; v < 3; v++) {
     char name[5];
     snprintf(name, 5, "V%02zd", v);
 
     /* Assert value descriptor */
-    ck_assert_ptr_eq(&(descriptor.value.data[v - 1]),
+    ck_assert_ptr_eq(&(descriptor.value.data[v]),
       pb_enum_descriptor_value_by_name(&descriptor, name));
   }
 } END_TEST
@@ -195,7 +196,7 @@ START_TEST(test_value_by_name) {
  */
 START_TEST(test_value_by_name_absent) {
   ck_assert_ptr_eq(NULL,
-    pb_enum_descriptor_value_by_name(&descriptor, "V00"));
+    pb_enum_descriptor_value_by_name(&descriptor, "V03"));
 } END_TEST
 
 /*
@@ -203,7 +204,7 @@ START_TEST(test_value_by_name_absent) {
  */
 START_TEST(test_value_by_name_empty) {
   ck_assert_ptr_eq(NULL,
-    pb_enum_descriptor_value_by_name(&descriptor_empty, "F00"));
+    pb_enum_descriptor_value_by_name(&descriptor_empty, "V00"));
 } END_TEST
 
 /* ----------------------------------------------------------------------------

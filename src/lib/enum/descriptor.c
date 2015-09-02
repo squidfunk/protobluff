@@ -58,15 +58,18 @@
 extern const struct pb_enum_descriptor_value_t *
 pb_enum_descriptor_value_by_number(
     const pb_enum_descriptor_t *descriptor, pb_enum_t number) {
-  assert(descriptor && number);
-  for (size_t v = min(number, descriptor->value.size); v > 0; v--) {
-    if (pb_enum_descriptor_value_number(
-        &(descriptor->value.data[v - 1])) == number) {
-      return &(descriptor->value.data[v - 1]);
-    } else if (pb_enum_descriptor_value_number(
-        &(descriptor->value.data[v - 1])) < number) {
-      break;
-    }
+  assert(descriptor);
+  if (descriptor->value.size) {
+    size_t v = min(number, descriptor->value.size);
+    do {
+      if (pb_enum_descriptor_value_number(
+          &(descriptor->value.data[v])) == number) {
+        return &(descriptor->value.data[v]);
+      } else if (pb_enum_descriptor_value_number(
+          &(descriptor->value.data[v])) < number) {
+        break;
+      }
+    } while (v--);
   }
   return NULL;
 }
