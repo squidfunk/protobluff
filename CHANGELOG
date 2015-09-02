@@ -1,3 +1,10 @@
+protobluff-0.2.1 (2015-09-02)
+
+  * Fixed bug in lookup of enum descriptor value with number 0
+  * Fixed invalid reference in raw accessor generator
+  * Added pb_binary_append to prepare streaming API
+  * Added convenience function pb_binary_dump to dump binaries
+
 protobluff-0.2.0 (2015-08-27)
 
   This release adds full support for extensions and proper descriptors for
