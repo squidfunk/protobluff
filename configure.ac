@@ -24,7 +24,7 @@
 
 AC_PREREQ(2.69)
 
-AC_INIT([protobluff], [0.2.1], [martin.donath@squidfunk.com])
+AC_INIT([protobluff], [0.2.2], [martin.donath@squidfunk.com])
 AM_INIT_AUTOMAKE([subdir-objects foreign])
 
 : ${CFLAGS=""}
@@ -45,7 +45,7 @@ AC_CONFIG_MACRO_DIR([m4])
 # -----------------------------------------------------------------------------
 
 # Library versioning as <current:revision:age>
-AC_SUBST([VERSION_INFO], [1:0:0])
+AC_SUBST([VERSION_INFO], [1:2:0])
 
 # Checks for programs
 AC_PROG_AWK

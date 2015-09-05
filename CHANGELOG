@@ -1,9 +1,17 @@
+protobluff-0.2.2 (2015-09-05)
+
+  * Fixed circular message type references in code generator
+  * Added chunk allocator implementation
+  * Added tests for chunk allocator
+  * Removed implicit default values for non-optional enums
+
 protobluff-0.2.1 (2015-09-02)
 
   * Fixed bug in lookup of enum descriptor value with number 0
   * Fixed invalid reference in raw accessor generator
-  * Added pb_binary_append to prepare streaming API
-  * Added convenience function pb_binary_dump to dump binaries
+  * Added pb_binary_append() to prepare streaming interface
+  * Added further tests for binaries
+  * Added convenience function pb_binary_dump() to dump binaries
 
 protobluff-0.2.0 (2015-08-27)
 
@@ -26,8 +34,8 @@ protobluff-0.2.0 (2015-08-27)
 
   * Complete overhaul of code generator
   * Fixed order of message descriptor fields in generated code
-  * Added generators for enums and enum values
   * Added generators for extensions
+  * Added generators for enums and enum values
   * Added implicit default values for enumerations (first value in definition)
   * Removed const qualifier on generated message descriptors for extensions
   * Removed double underscore prefixes in generated code
