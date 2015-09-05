@@ -26,6 +26,7 @@
 lib_LTLIBRARIES = libprotobluff.la
 libprotobluff_la_SOURCES = \
 	allocator.c \
+	allocator/chunk.c \
 	binary.c \
 	binary/buffer.c \
 	binary/stream.c \

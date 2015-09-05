@@ -26,6 +26,8 @@
 #include <assert.h>
 #include <stddef.h>
 
+#include <protobluff/common.h>
+
 /* ----------------------------------------------------------------------------
  * Type definitions
  * ------------------------------------------------------------------------- */
@@ -63,6 +65,23 @@ typedef struct pb_allocator_t {
 
 extern pb_allocator_t
 allocator_default;                     /*!< System-default allocator */
+
+/* ----------------------------------------------------------------------------
+ * Interface
+ * ------------------------------------------------------------------------- */
+
+PB_WARN_UNUSED_RESULT
+PB_EXPORT pb_allocator_t
+pb_allocator_chunk_create();
+
+PB_WARN_UNUSED_RESULT
+PB_EXPORT pb_allocator_t
+pb_allocator_chunk_create_with_capacity(
+  size_t capacity);                    /* Chunk capacity */
+
+PB_EXPORT void
+pb_allocator_chunk_destroy(
+  pb_allocator_t *allocator);          /* Allocator */
 
 /* ----------------------------------------------------------------------------
  * Macros

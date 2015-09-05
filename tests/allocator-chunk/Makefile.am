@@ -19,38 +19,18 @@
 # IN THE SOFTWARE.
 
 # -----------------------------------------------------------------------------
-# Subdirectories
+# Test suite: protobluff/allocator/chunk
 # -----------------------------------------------------------------------------
 
-SUBDIRS = \
-	allocator-chunk \
-	binary \
-	binary-buffer \
-	binary-stream \
-	cursor \
-	enum-descriptor \
-	field \
-	journal \
-	message \
-	message-descriptor \
-	message-nested \
-	part \
-	.
-
-# -----------------------------------------------------------------------------
-# Tests
-# -----------------------------------------------------------------------------
-
-TESTS = \
-	allocator-chunk/test \
-	binary/test \
-	binary-buffer/test \
-	binary-stream/test \
-	cursor/test \
-	enum-descriptor/test \
-	field/test \
-	journal/test \
-	message/test \
-	message-descriptor/test \
-	message-nested/test \
-	part/test
+# Build protobluff/allocator/chunk test suite
+check_PROGRAMS = test
+test_SOURCES = \
+	test.c
+test_CFLAGS = \
+	-g @check_CFLAGS@
+test_CPPFLAGS = \
+	-I@top_builddir@/src \
+	-I@top_builddir@/include
+test_LDADD = \
+	@top_builddir@/src/lib/libprotobluff.la \
+	@check_LIBS@

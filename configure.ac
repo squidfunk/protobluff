@@ -24,7 +24,7 @@
 
 AC_PREREQ(2.69)
 
-AC_INIT([protobluff], [0.2.0], [martin.donath@squidfunk.com])
+AC_INIT([protobluff], [0.2.1], [martin.donath@squidfunk.com])
 AM_INIT_AUTOMAKE([subdir-objects foreign])
 
 : ${CFLAGS=""}
@@ -182,6 +182,7 @@ AC_CONFIG_FILES([ \
 	src/lib/Makefile \
 	src/Makefile \
 	tests/Makefile \
+	tests/allocator-chunk/Makefile \
 	tests/binary/Makefile \
 	tests/binary-buffer/Makefile \
 	tests/binary-stream/Makefile \
