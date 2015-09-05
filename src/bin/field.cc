@@ -634,12 +634,35 @@ namespace protobluff {
   /*!
    * Check whether a field's nested message type should be traced.
    *
+   * In general, nested message types are traced if they adhere to the
+   * following three criteria:
+   *
+   * -# The field is not repeated, as repeated nested messages must be created
+   *    using a cursor to ensure proper handling.
+   *
+   * -# The nested message type is not part of a circular definition, i.e. does
+   *    not point to a parent message type.
+   *
+   * -# The nested message type is defined within the path of the current
+   *    message type, meaning within the current or a parent message type.
+   *
    * \return Test result
    */
   bool Field::
   ShouldTrace() const {
     assert(descriptor_->message_type());
-    return !descriptor_->is_repeated() && HasPrefixString(
+    if (descriptor_->is_repeated())
+      return false;
+
+    /* Check for non-circular message type reference */
+    const Descriptor *descriptor = descriptor_->containing_type();
+    do {
+      if (descriptor_->message_type() == descriptor)
+        return false;
+    } while ((descriptor = descriptor->containing_type()));
+
+    /* Check if message type is part of a parent message type */
+    return HasPrefixString(
       descriptor_->message_type()->full_name(),
       descriptor_->containing_type()->full_name());
   }
