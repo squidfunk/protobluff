@@ -72,11 +72,18 @@ START_TEST(test_alloc) {
  */
 START_TEST(test_alloc_invalid) {
   pb_allocator_t allocator = pb_allocator_chunk_create();
-  allocator.data = NULL;
+  pb_allocator_t allocator_invalid = {
+    .proc = {
+      .alloc   = allocator.proc.alloc,
+      .realloc = allocator.proc.realloc,
+      .free    = allocator.proc.free
+    },
+    .data = NULL
+  };
 
   /* Try to allocate blocks */
-  ck_assert_ptr_eq(NULL, pb_allocator_alloc(&allocator, 16));
-  ck_assert_ptr_eq(NULL, pb_allocator_alloc(&allocator, 16));
+  ck_assert_ptr_eq(NULL, pb_allocator_alloc(&allocator_invalid, 16));
+  ck_assert_ptr_eq(NULL, pb_allocator_alloc(&allocator_invalid, 16));
 
   /* Free all allocated memory */
   pb_allocator_chunk_destroy(&allocator);
@@ -127,14 +134,21 @@ START_TEST(test_realloc_over_capacity) {
  */
 START_TEST(test_realloc_invalid) {
   pb_allocator_t allocator = pb_allocator_chunk_create();
-  allocator.data = NULL;
+  pb_allocator_t allocator_invalid = {
+    .proc = {
+      .alloc   = allocator.proc.alloc,
+      .realloc = allocator.proc.realloc,
+      .free    = allocator.proc.free
+    },
+    .data = NULL
+  };
 
   /* Allocate a block */
-  void *block = pb_allocator_realloc(&allocator, NULL, 16);
+  void *block = pb_allocator_realloc(&allocator_invalid, NULL, 16);
   ck_assert_ptr_eq(NULL, block);
 
   /* Reallocate the block */
-  block = pb_allocator_realloc(&allocator, block, 128);
+  block = pb_allocator_realloc(&allocator_invalid, block, 128);
   ck_assert_ptr_eq(NULL, block);
 
   /* Free all allocated memory */
@@ -201,11 +215,18 @@ START_TEST(test_free_unordered) {
  */
 START_TEST(test_free_invalid) {
   pb_allocator_t allocator = pb_allocator_chunk_create();
-  allocator.data = NULL;
+  pb_allocator_t allocator_invalid = {
+    .proc = {
+      .alloc   = allocator.proc.alloc,
+      .realloc = allocator.proc.realloc,
+      .free    = allocator.proc.free
+    },
+    .data = NULL
+  };
 
   /* Try to free a non-allocated block */
   char block[] = "DOESN'T MATTER";
-  pb_allocator_free(&allocator, block);
+  pb_allocator_free(&allocator_invalid, block);
 
   /* Free all allocated memory */
   pb_allocator_chunk_destroy(&allocator);
