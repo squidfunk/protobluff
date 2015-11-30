@@ -25,13 +25,8 @@
 
 #include <stddef.h>
 
-#include <protobluff/common.h>
-
-/* ----------------------------------------------------------------------------
- * Forward declarations
- * ------------------------------------------------------------------------- */
-
-struct pb_message_t;
+#include <protobluff/message/common.h>
+#include <protobluff/message/message.h>
 
 /* ----------------------------------------------------------------------------
  * Interface
@@ -39,13 +34,13 @@ struct pb_message_t;
 
 PB_EXPORT int
 pb_message_nested_has(
-  struct pb_message_t *message,        /* Message */
+  pb_message_t *message,               /* Message */
   const pb_tag_t tags[],               /* Tags */
   size_t size);                        /* Tag count */
 
 PB_EXPORT int
 pb_message_nested_match(
-  struct pb_message_t *message,        /* Message */
+  pb_message_t *message,               /* Message */
   const pb_tag_t tags[],               /* Tags */
   size_t size,                         /* Tag count */
   const void *value);                  /* Pointer holding value */
@@ -53,7 +48,7 @@ pb_message_nested_match(
 PB_WARN_UNUSED_RESULT
 PB_EXPORT pb_error_t
 pb_message_nested_get(
-  struct pb_message_t *message,        /* Message */
+  pb_message_t *message,               /* Message */
   const pb_tag_t tags[],               /* Tags */
   size_t size,                         /* Tag count */
   void *value);                        /* Pointer receiving value */
@@ -61,7 +56,7 @@ pb_message_nested_get(
 PB_WARN_UNUSED_RESULT
 PB_EXPORT pb_error_t
 pb_message_nested_put(
-  struct pb_message_t *message,        /* Message */
+  pb_message_t *message,               /* Message */
   const pb_tag_t tags[],               /* Tags */
   size_t size,                         /* Tag count */
   const void *value);                  /* Pointer holding value */
@@ -69,13 +64,13 @@ pb_message_nested_put(
 PB_WARN_UNUSED_RESULT
 PB_EXPORT pb_error_t
 pb_message_nested_erase(
-  struct pb_message_t *message,        /* Message */
+  pb_message_t *message,               /* Message */
   const pb_tag_t tags[],               /* Tags */
   size_t size);                        /* Tag count */
 
 PB_EXPORT void *
 pb_message_nested_raw(
-  struct pb_message_t *message,        /* Message */
+  pb_message_t *message,               /* Message */
   const pb_tag_t tags[],               /* Tags */
   size_t size);                        /* Tag count */
 

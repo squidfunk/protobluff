@@ -58,9 +58,8 @@ before_install:
   - ./autogen.sh
 
 # Perform build and tests
-script: ./configure --enable-coverage && make && make test
+script: ./configure --enable-coverage && make && make test coverage
 
 # If successful, create and push coverage report
 after_success:
-  - cd tools/coverage && make
-  - coveralls-lcov coverage.info
+  - coveralls-lcov tests/coverage.info

@@ -1,0 +1,56 @@
+0.2.x => 0.3.0
+
+  Binaries
+
+    The "binary" which holds the underlying serialized data in wire format was
+    renamed to be a "buffer". Additionally, the journaling functionality is now
+    part of a "journal" which itself contains a buffer that is tracked. The
+    former is necessary for encoding and decoding messages, the later for
+    performing random access on encoded messages.
+
+    < 0.3.0:
+
+      pb_binary_t binary = pb_binary_create(...);
+      pb_binary_destroy(&binary);
+
+    = 0.3.0:
+
+      pb_buffer_t buffer = pb_buffer_create(...);
+      pb_buffer_destroy(&buffer);
+
+      pb_journal_t journal = pb_journal_create(...);
+      pb_journal_destroy(&journal);
+
+  Validation
+
+    Message validation was refactored into a separate "validator" structure,
+    so that validation can directly take place on a binary. This step was
+    necessary to make validation available to the lite runtime.
+
+    < 0.3.0:
+
+      pb_message_t message = pb_message_create(...);
+      pb_message_check(&message);
+
+    = 0.3.0:
+
+      pb_validator_t validator = pb_validator_create(...);
+      pb_validator_check(&validator, &buffer);
+
+0.1.x => 0.2.0
+
+  Validation
+
+    The function for message validation was renamed into pb_message_check() in
+    order to remove any ambiguities with pb_message_valid() which checks if the
+    message is still valid in terms of alignment.
+
+    < 0.2.0
+
+      pb_message_t message = pb_message_create(...);
+      pb_message_validate(&message);
+
+    = 0.2.0
+
+      pb_message_t message = pb_message_create(...);
+      pb_message_check(&message);

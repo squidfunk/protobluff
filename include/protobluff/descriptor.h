@@ -23,10 +23,9 @@
 #ifndef PB_INCLUDE_DESCRIPTOR_H
 #define PB_INCLUDE_DESCRIPTOR_H
 
-#include <protobluff/common.h>
-#include <protobluff/enum/descriptor.h>
-#include <protobluff/field/descriptor.h>
-#include <protobluff/message/descriptor.h>
+#include <protobluff/core/common.h>
+#include <protobluff/core/descriptor.h>
+#include <protobluff/core/string.h>
 
 /* ----------------------------------------------------------------------------
  * Constants

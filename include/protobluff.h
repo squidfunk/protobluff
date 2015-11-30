@@ -23,13 +23,8 @@
 #ifndef PB_INCLUDE_H
 #define PB_INCLUDE_H
 
-#include <protobluff/allocator.h>
-#include <protobluff/binary.h>
-#include <protobluff/common.h>
-#include <protobluff/cursor.h>
-#include <protobluff/enum.h>
-#include <protobluff/field.h>
+#include <protobluff/core.h>
 #include <protobluff/message.h>
-#include <protobluff/string.h>
+#include <protobluff/util.h>
 
 #endif /* PB_INCLUDE_H */

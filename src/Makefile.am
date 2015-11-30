@@ -22,4 +22,30 @@
 # Subdirectories
 # -----------------------------------------------------------------------------
 
-SUBDIRS = lib bin
+SUBDIRS = core message util generator
+
+# -----------------------------------------------------------------------------
+# Shared library: libprotobluff-lite
+# -----------------------------------------------------------------------------
+
+# Build libprotobluff-lite shared library
+lib_LTLIBRARIES = libprotobluff-lite.la
+libprotobluff_lite_la_SOURCES =
+libprotobluff_lite_la_LIBADD = \
+	@top_builddir@/src/core/libprotobluff-core.la
+libprotobluff_lite_la_LDFLAGS = \
+	-version-info @VERSION_INFO@
+
+# -----------------------------------------------------------------------------
+# Shared library: libprotobluff
+# -----------------------------------------------------------------------------
+
+# Build libprotobluff shared library
+lib_LTLIBRARIES += libprotobluff.la
+libprotobluff_la_SOURCES =
+libprotobluff_la_LIBADD = \
+	@top_builddir@/src/message/libprotobluff-message.la \
+	@top_builddir@/src/util/libprotobluff-util.la \
+	@top_builddir@/src/core/libprotobluff-core.la
+libprotobluff_la_LDFLAGS = \
+	-version-info @VERSION_INFO@

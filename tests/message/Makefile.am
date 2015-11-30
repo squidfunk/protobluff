@@ -19,18 +19,7 @@
 # IN THE SOFTWARE.
 
 # -----------------------------------------------------------------------------
-# Test suite: protobluff/message
+# Subdirectories
 # -----------------------------------------------------------------------------
 
-# Build protobluff/message test suite
-check_PROGRAMS = test
-test_SOURCES = \
-	test.c
-test_CFLAGS = \
-	-g @check_CFLAGS@
-test_CPPFLAGS = \
-	-I@top_builddir@/src \
-	-I@top_builddir@/include
-test_LDADD = \
-	@top_builddir@/src/lib/libprotobluff.la \
-	@check_LIBS@
+SUBDIRS = buffer cursor field journal message nested part

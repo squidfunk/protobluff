@@ -5,7 +5,7 @@
 [![Release Status](https://img.shields.io/github/release/squidfunk/protobluff.svg)](https://github.com/squidfunk/protobluff/releases/latest)
 [![License](https://img.shields.io/github/license/squidfunk/protobluff.svg)](https://github.com/squidfunk/protobluff/blob/master/LICENSE)
 
-protobluff is an extremely lightweight Protocol Buffers implementation for C.
+protobluff is a modular Protocol Buffers implementation for C.
 
 ## Theory of Operation
 
@@ -19,14 +19,14 @@ number of scattered allocations which in turn is not very cache-friendly.
 
 protobluff follows a different approach. It entirely skips the necessary
 decoding and encoding steps when reading or writing values from messages,
-as it directly operates on the encoded binary. New values can be incrementally
+as it directly operates on the encoded data. New values can be incrementally
 read or written, memory management is centralized and handled by the underlying
-binary. If no alterations that change the size of the underlying binary are
-expected, the binary can be used in *zero-copy mode*, omitting all dynamic
+journal. If no alterations that change the size of the underlying journal are
+expected, the journal can be used in *zero-copy mode*, omitting all dynamic
 allocations.
 
 Updates on fixed-sized wire types on little-endian machines can be carried out
-in-place using raw-pointers to the underlying binary. These include the native
+in-place using raw-pointers to the underlying data. These include the native
 Protocol Buffers types `fixed(32|64)`, `sfixed(32|64)`, `float` and `double`
 (see the [Protocol Buffers Encoding Guide][] for more information). Strings may
 also be accessed through raw-pointers, however writing a string of different
@@ -100,52 +100,64 @@ Here's a usage example taken from the original description of the Google
 Protocol Buffers library and adapted to protobluff:
 
 ``` c
-/* Create an empty binary to assemble a new person message */
-pb_binary_t binary = pb_binary_create_empty();
+/* Create an empty journal to assemble a new person message */
+pb_journal_t journal = pb_journal_create_empty();
 
 /* Create a person message */
-pb_message_t person = person_create(&binary);
+pb_message_t person = person_create(&journal);
 
 /* Define the values we want to set */
-pb_string_t name   = pb_string_init("John Doe"),
-            email  = pb_string_init("jdoe@example.com"),
-            home   = pb_string_init("+1-541-754-3010"),
-            mobile = pb_string_init("+1-541-293-8228");
+pb_string_t name   = pb_string_init_from_chars("John Doe"),
+            email  = pb_string_init_from_chars("jdoe@example.com"),
+            home   = pb_string_init_from_chars("+1-541-754-3010"),
+            mobile = pb_string_init_from_chars("+1-541-293-8228");
 int32_t     id     = 1234;
 
 /* Set values on person message and check return codes */
 pb_error_t error = PB_ERROR_NONE;
 do {
   if ((error = person_put_name(&person, &name)) ||
-      (error = person_put_email(&person, &email)) ||
-      (error = person_put_id(&person, &id)))
+      (error = person_put_id(&person, &id)) ||
+      (error = person_put_email(&person, &email)))
     break;
 
   /* Set home number */
   pb_message_t phone1 = person_create_phone(&person);
-  if ((error = person_phonenumber_put_type_home(&phone1)) ||
-      (error = person_phonenumber_put_number(&phone1, &home)))
-    break;
+  if (!(error = person_phonenumber_put_number(&phone1, &home)) &&
+      !(error = person_phonenumber_put_type_home(&phone1))) {
 
-  /* Set mobile number */
-  pb_message_t phone2 = person_create_phone(&person);
-  if ((error = person_phonenumber_put_type_mobile(&phone2)) ||
-      (error = person_phonenumber_put_number(&phone2, &mobile)))
-    break;
+    /* Set mobile number */
+    pb_message_t phone2 = person_create_phone(&person);
+    if (!(error = person_phonenumber_put_number(&phone2, &mobile)) &&
+        !(error = person_phonenumber_put_type_mobile(&phone2))) {
 
-  /* All values were set successfully, the binary is ready to be persisted,
-     sent or whatever - no marshalling necessary. The raw message data and size
-     can be directly obtained through the binary */
-  const uint8_t *data = pb_binary_data(&binary);
-  const size_t   size = pb_binary_size(&binary);
+      /* Dump the journal */
+      pb_journal_dump(&journal);
+
+      /* The encoded message can be accessed as follows */
+      // const uint8_t *data = pb_journal_data(&journal);
+      // const size_t   size = pb_journal_size(&journal);
+    }
+    person_phonenumber_destroy(&phone2);
+  }
+  person_phonenumber_destroy(&phone1);
 } while (0);
+
+/* Print error, if any */
+if (error)
+  fprintf(stderr, "ERROR: %s\n", pb_error_string(error));
 
 /* Cleanup and invalidate */
 person_destroy(&person);
 
-/* Free all allocated memory */
-pb_binary_destroy(&binary);
+/* Free all allocated memory and return */
+pb_journal_destroy(&journal);
+return error
+  ? EXIT_FAILURE
+  : EXIT_SUCCESS;
 ```
+
+See the examples directory for more information.
 
 ## Linking
 
@@ -157,8 +169,8 @@ library. Therefore, the following compiler and linker flags must be obtained
 and added to your build toolchain:
 
 ``` sh
-pkg-config --cflags libprotobluff # Add output to compiler flags
-pkg-config --libs   libprotobluff # Add output to linker flags
+pkg-config --cflags protobluff # Add output to compiler flags
+pkg-config --libs   protobluff # Add output to linker flags
 ```
 
 ### Autotools
@@ -169,7 +181,7 @@ the compiler flags into the variable `protobluff_CFLAGS` and the linker flags
 into the variable `protobluff_LDFLAGS`:
 
 ``` makefile
-PKG_CHECK_MODULES([protobluff], [libprotobluff])
+PKG_CHECK_MODULES([protobluff], [protobluff])
 ```
 
 ## Features
@@ -198,9 +210,8 @@ PKG_CHECK_MODULES([protobluff], [libprotobluff])
 ### Roadmap
 
 1. Oneofs
-2. Streaming API
-3. Packed fields
-4. Services
+2. Packed fields
+3. Services
 
 ## License
 

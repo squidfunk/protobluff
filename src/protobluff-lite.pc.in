@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+includedir=@includedir@
+libdir=@libdir@
+
+Name: protobluff-lite
+Description: A modular Protocol Buffers implementation for C
+URL: https://github.com/squidfunk/protobluff
+Version: @PACKAGE_VERSION@
+Cflags: -I${includedir}
+Libs: -L${libdir} -lprotobluff-lite
+Conflicts: protobluff

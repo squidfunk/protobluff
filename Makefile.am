@@ -31,7 +31,8 @@ SUBDIRS = include src tests
 # Create pkg-config recipe
 pkgconfigdir = @libdir@/pkgconfig
 pkgconfig_DATA = \
-	src/lib/libprotobluff.pc
+	src/protobluff.pc \
+	src/protobluff-lite.pc
 
 # -----------------------------------------------------------------------------
 # Custom build rules
@@ -72,6 +73,19 @@ purge: clean
 	rm -f  test-driver
 
 # -----------------------------------------------------------------------------
+# Coverage report
+# -----------------------------------------------------------------------------
+
+if HAVE_COVERAGE
+
+# Generate and display code coverage report
+coverage:
+	@LCOV@ -q -c --no-external -d @top_builddir@/src -o tests/coverage.info
+	@GENHTML@ tests/coverage.info -o tests/coverage -c tests/coverage.css
+
+endif # HAVE_COVERAGE
+
+# -----------------------------------------------------------------------------
 # Leak check
 # -----------------------------------------------------------------------------
 
@@ -79,9 +93,10 @@ if HAVE_VALGRIND
 
 # Perform leak check using unit tests
 memcheck: check
-	@for t in `find tests -maxdepth 2 -executable -type f`; do \
+	@for t in `find tests -maxdepth 3 -perm +111 -type f`; do \
 	  @LIBTOOL@ --mode=execute @VALGRIND@ --dsymutil=yes --tool=memcheck \
-	  --track-origins=yes --leak-check=full --show-reachable=yes $$t; \
+	  --track-origins=yes --leak-check=full --show-reachable=yes \
+		--suppressions=valgrind.supp $$t; \
 	done
 
 endif # HAVE_VALGRIND

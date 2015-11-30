@@ -1,6 +1,54 @@
+protobluff-0.3.0 (2015-11-30)
+
+  Complete overhaul of the internal structure: an encoder and decoder have
+  been implemented which now form the core of protobluff, together with the
+  buffer, descriptor and varint-packing logic. protobluff is turning into a
+  full-featured multi-purpose library: messages can be streamed using the
+  encoding and/or decoding functions, fields and messages can be read and
+  written without decoding/encoding the entire message using the message
+  and cursor functions (as before).
+
+  In addition protobluff has been split into a lite and full runtime. The lite
+  runtime only contains the core functionality and currently weighs 14kb
+  (stripped) on x86_64, the full runtime weighs 36kb (stripped). Though not
+  being the highest priority task on the list, compatibility with embedded
+  environments is planned, as the groundwork has now been done. Furthermore
+  the project structure has been revamped and is now completely modular, and
+  some examples on how to use protobluff for encoding/decoding were added.
+
+  Regardless of the addition of a whole bunch of new functions, this release is
+  mostly compatible with prior versions. Nevertheless, the libtool version has
+  been updated to 2.0.0 to reflect some breaking changes. See the MIGRATION
+  file for more information on how to migrate from older versions.
+
+  Runtime:
+
+  * Complete overhaul of runtime
+  * Fixed improper encoding and decoding of zig-zag encoded varints
+  * Added functions for type-specific packing and unpacking of varints
+  * Added function to efficiently grow buffers
+  * Added decoder and encoder to stream messages
+  * Added tests for all new structures
+  * Added validator as a replacement for pb_message_check()
+  * Added some usage examples for encoding and decoding messages
+  * Changed directory structure to reflect new modular design
+  * Changed macros to inline functions for better type checking
+  * Renamed binary into buffer and fleshed out the implementation
+  * Renamed binary stream into stream and refactored implementation
+  * Merged journaling with binary functionality into journal
+  * Merged descriptors into single translation unit
+  * Adapted existing code to work with new internal structure
+
+  Generator:
+
+  * Fixed accessor generation for nested enumerations
+  * Added compile-time field, message, enum and enum value deprecations
+  * Added generators for interfacing with the decoder and encoder
+  * Changed generated code from macros to inline functions
+
 protobluff-0.2.2 (2015-09-05)
 
-  * Fixed circular message type references in code generator
+  * Fixed circular message type references in generator
   * Added chunk allocator implementation
   * Added tests for chunk allocator
   * Removed implicit default values for non-optional enums
@@ -30,9 +78,9 @@ protobluff-0.2.0 (2015-08-27)
   * Removed double underscore prefixes in function names
   * Renamed pb_message_validate() into pb_message_check()
 
-  Code generator:
+  Generator:
 
-  * Complete overhaul of code generator
+  * Complete overhaul of generator
   * Fixed order of message descriptor fields in generated code
   * Added generators for extensions
   * Added generators for enums and enum values

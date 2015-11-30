@@ -24,8 +24,10 @@
 
 AC_PREREQ(2.69)
 
-AC_INIT([protobluff], [0.2.2], [martin.donath@squidfunk.com])
+AC_INIT([protobluff], [0.3.0], [martin.donath@squidfunk.com])
 AM_INIT_AUTOMAKE([subdir-objects foreign])
+
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 : ${CFLAGS=""}
 : ${CXXFLAGS=""}
@@ -45,7 +47,7 @@ AC_CONFIG_MACRO_DIR([m4])
 # -----------------------------------------------------------------------------
 
 # Library versioning as <current:revision:age>
-AC_SUBST([VERSION_INFO], [1:2:0])
+AC_SUBST([VERSION_INFO], [2:0:0])
 
 # Checks for programs
 AC_PROG_AWK
@@ -89,7 +91,7 @@ if test -z "$GENHTML"; then
 fi
 AM_CONDITIONAL(HAVE_COVERAGE, [test -n "$LCOV" -a -n "$GENHTML"])
 
-# Check for ability to run leak check
+# Check for ability to run memcheck
 AC_CHECK_PROGS([VALGRIND], [valgrind])
 if test -z "$VALGRIND"; then
 	AC_MSG_WARN([valgrind not found; cannot run leak check])
@@ -105,11 +107,11 @@ AC_ARG_ENABLE([optimized],
 	[AS_HELP_STRING([--disable-optimized],
 		[no optimizations @<:@default=enabled@:>@])],
 	[OPTIMIZATIONS="-g"],
-	[OPTIMIZATIONS="-O3 -DNDEBUG" \
-	 OPTIMIZATIONS+=" -fno-exceptions" \
-	 OPTIMIZATIONS+=" -fno-unwind-tables" \
-	 OPTIMIZATIONS+=" -fno-asynchronous-unwind-tables" \
-	 OPTIMIZATIONS+=" -fno-stack-protector" \
+	[OPTIMIZATIONS="-O3 -DNDEBUG"
+	 OPTIMIZATIONS+=" -fno-exceptions"
+	 OPTIMIZATIONS+=" -fno-unwind-tables"
+	 OPTIMIZATIONS+=" -fno-asynchronous-unwind-tables"
+	 OPTIMIZATIONS+=" -fno-stack-protector"
 	 OPTIMIZATIONS+=" -fomit-frame-pointer"])
 AC_SUBST([OPTIMIZATIONS])
 
@@ -174,31 +176,62 @@ AC_CHECK_FUNCS([ \
 # -----------------------------------------------------------------------------
 
 # Configuration files
-AC_CONFIG_FILES([ \
-	Makefile \
-	include/Makefile \
-	src/bin/Makefile \
-	src/lib/libprotobluff.pc \
-	src/lib/Makefile \
-	src/Makefile \
-	tests/Makefile \
-	tests/allocator-chunk/Makefile \
-	tests/binary/Makefile \
-	tests/binary-buffer/Makefile \
-	tests/binary-stream/Makefile \
-	tests/cursor/Makefile \
-	tests/enum-descriptor/Makefile \
-	tests/field/Makefile \
-	tests/journal/Makefile \
-	tests/message/Makefile \
-	tests/message-descriptor/Makefile \
-	tests/message-nested/Makefile \
-	tests/part/Makefile \
-	tools/coverage/Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	examples/decoding/Makefile
+	examples/encoding/Makefile
+	examples/messages/Makefile
+	examples/Makefile
+	include/Makefile
+	src/core/Makefile
+	src/generator/Makefile
+	src/message/Makefile
+	src/util/Makefile
+	src/Makefile
+	src/protobluff-lite.pc
+	src/protobluff.pc
+	tests/core/buffer/Makefile
+	tests/core/decoder/Makefile
+	tests/core/descriptor/Makefile
+	tests/core/encoder/Makefile
+	tests/core/stream/Makefile
+	tests/core/varint/Makefile
+	tests/core/Makefile
+	tests/message/buffer/Makefile
+	tests/message/cursor/Makefile
+	tests/message/field/Makefile
+	tests/message/journal/Makefile
+	tests/message/message/Makefile
+	tests/message/nested/Makefile
+	tests/message/part/Makefile
+	tests/message/Makefile
+	tests/util/chunk_allocator/Makefile
+	tests/util/descriptor/Makefile
+	tests/util/validator/Makefile
+	tests/util/Makefile
+	tests/Makefile
+])
 
 # Compiler flags
 CFLAGS+=" -std=c99"
 CXXFLAGS+=" -std=c++98"
 CPPFLAGS+=" -Wall -Wno-address -march=native"
 
+# Output result
 AC_OUTPUT
+
+# Print build configuration
+AC_MSG_RESULT([
+  $PACKAGE $VERSION
+
+    CC:                     ${CC}
+    CFLAGS:                 ${CFLAGS} ${OPTIMIZATIONS}
+    CXX:                    ${CXX}
+    CXXFLAGS:               ${CXXFLAGS} ${OPTIMIZATIONS}
+    CPPFLAGS:               ${CPPFLAGS}
+
+    prefix:                 ${prefix}
+    sysconfdir:             ${sysconfdir}
+    libdir:                 ${libdir}
+    includedir:             ${includedir}
+])

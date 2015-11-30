@@ -22,35 +22,47 @@
 # Subdirectories
 # -----------------------------------------------------------------------------
 
-SUBDIRS = \
-	allocator-chunk \
-	binary \
-	binary-buffer \
-	binary-stream \
-	cursor \
-	enum-descriptor \
-	field \
-	journal \
-	message \
-	message-descriptor \
-	message-nested \
-	part \
-	.
+SUBDIRS = core message util
 
 # -----------------------------------------------------------------------------
 # Tests
 # -----------------------------------------------------------------------------
 
+# Add core tests
 TESTS = \
-	allocator-chunk/test \
-	binary/test \
-	binary-buffer/test \
-	binary-stream/test \
-	cursor/test \
-	enum-descriptor/test \
-	field/test \
-	journal/test \
-	message/test \
-	message-descriptor/test \
-	message-nested/test \
-	part/test
+	core/buffer/test \
+	core/decoder/test \
+	core/descriptor/test \
+	core/encoder/test \
+	core/stream/test \
+	core/varint/test
+
+# Add message tests
+TESTS += \
+	message/buffer/test \
+	message/cursor/test \
+	message/field/test \
+	message/journal/test \
+	message/message/test \
+	message/nested/test \
+	message/part/test
+
+# Add util tests
+TESTS += \
+	util/chunk_allocator/test \
+	util/descriptor/test \
+	util/validator/test
+
+# -----------------------------------------------------------------------------
+# Coverage report
+# -----------------------------------------------------------------------------
+
+if HAVE_COVERAGE
+
+# Reset execution counts
+clean-local:
+	@LCOV@ -z -d @top_builddir@/src
+	rm -rf coverage
+	rm -f  coverage.info
+
+endif # HAVE_COVERAGE

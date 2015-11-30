@@ -24,18 +24,26 @@
 
 # Don't rebase libprotobluff public header files
 nobase_include_HEADERS = \
-	protobluff/allocator.h \
-	protobluff/binary.h \
-	protobluff/common.h \
-	protobluff/cursor.h \
+	protobluff/core/allocator.h \
+	protobluff/core/buffer.h \
+	protobluff/core/common.h \
+	protobluff/core/decoder.h \
+	protobluff/core/descriptor.h \
+	protobluff/core/encoder.h \
+	protobluff/core/string.h \
+	protobluff/core.h \
 	protobluff/descriptor.h \
-	protobluff/enum.h \
-	protobluff/enum/descriptor.h \
-	protobluff/field.h \
-	protobluff/field/descriptor.h \
-	protobluff/message.h \
-	protobluff/message/descriptor.h \
+	protobluff/message/buffer.h \
+	protobluff/message/common.h \
+	protobluff/message/cursor.h \
+	protobluff/message/field.h \
+	protobluff/message/journal.h \
+	protobluff/message/message.h \
 	protobluff/message/nested.h \
-	protobluff/part.h \
-	protobluff/string.h \
+	protobluff/message/part.h \
+	protobluff/message.h \
+	protobluff/util/chunk_allocator.h \
+	protobluff/util/descriptor.h \
+	protobluff/util/validator.h \
+	protobluff/util.h \
 	protobluff.h
