@@ -32,6 +32,8 @@
 #include <google/protobuf/io/printer.h>
 #include <google/protobuf/stubs/common.h>
 
+#include <protobluff/core/common.h>
+
 #include "generator/enum.hh"
 #include "generator/extension.hh"
 #include "generator/file.hh"
@@ -54,6 +56,7 @@ namespace protobluff {
   using ::google::protobuf::io::Printer;
   using ::google::protobuf::scoped_ptr;
 
+  using ::google::protobuf::SimpleItoa;
   using ::google::protobuf::StripSuffixString;
   using ::google::protobuf::StringReplace;
   using ::google::protobuf::UpperString;
@@ -114,6 +117,9 @@ namespace protobluff {
       StripSuffixString(descriptor_->name(), ".proto"),
     ".", "_", true);
     UpperString(&(variables_["guard"]));
+
+    /* Prepare current runtime version */
+    variables_["version"] = SimpleItoa(PB_VERSION);
 
     /* Prepare header include */
     variables_["include"] = StripSuffixString(descriptor_->name(), ".proto");
@@ -193,6 +199,10 @@ namespace protobluff {
     printer->Print(variables_,
       "#ifndef `guard`_PB_H\n"
       "#define `guard`_PB_H\n"
+      "\n"
+      "#if PB_VERSION != `version`\n"
+      "  #error Version mismatch - please regenerate this file using protoc\n"
+      "#endif\n"
       "\n"
       "#include <protobluff.h>\n"
       "\n");

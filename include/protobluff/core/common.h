@@ -30,6 +30,12 @@
  * ------------------------------------------------------------------------- */
 
 /*
+ * Current ABI version as a single integer to test binary compatibility in
+ * genereated header files: current * 10^6 + revision * 10^3
+ */
+#define PB_VERSION (2 * 1000000) + (0 * 1000) + 0
+
+/*
  * Agnostic C-linkage classifier for extern functions when compiling from C++
  * or other languages for ABI-compatibility.
  */
