@@ -28,6 +28,7 @@
 #include <vector>
 
 #include <google/protobuf/descriptor.h>
+#include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/io/printer.h>
 #include <google/protobuf/stubs/common.h>
 
@@ -46,6 +47,7 @@ namespace protobluff {
   using ::std::vector;
 
   using ::google::protobuf::FileDescriptor;
+  using ::google::protobuf::FileOptions;
   using ::google::protobuf::io::Printer;
   using ::google::protobuf::scoped_array;
   using ::google::protobuf::scoped_ptr;
@@ -82,6 +84,8 @@ namespace protobluff {
 
   private:
     const FileDescriptor *descriptor_; /* File descriptor */
+    const FileOptions::OptimizeMode
+      mode_;                           /* Optimization mode */
     scoped_array<
       scoped_ptr<Message>
     > messages_;                       /* Message generators */

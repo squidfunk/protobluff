@@ -28,6 +28,7 @@
 #include <vector>
 
 #include <google/protobuf/descriptor.h>
+#include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/io/printer.h>
 #include <google/protobuf/stubs/common.h>
 
@@ -49,6 +50,7 @@ namespace protobluff {
   using ::std::vector;
 
   using ::google::protobuf::FileDescriptor;
+  using ::google::protobuf::FileOptions;
   using ::google::protobuf::io::Printer;
   using ::google::protobuf::scoped_ptr;
 
@@ -64,6 +66,9 @@ namespace protobluff {
   File::
   File(const FileDescriptor *descriptor) :
       descriptor_(descriptor),
+      mode_(descriptor_->options().has_optimize_for()
+        ? descriptor_->options().optimize_for()
+        : FileOptions::SPEED),
       messages_(new scoped_ptr<Message>[descriptor_->message_type_count()]),
       enums_(new scoped_ptr<Enum>[descriptor_->enum_type_count()]) {
 
@@ -258,27 +263,31 @@ namespace protobluff {
     for (size_t m = 0; m < descriptor_->message_type_count(); m++)
       messages_[m]->GenerateEncoder(printer);
 
-    /* Generate accessor banner */
-    PrintBanner(printer, "Accessors");
+    /* Don't generate accessor code for lite runtime */
+    if (mode_ != FileOptions::LITE_RUNTIME) {
 
-    /* Generate accessors for messages and nested messages */
-    for (size_t m = 0; m < descriptor_->message_type_count(); m++)
-      messages_[m]->GenerateAccessors(printer);
+      /* Generate accessor banner */
+      PrintBanner(printer, "Accessors");
 
-    /* Generate accessors for extensions, if any */
-    if (HasExtensions()) {
-      PrintBanner(printer, "Extension accessors");
+      /* Generate accessors for messages and nested messages */
+      for (size_t m = 0; m < descriptor_->message_type_count(); m++)
+        messages_[m]->GenerateAccessors(printer);
 
-      /* Generate accessors for extensions */
-      for (size_t e = 0; e < extensions_.size(); e++)
-        extensions_[e]->GenerateAccessors(printer);
+      /* Generate accessors for extensions, if any */
+      if (HasExtensions()) {
+        PrintBanner(printer, "Extension accessors");
 
-      /* Generate accessors for nested extensions */
-      for (size_t m = 0; m < descriptor_->message_type_count(); m++) {
-        const vector<const Extension *> extensions =
-          messages_[m]->GetExtensions();
-        for (size_t e = 0; e < extensions.size(); e++)
-          extensions[e]->GenerateAccessors(printer);
+        /* Generate accessors for extensions */
+        for (size_t e = 0; e < extensions_.size(); e++)
+          extensions_[e]->GenerateAccessors(printer);
+
+        /* Generate accessors for nested extensions */
+        for (size_t m = 0; m < descriptor_->message_type_count(); m++) {
+          const vector<const Extension *> extensions =
+            messages_[m]->GetExtensions();
+          for (size_t e = 0; e < extensions.size(); e++)
+            extensions[e]->GenerateAccessors(printer);
+        }
       }
     }
 
