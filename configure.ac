@@ -46,7 +46,8 @@ AC_CONFIG_MACRO_DIR([m4])
 # Dependencies
 # -----------------------------------------------------------------------------
 
-# Library versioning as <current:revision:age>
+# Library versioning as <current:revision:age> - also remember to synchronize
+# this value with the version info in the core/common.h header file.
 AC_SUBST([VERSION_INFO], [2:0:0])
 
 # Checks for programs
@@ -79,6 +80,13 @@ AC_SUBST([PROTOC])
 PKG_CHECK_MODULES([check], [check >= 0.9.10], [],
 	AC_MSG_WARN([check not found; cannot build tests]))
 AM_CONDITIONAL(HAVE_CHECK, [test -n "$check_LIBS"])
+
+# Additional compiler flags for check
+if test "${CC}" = "clang"; then
+  check_CFLAGS+=" -g -Wno-incompatible-pointer-types-discards-qualifiers"
+else
+	check_CFLAGS+=" -g"
+fi
 
 # Check for ability to build coverage report
 AC_CHECK_PROGS([LCOV], [lcov])

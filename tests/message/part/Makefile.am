@@ -27,8 +27,7 @@ check_PROGRAMS = test
 test_SOURCES = \
 	test.c
 test_CFLAGS = \
-	-g @check_CFLAGS@ \
-	-Wno-incompatible-pointer-types-discards-qualifiers
+	@check_CFLAGS@
 test_CPPFLAGS = \
 	-I@top_builddir@/src \
 	-I@top_builddir@/include
