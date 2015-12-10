@@ -107,7 +107,8 @@ PB_INLINE int
 pb_descriptor_iter_begin(pb_descriptor_iter_t *it) {
   assert(it);
   return !pb_descriptor_empty(it->descriptor)
-    ? !(it->pos = 0) : 0;
+    ? !(it->pos = 0)
+    : 0;
 }
 
 /*!
@@ -121,7 +122,8 @@ PB_INLINE int
 pb_descriptor_iter_end(pb_descriptor_iter_t *it) {
   assert(it);
   return !pb_descriptor_empty(it->descriptor)
-    ? !!(it->pos = pb_descriptor_size(it->descriptor) - 1) : 0;
+    ? !!(it->pos = pb_descriptor_size(it->descriptor) - 1)
+    : 0;
 }
 
 /*!
@@ -135,7 +137,9 @@ PB_INLINE int
 pb_descriptor_iter_prev(pb_descriptor_iter_t *it) {
   assert(it && it->pos != SIZE_MAX);
   assert(!pb_descriptor_empty(it->descriptor));
-  return it->pos > 0 ? it->pos-- : 0;
+  return it->pos > 0
+    ? it->pos--
+    : 0;
 }
 
 /*!
@@ -149,7 +153,9 @@ PB_INLINE int
 pb_descriptor_iter_next(pb_descriptor_iter_t *it) {
   assert(it && it->pos != SIZE_MAX);
   assert(!pb_descriptor_empty(it->descriptor));
-  return it->pos < pb_descriptor_size(it->descriptor) - 1 ? ++it->pos : 0;
+  return it->pos < pb_descriptor_size(it->descriptor) - 1
+    ? ++it->pos
+    : 0;
 }
 
 /*!
@@ -216,7 +222,8 @@ PB_INLINE int
 pb_enum_descriptor_iter_begin(pb_enum_descriptor_iter_t *it) {
   assert(it);
   return !pb_enum_descriptor_empty(it->descriptor)
-    ? !(it->pos = 0) : 0;
+    ? !(it->pos = 0)
+    : 0;
 }
 
 /*!
@@ -230,7 +237,8 @@ PB_INLINE int
 pb_enum_descriptor_iter_end(pb_enum_descriptor_iter_t *it) {
   assert(it);
   return !pb_enum_descriptor_empty(it->descriptor)
-    ? !!(it->pos = pb_enum_descriptor_size(it->descriptor) - 1) : 0;
+    ? !!(it->pos = pb_enum_descriptor_size(it->descriptor) - 1)
+    : 0;
 }
 
 /*!
@@ -244,7 +252,9 @@ PB_INLINE int
 pb_enum_descriptor_iter_prev(pb_enum_descriptor_iter_t *it) {
   assert(it && it->pos != SIZE_MAX);
   assert(!pb_enum_descriptor_empty(it->descriptor));
-  return it->pos > 0 ? it->pos-- : 0;
+  return it->pos > 0
+    ? it->pos--
+    : 0;
 }
 
 /*!
@@ -258,7 +268,9 @@ PB_INLINE int
 pb_enum_descriptor_iter_next(pb_enum_descriptor_iter_t *it) {
   assert(it && it->pos != SIZE_MAX);
   assert(!pb_enum_descriptor_empty(it->descriptor));
-  return it->pos < pb_enum_descriptor_size(it->descriptor) - 1 ? ++it->pos : 0;
+  return it->pos < pb_enum_descriptor_size(it->descriptor) - 1
+    ? ++it->pos
+    : 0;
 }
 
 /*!

@@ -328,9 +328,8 @@ START_TEST(test_read_64bit) {
  * Read a repeated fixed-sized 64-bit value.
  */
 START_TEST(test_read_64bit_repeated) {
-  const uint8_t data[] = {
-    0, 0, 100, 167, 179, 182, 224, 13,
-    0, 0, 100, 167, 179, 182, 224, 13 };
+  const uint8_t data[] = { 0, 0, 100, 167, 179, 182, 224, 13,
+                           0, 0, 100, 167, 179, 182, 224, 13 };
   const size_t  size   = 16;
 
   /* Create buffer and stream */

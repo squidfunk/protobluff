@@ -57,8 +57,8 @@ namespace protobluff {
   using ::google::protobuf::scoped_ptr;
 
   using ::google::protobuf::SimpleItoa;
-  using ::google::protobuf::StripSuffixString;
   using ::google::protobuf::StringReplace;
+  using ::google::protobuf::StripSuffixString;
   using ::google::protobuf::UpperString;
 
   /*!

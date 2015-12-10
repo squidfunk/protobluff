@@ -83,7 +83,7 @@ AM_CONDITIONAL(HAVE_CHECK, [test -n "$check_LIBS"])
 
 # Additional compiler flags for check
 if test "${CC}" = "clang"; then
-  check_CFLAGS+=" -g -Wno-incompatible-pointer-types-discards-qualifiers"
+	check_CFLAGS+=" -g -Wno-incompatible-pointer-types-discards-qualifiers"
 else
 	check_CFLAGS+=" -g"
 fi

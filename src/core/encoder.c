@@ -230,8 +230,8 @@ pb_encoder_destroy(pb_encoder_t *encoder) {
  * may impact message validity:
  *
  * -# The encoder encodes a field regardless of its label (optional, required
- *    or repeated). Other Protocol Buffer libraries will only interpret the
- *    last occurrence of multiple optional or required fields.
+ *    or repeated). The Protocol Buffers standard demands that only the last
+ *    occurrence of an optional or required field is interpreted.
  *
  * -# The encoder does not check that all required fields are set. This can
  *    be done afterwards by creating a validator with pb_validator_create()
