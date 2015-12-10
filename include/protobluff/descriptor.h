@@ -55,4 +55,8 @@
 #define OPTIONAL   PB_LABEL_OPTIONAL   /*!< Optional field */
 #define REPEATED   PB_LABEL_REPEATED   /*!< Repeated field */
 
+/* ------------------------------------------------------------------------- */
+
+#define PACKED     PB_FLAG_PACKED      /*!< Flag: packed field */
+
 #endif /* PB_INCLUDE_DESCRIPTOR_H */

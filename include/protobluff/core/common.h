@@ -31,7 +31,7 @@
 
 /*
  * Current ABI version as a single integer to test binary compatibility in
- * genereated header files: current * 10^6 + revision * 10^3
+ * the generated header files: current * 10^6 + revision * 10^3 + age
  */
 #define PB_VERSION (2 * 1000000) + (0 * 1000) + 0
 
@@ -40,9 +40,9 @@
  * or other languages for ABI-compatibility.
  */
 #ifdef __cplusplus
-  #define _C_ "C"
+  #define PB_LINKAGE "C"
 #else
-  #define _C_
+  #define PB_LINKAGE
 #endif
 
 /*
@@ -50,9 +50,9 @@
  * capability, unless the compiler doesn't support it.
  */
 #if defined(__GNUC__) && __GNUC__ >= 4
-  #define PB_EXPORT extern _C_ __attribute__((visibility("default")))
+  #define PB_EXPORT extern PB_LINKAGE __attribute__((visibility("default")))
 #else
-  #define PB_EXPORT
+  #define PB_EXPORT extern PB_LINKAGE
 #endif
 
 /*
@@ -108,8 +108,6 @@ typedef enum pb_error_t {
   PB_ERROR_NONE,                       /*!< None (default) */
   PB_ERROR_ALLOC,                      /*!< Allocation failed */
   PB_ERROR_INVALID,                    /*!< Invalid arguments or data */
-  PB_ERROR_DESCRIPTOR,                 /*!< Invalid descriptor */
-  PB_ERROR_WIRETYPE,                   /*!< Invalid wiretype */
   PB_ERROR_VARINT,                     /*!< Invalid varint */
   PB_ERROR_OFFSET,                     /*!< Invalid offset */
   PB_ERROR_ABSENT,                     /*!< Absent field or value */

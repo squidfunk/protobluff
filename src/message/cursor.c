@@ -26,12 +26,155 @@
 
 #include "core/descriptor.h"
 #include "core/stream.h"
+#include "message/buffer.h"
 #include "message/common.h"
 #include "message/cursor.h"
 #include "message/field.h"
 #include "message/journal.h"
 #include "message/message.h"
 #include "message/part.h"
+
+/* ----------------------------------------------------------------------------
+ * Internal functions
+ * ------------------------------------------------------------------------- */
+
+/*!
+ * Move a cursor to the next value of a packed field.
+ *
+ * \param[in,out] cursor Cursor
+ * \return               Test result
+ */
+static int
+next_packed(pb_cursor_t *cursor) {
+  assert(cursor);
+  pb_offset_t *offset = &(cursor->current.offset),
+              *packed = &(cursor->current.packed);
+
+  /* Create temporary buffer to read the next value of the packed field */
+  pb_buffer_t buffer = pb_buffer_create_zero_copy_internal(
+    pb_journal_data_from(pb_cursor_journal(cursor), offset->end),
+      packed->end - offset->end);
+
+  /* Create stream over temporary buffer */
+  pb_stream_t stream = pb_stream_create(&buffer);
+  while (pb_stream_left(&stream)) {
+
+    /* Skip field contents to determine length */
+    pb_wiretype_t wiretype =
+      pb_field_descriptor_wiretype(cursor->current.descriptor);
+    if (unlikely_((cursor->error = pb_stream_skip(&stream, wiretype))))
+      break;
+
+    /* Adjust offsets */
+    offset->diff.origin -= offset->end - offset->start;
+    offset->start        = offset->end;
+    offset->end         += pb_stream_offset(&stream);
+
+    /* Cleanup and return with success */
+    pb_stream_destroy(&stream);
+    pb_buffer_destroy(&buffer);
+    return 1;
+  }
+
+  /* Cleanup to move on to next field */
+  pb_stream_destroy(&stream);
+  pb_buffer_destroy(&buffer);
+
+  /* Switch back to non-packed context, as end is reached */
+  *offset = *packed;
+  return packed->end = 0;
+}
+
+/*!
+ * Move a cursor to the next field.
+ *
+ * \param[in,out] cursor Cursor
+ * \return               Test result
+ */
+static int
+next(pb_cursor_t *cursor) {
+  assert(cursor);
+  pb_offset_t *offset = &(cursor->current.offset),
+              *packed = &(cursor->current.packed);
+
+  /* Create temporary buffer to read the next value */
+  pb_buffer_t buffer = pb_buffer_create_zero_copy_internal(
+    pb_journal_data_from(pb_cursor_journal(cursor), 0),
+      pb_message_end(&(cursor->message)));
+
+  /* Create stream over temporary buffer */
+  pb_stream_t stream = pb_stream_create_at(&buffer, offset->end);
+  while (pb_stream_left(&stream)) {
+
+    /* Adjust offsets */
+    offset->start       = offset->end;
+    offset->diff.origin = pb_message_start(&(cursor->message));
+    offset->diff.tag    = pb_stream_offset(&stream);
+
+    /* Read tag from stream */
+    pb_tag_t tag; uint32_t length;
+    if ((cursor->error = pb_stream_read(&stream, PB_TYPE_UINT32, &tag)))
+      break;
+
+    /* Extract wiretype and tag */
+    pb_wiretype_t wiretype = tag & 7;
+    tag >>= 3;
+
+    /* Skip field contents to determine length */
+    offset->diff.length = pb_stream_offset(&stream);
+    if (wiretype == PB_WIRETYPE_LENGTH) {
+      if ((cursor->error = pb_stream_read(&stream, PB_TYPE_UINT32, &length)))
+        break;
+      offset->start = pb_stream_offset(&stream);
+      if ((cursor->error = pb_stream_advance(&stream, length)))
+        break;
+    } else {
+      offset->start = pb_stream_offset(&stream);
+      if ((cursor->error = pb_stream_skip(&stream, wiretype)))
+        break;
+    }
+
+    /* Adjust offsets */
+    offset->end          = pb_stream_offset(&stream);
+    offset->diff.origin -= offset->start;
+    offset->diff.tag    -= offset->start;
+    offset->diff.length -= offset->start;
+
+    /* If a tag is set check if the tags match or continue */
+    if (cursor->tag && cursor->tag != tag) {
+      continue;
+
+    /* Otherwise try to load descriptor for current tag */
+    } else if (!cursor->current.descriptor ||
+        pb_field_descriptor_tag(cursor->current.descriptor) != tag) {
+      if (!(cursor->current.descriptor = pb_descriptor_field_by_tag(
+          pb_message_descriptor(&(cursor->message)), tag)))
+        continue;
+    }
+
+    /* Switch to packed context in case of packed field */
+    if (pb_field_descriptor_packed(cursor->current.descriptor)) {
+      *packed = *offset;
+
+      /* Prepare offsets for packed field members */
+      offset->end         = offset->start;
+      offset->diff.tag    = 0;
+      offset->diff.length = 0;
+    }
+
+    /* Cleanup and return */
+    pb_buffer_destroy(&buffer);
+    pb_stream_destroy(&stream);
+    return !packed->end;
+  }
+
+  /* Cleanup and invalidate cursor */
+  pb_buffer_destroy(&buffer);
+  pb_stream_destroy(&stream);
+  if (!cursor->error)
+    cursor->error = PB_ERROR_EOM;
+  return 0;
+}
 
 /* ----------------------------------------------------------------------------
  * Interface
@@ -69,12 +212,15 @@ extern pb_cursor_t
 pb_cursor_create_internal(pb_message_t *message, pb_tag_t tag) {
   assert(message);
   if (pb_message_valid(message) && !pb_message_align(message)) {
+    const pb_field_descriptor_t *descriptor = tag
+      ? pb_descriptor_field_by_tag(pb_message_descriptor(message), tag)
+      : NULL;
     pb_cursor_t cursor = {
       .message = pb_message_copy(message),
       .tag     = tag,
       .current = {
-        .tag    = 0,
-        .offset = {
+        .descriptor = descriptor,
+        .offset     = {
           .start = pb_message_start(message),
           .end   = pb_message_start(message),
           .diff  = {
@@ -131,75 +277,27 @@ pb_cursor_destroy(pb_cursor_t *cursor) {
 /*!
  * Move a cursor to the next field.
  *
+ * If alignment yields an invalid result, the current part was most probably
+ * deleted, but the cursor must not necessarily be invalid.
+ *
  * \param[in,out] cursor Cursor
  * \return               Test result
  */
 extern int
 pb_cursor_next(pb_cursor_t *cursor) {
   assert(cursor);
-  if (unlikely_(!pb_cursor_valid(cursor)))
-    return 0;
-
-  /* If alignment yields an invalid result the current part was most probably
-     deleted, but the cursor must not necessarily be invalid */
-  cursor->error = pb_cursor_align(cursor);
-
-  /* Continue at end offset until end of message */
-  pb_stream_t stream = pb_stream_create_at(
-    pb_journal_buffer(pb_cursor_journal(cursor)), cursor->current.offset.end);
-  while (pb_stream_offset(&stream) < pb_message_end(&(cursor->message))) {
-    pb_offset_t offset = {
-      .start = 0,
-      .end   = 0,
-      .diff  = {
-        .origin = pb_stream_offset(&stream),
-        .tag    = pb_stream_offset(&stream),
-        .length = 0
-      }
-    };
-
-    /* Read tag from stream */
-    pb_tag_t tag = 0; uint32_t length;
-    if ((cursor->error = pb_stream_read(&stream, PB_TYPE_UINT32, &tag)))
-      break;
-
-    /* Skip field contents to determine length */
-    offset.diff.length = pb_stream_offset(&stream);
-    if ((tag & 7) == PB_WIRETYPE_LENGTH) {
-      if ((cursor->error = pb_stream_read(&stream, PB_TYPE_UINT32, &length)))
-        break;
-      offset.start = pb_stream_offset(&stream);
-      if ((cursor->error = pb_stream_advance(&stream, length)))
-        break;
-    } else {
-      offset.start = pb_stream_offset(&stream);
-      if ((cursor->error = pb_stream_skip(&stream, tag & 7)))
-        break;
-    }
-
-    /* If tags match or we don't care for the tag, we're fine */
-    if (!cursor->tag || cursor->tag == (tag >> 3)) {
-      offset.end          = pb_stream_offset(&stream);
-      offset.diff.origin -= offset.start;
-      offset.diff.tag    -= offset.start;
-      offset.diff.length -= offset.start;
-
-      /* Update cursor */
-      cursor->current.tag    = tag >> 3;
-      cursor->current.offset = offset;
-      cursor->pos++;
-
-      /* Cleanup and exit */
-      pb_stream_destroy(&stream);
-      return 1;
-    }
-  }
-
-  /* Cleanup and invalidate cursor */
-  pb_stream_destroy(&stream);
-  if (!cursor->error)
-    cursor->error = PB_ERROR_EOM;
-  return 0;
+  int result = 0;
+  if (pb_cursor_valid(cursor)) {
+    cursor->error = pb_cursor_align(cursor);
+    do {
+      result = cursor->current.packed.end
+        ? next_packed(cursor)
+        : next(cursor);
+      if (result)
+        cursor->pos++;
+    } while (!cursor->error && !result);
+  };
+  return result;
 }
 
 /*!
@@ -211,22 +309,11 @@ pb_cursor_next(pb_cursor_t *cursor) {
 extern int
 pb_cursor_rewind(pb_cursor_t *cursor) {
   assert(cursor);
-  pb_message_t *message = &(cursor->message);
-  if (pb_message_valid(message) && !pb_message_align(message)) {
-    cursor->current.tag    = 0;
-    cursor->current.offset = (pb_offset_t){
-      .start = pb_message_start(message),
-      .end   = pb_message_start(message),
-      .diff  = {
-        .origin = 0,
-        .tag    = 0,
-        .length = 0
-      }
-    };
-    cursor->pos   = SIZE_MAX; /* = uninitialized */
-    cursor->error = PB_ERROR_NONE;
-  }
-  return pb_cursor_next(cursor);
+  pb_cursor_t copy = pb_cursor_create_internal(
+    &(cursor->message), cursor->tag);
+  pb_cursor_destroy(cursor);
+  *cursor = copy;
+  return pb_cursor_valid(cursor);
 }
 
 /*!
@@ -243,15 +330,11 @@ extern int
 pb_cursor_seek(pb_cursor_t *cursor, const void *value) {
   assert(cursor && value);
   int result = 0;
-
-  /* Retrieve and check descriptor for current tag */
   if (pb_cursor_valid(cursor) && cursor->tag) {
-    const pb_field_descriptor_t *descriptor =
-      pb_descriptor_field_by_tag(
-        pb_message_descriptor(&(cursor->message)), cursor->current.tag);
+    const pb_field_descriptor_t *descriptor = cursor->current.descriptor;
 
-    /* Check type and seek for value */
-    if (descriptor && pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE) {
+    /* Create field and seek for value */
+    if (pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE) {
       while (!result && pb_cursor_next(cursor)) {
         pb_field_t field = pb_field_create_from_cursor(cursor);
         result = pb_field_match(&field, value);
@@ -276,15 +359,11 @@ extern int
 pb_cursor_match(pb_cursor_t *cursor, const void *value) {
   assert(cursor && value);
   int result = 0;
-
-  /* Retrieve and check descriptor for current tag */
   if (pb_cursor_valid(cursor)) {
-    const pb_field_descriptor_t *descriptor =
-      pb_descriptor_field_by_tag(
-        pb_message_descriptor(&(cursor->message)), cursor->current.tag);
+    const pb_field_descriptor_t *descriptor = cursor->current.descriptor;
 
-    /* Check type and compare value */
-    if (descriptor && pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE) {
+    /* Create field and compare value */
+    if (pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE) {
       pb_field_t field = pb_field_create_from_cursor(cursor);
       result = pb_field_match(&field, value);
       pb_field_destroy(&field);
@@ -310,17 +389,11 @@ extern pb_error_t
 pb_cursor_get(pb_cursor_t *cursor, void *value) {
   assert(cursor && value);
   pb_error_t error = PB_ERROR_INVALID;
-
-  /* Retrieve and check descriptor for current tag */
   if (pb_cursor_valid(cursor)) {
-    const pb_field_descriptor_t *descriptor =
-      pb_descriptor_field_by_tag(
-        pb_message_descriptor(&(cursor->message)), cursor->current.tag);
-    if (unlikely_(!descriptor)) {
-      error = PB_ERROR_DESCRIPTOR;
+    const pb_field_descriptor_t *descriptor = cursor->current.descriptor;
 
-    /* Check type and read value */
-    } else if (pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE) {
+    /* Create field and read value */
+    if (pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE) {
       pb_field_t field = pb_field_create_from_cursor(cursor);
       error = pb_field_get(&field, value);
       pb_field_destroy(&field);
@@ -346,17 +419,11 @@ extern pb_error_t
 pb_cursor_put(pb_cursor_t *cursor, const void *value) {
   assert(cursor && value);
   pb_error_t error = PB_ERROR_INVALID;
-
-  /* Retrieve and check descriptor for current tag */
   if (pb_cursor_valid(cursor)) {
-    const pb_field_descriptor_t *descriptor =
-      pb_descriptor_field_by_tag(
-        pb_message_descriptor(&(cursor->message)), cursor->current.tag);
-    if (unlikely_(!descriptor)) {
-      error = PB_ERROR_DESCRIPTOR;
+    const pb_field_descriptor_t *descriptor = cursor->current.descriptor;
 
     /* Create field and write value */
-    } else if (pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE) {
+    if (pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE) {
       pb_field_t field = pb_field_create_from_cursor(cursor);
       error = pb_field_put(&field, value);
       pb_field_destroy(&field);
@@ -396,17 +463,11 @@ extern pb_error_t
 pb_cursor_erase(pb_cursor_t *cursor) {
   assert(cursor);
   pb_error_t error = PB_ERROR_INVALID;
-
-  /* Retrieve and check descriptor for current tag */
   if (pb_cursor_valid(cursor)) {
-    const pb_field_descriptor_t *descriptor =
-      pb_descriptor_field_by_tag(
-        pb_message_descriptor(&(cursor->message)), cursor->current.tag);
-    if (unlikely_(!descriptor)) {
-      error = PB_ERROR_DESCRIPTOR;
+    const pb_field_descriptor_t *descriptor = cursor->current.descriptor;
 
     /* Clear field */
-    } else if (pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE) {
+    if (pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE) {
       pb_field_t field = pb_field_create_from_cursor(cursor);
       error = pb_field_clear(&field);
       pb_field_destroy(&field);
@@ -442,10 +503,10 @@ pb_cursor_raw(pb_cursor_t *cursor) {
 
   /* Retrieve and check descriptor for current tag */
   if (pb_cursor_valid(cursor)) {
-    const pb_field_descriptor_t *descriptor =
-      pb_descriptor_field_by_tag(
-        pb_message_descriptor(&(cursor->message)), cursor->current.tag);
-    if (descriptor && pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE) {
+    const pb_field_descriptor_t *descriptor = cursor->current.descriptor;
+
+    /* Create field and return pointer to raw data */
+    if (pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE) {
       pb_field_t field = pb_field_create_from_cursor(cursor);
       value = pb_field_raw(&field);
       pb_field_destroy(&field);
@@ -469,10 +530,20 @@ pb_cursor_align(pb_cursor_t *cursor) {
   assert(pb_cursor_valid(cursor));
   pb_error_t error = PB_ERROR_NONE;
 
-  /* Align cursor and current part, if currently unaligned */
+  /* Check, if current part is already aligned */
   const pb_part_t *part = pb_message_part(&(cursor->message));
   if (unlikely_(!pb_part_aligned(part))) {
     pb_version_t version = pb_cursor_version(cursor);
+
+    /* Align current packed context offset, if given */
+    const pb_field_descriptor_t *descriptor = cursor->current.descriptor;
+    if (pb_field_descriptor_packed(descriptor)) {
+      pb_version_t version = pb_cursor_version(cursor);
+      error = pb_journal_align(pb_cursor_journal(cursor),
+        &version, &(cursor->current.packed));
+    }
+
+    /* Align current cursor offset */
     if (!(error = pb_message_align(&(cursor->message)))) {
       error = pb_journal_align(pb_cursor_journal(cursor),
         &version, &(cursor->current.offset));

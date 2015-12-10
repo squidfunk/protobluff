@@ -211,9 +211,8 @@ pb_stream_read(pb_stream_t *stream, pb_type_t type, void *value) {
 PB_WARN_UNUSED_RESULT
 PB_INLINE pb_error_t
 pb_stream_skip(pb_stream_t *stream, pb_wiretype_t wiretype) {
-  return pb_stream_skip_jump[wiretype]
-    ? pb_stream_skip_jump[wiretype](stream)
-    : PB_ERROR_WIRETYPE;
+  assert(pb_stream_skip_jump[wiretype]);
+  return pb_stream_skip_jump[wiretype](stream);
 }
 
 #endif /* PB_CORE_STREAM_H */

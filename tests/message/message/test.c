@@ -262,8 +262,11 @@ START_TEST(test_create_within_siblings) {
 
   /* Create a hundred submessage siblings and write values to them */
   for (size_t m = 1; m < 101; m++) {
+    uint64_t value = m;
+
+    /* Create submessage and write value */
     pb_message_t submessage = pb_message_create_within(&message, 12);
-    ck_assert_uint_eq(PB_ERROR_NONE, pb_message_put(&submessage, 2, &m));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_message_put(&submessage, 2, &value));
 
     /* Free all allocated memory */
     pb_message_destroy(&submessage);
@@ -277,7 +280,10 @@ START_TEST(test_create_within_siblings) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
   /* Walk through submessages and read fields */
-  for (size_t m = 1, value; m < 101; m++, pb_cursor_next(&cursor)) {
+  for (size_t m = 1; m < 101; m++, pb_cursor_next(&cursor)) {
+    uint64_t value = m;
+
+    /* Create submessage and write value */
     pb_message_t submessage = pb_message_create_from_cursor(&cursor);
     ck_assert_uint_eq(PB_ERROR_NONE, pb_message_get(&submessage, 2, &value));
     ck_assert_uint_eq(m, value);
@@ -451,9 +457,12 @@ START_TEST(test_create_within_nested) {
 
   /* Create a hundred nested submessages and write values to them */
   for (size_t m = 1; m < 101; m++) {
+    uint64_t value = m;
+
+    /* Create submessage and write value */
     messages[m] = pb_message_create_within(&(messages[m - 1]), 11);
     ck_assert_uint_eq(PB_ERROR_NONE,
-      pb_message_put(&(messages[m]), 2, &m));
+      pb_message_put(&(messages[m]), 2, &value));
   }
 
   /* Free all allocated memory */
@@ -461,8 +470,8 @@ START_TEST(test_create_within_nested) {
     pb_message_destroy(&(messages[m]));
 
   /* Walk through nested submessages */
-  size_t start = 0, end = pb_journal_size(&journal);
-  for (size_t m = 1, value; m < 101; m++) {
+  size_t start = 0, end = pb_journal_size(&journal); uint64_t value;
+  for (size_t m = 1; m < 101; m++) {
     messages[m] = pb_message_create_within(&(messages[m - 1]), 11);
     ck_assert_uint_eq(PB_ERROR_NONE,
       pb_message_get(&(messages[m]), 2, &value));
@@ -609,9 +618,12 @@ START_TEST(test_create_nested) {
 
   /* Create a hundred nested submessages and write values to them */
   for (size_t m = 1; m < 101; m++) {
+    uint64_t value = m;
+
+    /* Create submessage and write value */
     messages[m] = pb_message_create_within(&(messages[m - 1]), 11);
     ck_assert_uint_eq(PB_ERROR_NONE,
-      pb_message_put(&(messages[m]), 2, &m));
+      pb_message_put(&(messages[m]), 2, &value));
   }
 
   /* Free all allocated memory */
@@ -624,7 +636,8 @@ START_TEST(test_create_nested) {
     tags[t] = 11;
 
   /* Walk through nested submessages */
-  for (size_t m = 2, value; m < 101; m++) {
+  uint64_t value;
+  for (size_t m = 2; m < 101; m++) {
     messages[m] = pb_message_create_within(&(messages[m - 1]), 11);
     ck_assert_uint_eq(PB_ERROR_NONE,
       pb_message_get(&(messages[m]), 2, &value));
@@ -706,9 +719,12 @@ START_TEST(test_create_nested_repeated) {
 
   /* Create a hundred nested submessages and write values to them */
   for (size_t m = 1; m < 101; m++) {
+    uint64_t value = m;
+
+    /* Create submessage and write value */
     messages[m] = pb_message_create_within(&(messages[m - 1]), 11);
     ck_assert_uint_eq(PB_ERROR_NONE,
-      pb_message_put(&(messages[m]), 2, &m));
+      pb_message_put(&(messages[m]), 2, &value));
   }
 
   /* Create tags */
@@ -804,8 +820,11 @@ START_TEST(test_create_from_cursor) {
 
   /* Create a hundred submessage siblings and write values to them */
   for (size_t m = 1; m < 101; m++) {
+    uint64_t value = m;
+
+    /* Create submessage and write value */
     pb_message_t submessage = pb_message_create_within(&message, 12);
-    ck_assert_uint_eq(PB_ERROR_NONE, pb_message_put(&submessage, 2, &m));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_message_put(&submessage, 2, &value));
 
     /* Assert submessage validity and error */
     fail_unless(pb_message_valid(&submessage));
@@ -823,7 +842,8 @@ START_TEST(test_create_from_cursor) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
   /* Walk through submessages and read fields */
-  for (size_t m = 1, value; m < 101; m++, pb_cursor_next(&cursor)) {
+  uint64_t value;
+  for (size_t m = 1; m < 101; m++, pb_cursor_next(&cursor)) {
     pb_message_t submessage = pb_message_create_from_cursor(&cursor);
     ck_assert_uint_eq(PB_ERROR_NONE,
       pb_message_get(&submessage, 2, &value));
@@ -908,12 +928,12 @@ START_TEST(test_create_from_cursor_invalid_tag) {
   pb_cursor_t  cursor  = pb_cursor_create_without_tag(&message);
 
   /* Assert cursor validity and error */
-  fail_unless(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Assert cursor tag and position */
-  ck_assert_uint_eq(13, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0,  pb_cursor_pos(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Create submessage for invalid tag */
   pb_message_t submessage = pb_message_create_from_cursor(&cursor);
@@ -1151,7 +1171,7 @@ START_TEST(test_has_empty) {
  * Test whether a message contains at least one repeated occurrence.
  */
 START_TEST(test_has_repeated) {
-  const uint8_t data[] = { 104, 0, 104, 0 };
+  const uint8_t data[] = { 98, 0, 98, 0 };
   const size_t  size   = 4;
 
   /* Create journal and message */
@@ -1163,7 +1183,7 @@ START_TEST(test_has_repeated) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
 
   /* Assert field (non-)existence */
-  fail_unless(pb_message_has(&message, 13));
+  fail_unless(pb_message_has(&message, 12));
 
   /* Free all allocated memory */
   pb_message_destroy(&message);
@@ -2165,8 +2185,11 @@ START_TEST(test_erase_message_repeated) {
 
   /* Create a hundred submessage siblings and write values to them */
   for (size_t m = 1; m < 101; m++) {
+    uint64_t value = m;
+
+    /* Create submessage and write value */
     pb_message_t submessage = pb_message_create_within(&message, 12);
-    ck_assert_uint_eq(PB_ERROR_NONE, pb_message_put(&submessage, 2, &m));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_message_put(&submessage, 2, &value));
 
     /* Free all allocated memory */
     pb_message_destroy(&submessage);
@@ -2192,7 +2215,7 @@ START_TEST(test_erase_message_repeated) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_message_erase(&message, 12));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_message_align(&message));
 
-  /* Assert message validity and error again */
+  /* Assert message validity and error */
   fail_unless(pb_message_valid(&message));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
 
@@ -2320,7 +2343,7 @@ START_TEST(test_clear) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_message_clear(&message));
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_message_clear(&message));
 
-  /* Assert message validity and error again */
+  /* Assert message validity and error */
   fail_if(pb_message_valid(&message));
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_message_error(&message));
 
@@ -2353,7 +2376,7 @@ START_TEST(test_clear_message) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_message_clear(&message));
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_message_clear(&message));
 
-  /* Assert message validity and error again */
+  /* Assert message validity and error */
   fail_if(pb_message_valid(&message));
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_message_error(&message));
 
@@ -2523,7 +2546,7 @@ START_TEST(test_clear_unaligned) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_message_clear(&message));
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_message_clear(&message));
 
-  /* Assert message validity and error again */
+  /* Assert message validity and error */
   fail_if(pb_message_valid(&message));
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_message_error(&message));
 

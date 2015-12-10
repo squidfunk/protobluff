@@ -92,8 +92,9 @@ descriptor = { {
     {  9, "F09", ENUM,    OPTIONAL, &descriptor_enum, &default_enum },
     { 10, "F10", UINT64,  REPEATED },
     { 11, "F11", STRING,  REPEATED },
-    { 12, "F12", MESSAGE, OPTIONAL, &descriptor }
-  }, 12 } };
+    { 12, "F12", MESSAGE, OPTIONAL, &descriptor },
+    { 13, "F11", UINT64,  REPEATED, NULL, NULL, PACKED },
+  }, 13 } };
 
 /* ----------------------------------------------------------------------------
  * Tests
@@ -182,8 +183,11 @@ START_TEST(test_create_repeated) {
 
   /* Create a hundred fields and write values to them */
   for (size_t f = 1; f < 101; f++) {
+    uint64_t value = f;
+
+    /* Create field and write value */
     pb_field_t field = pb_field_create(&message, 10);
-    ck_assert_uint_eq(PB_ERROR_NONE, pb_field_put(&field, &f));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_field_put(&field, &value));
 
     /* Assert field validity and error */
     fail_unless(pb_field_valid(&field));
@@ -209,6 +213,104 @@ START_TEST(test_create_repeated) {
   /* Assert journal contents */
   for (size_t f = 1; f < 101; f++)
     ck_assert_uint_eq(f, pb_journal_data_at(&journal, f * 2 - 1));
+
+  /* Free all allocated memory */
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Create a set of packed fields within a message for a specific tag.
+ */
+START_TEST(test_create_packed) {
+  const uint8_t data[] = { 66, 4, 68, 65, 84, 65 };
+  const size_t  size   = 6;
+
+  /* Create journal and message */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Create four fields and write values to them */
+  for (size_t f = 1; f < 5; f++) {
+    uint64_t value = f;
+
+    /* Create field and write value */
+    pb_field_t field = pb_field_create(&message, 13);
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_field_put(&field, &value));
+
+    /* Assert field validity and error */
+    fail_unless(pb_field_valid(&field));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_field_error(&field));
+
+    /* Assert field size and version */
+    fail_if(pb_field_empty(&field));
+    ck_assert_uint_eq(1, pb_field_size(&field));
+    ck_assert_uint_eq(f + 1, pb_field_version(&field));
+
+    /* Assert field offsets */
+    ck_assert_uint_eq(f + 7, pb_field_start(&field));
+    ck_assert_uint_eq(f + 8, pb_field_end(&field));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(f + 8, pb_journal_size(&journal));
+
+    /* Free all allocated memory */
+    pb_field_destroy(&field);
+  }
+
+  /* Assert journal contents */
+  for (size_t f = 1; f < 5; f++)
+    ck_assert_uint_eq(f, pb_journal_data_at(&journal, f + 7));
+
+  /* Free all allocated memory */
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Create a set of packed fields within a message for a specific tag.
+ */
+START_TEST(test_create_packed_existing) {
+  const uint8_t data[] = { 106, 4, 1, 2, 3, 4 };
+  const size_t  size   = 6;
+
+  /* Create journal, message and field */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Create four fields and write values to them */
+  for (size_t f = 1; f < 5; f++) {
+    uint64_t value = f + 4;
+
+    /* Create field and write value */
+    pb_field_t field = pb_field_create(&message, 13);
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_field_put(&field, &value));
+
+    /* Assert field validity and error */
+    fail_unless(pb_field_valid(&field));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_field_error(&field));
+
+    /* Assert field size and version */
+    fail_if(pb_field_empty(&field));
+    ck_assert_uint_eq(1, pb_field_size(&field));
+    ck_assert_uint_eq(f, pb_field_version(&field));
+
+    /* Assert field offsets */
+    ck_assert_uint_eq(f + 5, pb_field_start(&field));
+    ck_assert_uint_eq(f + 6, pb_field_end(&field));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(f + 6, pb_journal_size(&journal));
+
+    /* Free all allocated memory */
+    pb_field_destroy(&field);
+  }
+
+  /* Assert journal contents */
+  for (size_t f = 5; f < 9; f++)
+    ck_assert_uint_eq(f, pb_journal_data_at(&journal, f + 1));
 
   /* Free all allocated memory */
   pb_message_destroy(&message);
@@ -429,8 +531,11 @@ START_TEST(test_create_from_cursor) {
 
   /* Create a hundred fields and write values to them */
   for (size_t f = 1; f < 101; f++) {
+    uint64_t value = f;
+
+    /* Create field and write value */
     pb_field_t field = pb_field_create(&message, 10);
-    ck_assert_uint_eq(PB_ERROR_NONE, pb_field_put(&field, &f));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_field_put(&field, &value));
 
     /* Free all allocated memory */
     pb_field_destroy(&field);
@@ -444,7 +549,8 @@ START_TEST(test_create_from_cursor) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
   /* Walk through message and read fields */
-  for (size_t f = 1, value; f < 101; f++, pb_cursor_next(&cursor)) {
+  uint64_t value;
+  for (size_t f = 1; f < 101; f++, pb_cursor_next(&cursor)) {
     pb_field_t field = pb_field_create_from_cursor(&cursor);
     ck_assert_uint_eq(PB_ERROR_NONE, pb_field_get(&field, &value));
     ck_assert_uint_eq(f, value);
@@ -527,12 +633,12 @@ START_TEST(test_create_from_cursor_invalid_tag) {
   pb_cursor_t  cursor  = pb_cursor_create_without_tag(&message);
 
   /* Assert cursor validity and error */
-  fail_unless(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Assert cursor tag and position */
-  ck_assert_uint_eq(18, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0,  pb_cursor_pos(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Create field for invalid tag */
   pb_field_t field = pb_field_create_from_cursor(&cursor);
@@ -2390,6 +2496,8 @@ main(void) {
   tcase_add_test(tcase, test_create);
   tcase_add_test(tcase, test_create_existing);
   tcase_add_test(tcase, test_create_repeated);
+  tcase_add_test(tcase, test_create_packed);
+  tcase_add_test(tcase, test_create_packed_existing);
   tcase_add_test(tcase, test_create_message_empty);
   tcase_add_test(tcase, test_create_message_invalid);
   tcase_add_test(tcase, test_create_without_default);

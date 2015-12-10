@@ -310,7 +310,7 @@ namespace protobluff {
         "  .name  = \"`descriptor.name`\",\n"
         "  .type  = `descriptor.type`,\n"
         "  .label = `descriptor.label`,\n"
-        "  .refer = &`descriptor.symbol`_descriptor }");
+        "  .refer = &`descriptor.symbol`_descriptor");
 
     /* Generate field descriptor for enum */
     } else if (descriptor_->enum_type()) {
@@ -323,7 +323,7 @@ namespace protobluff {
           "  .type  = `descriptor.type`,\n"
           "  .label = `descriptor.label`,\n"
           "  .refer = &`descriptor.symbol`_descriptor,\n"
-          "  .value = &`default.symbol`_default }");
+          "  .value = &`default.symbol`_default");
       } else {
         printer->Print(variables_,
           "\n"
@@ -332,7 +332,7 @@ namespace protobluff {
           "  .name  = \"`descriptor.name`\",\n"
           "  .type  = `descriptor.type`,\n"
           "  .label = `descriptor.label`,\n"
-          "  .refer = &`descriptor.symbol`_descriptor }");
+          "  .refer = &`descriptor.symbol`_descriptor");
       }
 
     /* Generate field descriptor with default value */
@@ -344,7 +344,7 @@ namespace protobluff {
         "  .name  = \"`descriptor.name`\",\n"
         "  .type  = `descriptor.type`,\n"
         "  .label = `descriptor.label`,\n"
-        "  .value = &`default.symbol`_default }");
+        "  .value = &`default.symbol`_default");
 
     /* Generate field descriptor */
     } else {
@@ -354,8 +354,17 @@ namespace protobluff {
         "{ .tag   = `descriptor.tag`,\n"
         "  .name  = \"`descriptor.name`\",\n"
         "  .type  = `descriptor.type`,\n"
-        "  .label = `descriptor.label` }");
+        "  .label = `descriptor.label`");
     }
+
+    /* Add flag for packed fields */
+    if (descriptor_->is_packed())
+      printer->Print(
+        ",\n"
+        "  .flags = PACKED");
+
+    /* Terminate initializer */
+    printer->Print(" }");
   }
 
   /*!

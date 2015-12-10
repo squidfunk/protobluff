@@ -1,3 +1,25 @@
+protobluff-0.x.x
+
+  This release is not finished yet, packed fields are implemented in the
+  message library but not in core. This is going to be fixed in a few days.
+
+  Runtime:
+
+  * Fixed incorrectly reported position in pb_cursor_seek()
+  * Added support for packed fields
+  * Added missing error string for PB_ERROR_EOM (could have caused segfault)
+  * Added tests for packed fields
+  * Changed cursor semantics: cursor will now skip unknown fields
+  * Changed cursor to directly initialize descriptor
+  * Removed PB_ERROR_WIRETYPE and PB_ERROR_DESCRIPTOR error codes
+  * Removed pb_cursor_tag() from ABI in favor of pb_cursor_descriptor()
+  * Renamed C-linkage classifier to avoid name clashes
+  * Adapted message and field from cursor constructors
+
+  Generator:
+
+  * Added support for packed fields
+
 protobluff-0.3.0 (2015-11-30)
 
   Complete overhaul of the internal structure: an encoder and decoder have

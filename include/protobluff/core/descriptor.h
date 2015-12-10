@@ -40,7 +40,7 @@ typedef struct pb_field_descriptor_t {
   const pb_label_t label;              /*!< Label */
   const void *const refer;             /*!< Referenced descriptor */
   const void *const value;             /*!< Default */
-  const uint8_t flags;                 /*!< Flags (reserved) */
+  const uint8_t flags;                 /*!< Flags */
 } pb_field_descriptor_t;
 
 /* ------------------------------------------------------------------------- */
@@ -103,6 +103,12 @@ pb_field_descriptor_type_size_map[];
 /*! Mapping: type ==> wiretype */
 extern const pb_wiretype_t
 pb_field_descriptor_wiretype_map[];
+
+/* ----------------------------------------------------------------------------
+ * Constants
+ * ------------------------------------------------------------------------- */
+
+#define PB_FLAG_PACKED 1               /*!< Flag: packed field */
 
 /* ----------------------------------------------------------------------------
  * Inline functions
@@ -181,6 +187,18 @@ pb_field_descriptor_default(const pb_field_descriptor_t *descriptor) {
   assert(descriptor &&
     descriptor->type != PB_TYPE_MESSAGE);
   return descriptor->value;
+}
+
+/*!
+ * Test whether a field descriptor specifies the packed option.
+ *
+ * \param[in] descriptor Field descriptor
+ * \return               Test result
+ */
+PB_INLINE int
+pb_field_descriptor_packed(const pb_field_descriptor_t *descriptor) {
+  assert(descriptor);
+  return descriptor->flags & PB_FLAG_PACKED;
 }
 
 /*!

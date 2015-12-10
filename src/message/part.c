@@ -35,6 +35,10 @@
 #include "message/message.h"
 #include "message/part.h"
 
+/* ----------------------------------------------------------------------------
+ * Internal functions
+ * ------------------------------------------------------------------------- */
+
 /*!
  * Adjust the length prefix of the part by the provided delta to reflect the
  * current length of the part, and return the (possibly) adjusted delta.
@@ -157,8 +161,9 @@ adjust_recursive(pb_part_t *part, pb_stream_t *stream, ptrdiff_t *delta) {
     temp.offset.diff.tag    -= temp.offset.start;
     temp.offset.diff.length -= temp.offset.start;
 
-    /* Abort, if we're past the origin */
-    if (temp.offset.start > part->offset.start + part->offset.diff.origin)
+    /* Abort, if we're not inside a packed field and past the origin */
+    if (part->offset.diff.tag &&
+        temp.offset.start > part->offset.start + part->offset.diff.origin)
       break;
 
     /* The temporary part lies within the part */
@@ -166,24 +171,38 @@ adjust_recursive(pb_part_t *part, pb_stream_t *stream, ptrdiff_t *delta) {
         temp.offset.end   >= part->offset.end - *delta) {
       temp.offset.end += *delta;
 
-      /* The parts don't match, so recurse */
-      if (temp.offset.start != part->offset.start ||
-          temp.offset.end   != part->offset.end) {
-        pb_stream_t substream = pb_stream_create_at(
-          pb_stream_buffer(stream), temp.offset.start);
-        error = adjust_recursive(part, &substream, delta);
-        pb_stream_destroy(&substream);
-        if (unlikely_(error))
-          break;                                           /* LCOV_EXCL_LINE */
+      /* If a tag is given, we're not inside a packed field */
+      if (part->offset.diff.tag) {
 
-        /* Parts may be unaligned due to length prefix update */
-        if ((!pb_part_aligned(part)  && (error = pb_part_align(part))) ||
-            (!pb_part_aligned(&temp) && (error = pb_part_align(&temp))))
-          break;                                           /* LCOV_EXCL_LINE */
+        /* The parts don't match, so recurse */
+        if (temp.offset.start != part->offset.start ||
+            temp.offset.end   != part->offset.end) {
+          pb_stream_t substream = pb_stream_create_at(
+            pb_stream_buffer(stream), temp.offset.start);
+          error = adjust_recursive(part, &substream, delta);
+          pb_stream_destroy(&substream);
+          if (unlikely_(error))
+            break;                                         /* LCOV_EXCL_LINE */
+
+          /* Parts may be unaligned due to length prefix update */
+          if ((!pb_part_aligned(part)  && (error = pb_part_align(part))) ||
+              (!pb_part_aligned(&temp) && (error = pb_part_align(&temp))))
+            break;                                         /* LCOV_EXCL_LINE */
+        }
+
+      /* Delete the packed field tag and length-prefix if part is empty */
+      } else if (*delta < 0 && pb_part_empty(&temp)) {
+        error = pb_journal_clear(part->journal,
+          temp.offset.start + temp.offset.diff.origin,
+          temp.offset.start + temp.offset.diff.origin,
+          temp.offset.end);
+        break;
       }
 
-      /* Adjust length prefix */
+      /* Adjust length prefix and ensure aligned part */
       error = adjust_prefix(&temp, delta);
+      if (!error && !pb_part_aligned(part))
+        error = pb_part_align(part);
       break;
 
     /* Otherwise just skip stream part */
@@ -214,10 +233,6 @@ adjust(pb_part_t *part, ptrdiff_t delta) {
   pb_stream_t stream = pb_stream_create(pb_journal_buffer(part->journal));
   pb_error_t  error  = adjust_recursive(part, &stream, &delta);
   pb_stream_destroy(&stream);
-
-  /* Align part if unaligned */
-  if (!error && !pb_part_aligned(part))
-    return pb_part_align(part);
   return error;
 }
 
@@ -227,20 +242,17 @@ adjust(pb_part_t *part, ptrdiff_t delta) {
  * \warning The lines excluded from code coverage cannot be triggered within
  * the tests, as they are masked through the previous function calls.
  *
- * \param[in,out] part       Part
- * \param[in]     descriptor Field descriptor
+ * \param[in,out] part     Part
+ * \param[in]     wiretype Wiretype
+ * \param[in]     tag      Tag
  */
 static void
-init(pb_part_t *part, const pb_field_descriptor_t *descriptor) {
-  assert(part && descriptor);
+init(pb_part_t *part, pb_wiretype_t wiretype, pb_tag_t tag) {
+  assert(part && tag);
   assert(pb_part_aligned(part));
-
-  /* Initialize field for writing */
   do {
-    pb_wiretype_t wiretype = pb_field_descriptor_wiretype(descriptor);
-    pb_tag_t tag = pb_field_descriptor_tag(descriptor);
 
-    /* Write tag to buffer */
+    /* Write tag to temporary buffer */
     uint32_t value = wiretype | (tag << 3);
     uint8_t data[10]; size_t size = pb_varint_pack_uint32(data, &value);
 
@@ -351,6 +363,7 @@ pb_part_create(pb_message_t *message, pb_tag_t tag) {
     /* Don't indicate an error, if the cursor just reached the end */
     if (pb_cursor_valid(&temp) ||
         pb_cursor_error(&temp) == PB_ERROR_EOM) {
+      pb_cursor_destroy(&temp);
 
       /* If the tag matches and the field is non-repeated, we're done */
       size_t start = pb_message_start(message);
@@ -363,13 +376,12 @@ pb_part_create(pb_message_t *message, pb_tag_t tag) {
         }
 
         /* Otherwise correct insert vector in documented cases */
-        const pb_offset_t *offset = pb_cursor_current(&cursor);
+        const pb_offset_t *offset = pb_cursor_offset(&cursor);
         if (pb_cursor_pos(&cursor) || pb_cursor_tag(&cursor) <= tag)
           start = offset->end;
       }
-      pb_cursor_destroy(&cursor);
 
-      /* Create and return an empty part */
+      /* Create an empty part */
       pb_part_t part = {
         .journal = pb_message_journal(message),
         .version = pb_message_version(message),
@@ -383,7 +395,24 @@ pb_part_create(pb_message_t *message, pb_tag_t tag) {
           }
         }
       };
-      init(&part, descriptor);
+
+      /* Initialize length prefix of part underlying a packed field */
+      if (pb_field_descriptor_packed(descriptor)) {
+        if (tag != pb_cursor_tag(&cursor)) {
+          init(&part, PB_WIRETYPE_LENGTH, tag);
+
+          /* Correct offsets for packed field */
+          part.offset.diff.tag = 0;
+          part.offset.diff.length = 0;
+        }
+
+      /* Initialize all other cases */
+      } else {
+        init(&part, pb_field_descriptor_wiretype(descriptor), tag);
+      }
+
+      /* Cleanup and return part */
+      pb_cursor_destroy(&cursor);
       return part;
     }
     pb_cursor_destroy(&temp);
@@ -432,7 +461,7 @@ extern pb_part_t
 pb_part_create_from_cursor(pb_cursor_t *cursor) {
   assert(cursor);
   if (pb_cursor_valid(cursor) && !pb_cursor_align(cursor)) {
-    const pb_offset_t *offset = pb_cursor_current(cursor);
+    const pb_offset_t *offset = pb_cursor_offset(cursor);
     pb_part_t part = {
       .journal = pb_cursor_journal(cursor),
       .version = pb_cursor_version(cursor),
@@ -516,10 +545,15 @@ pb_part_clear(pb_part_t *part) {
   if (!pb_part_valid(part) || (!pb_part_aligned(part) && pb_part_align(part)))
     return PB_ERROR_INVALID;
 
+  /* Adjust origin for correct journaling of packed fields */
+  ptrdiff_t origin = part->offset.diff.tag
+    ? part->offset.diff.origin
+    : 0;
+
   /* Clear data from journal */
   ptrdiff_t  delta = -(pb_part_size(part)) + part->offset.diff.tag;
   pb_error_t error = pb_journal_clear(part->journal,
-    part->offset.start + part->offset.diff.origin,
+    part->offset.start + origin,
     part->offset.start + part->offset.diff.tag,
     part->offset.end);
   if (likely_(!error)) {
@@ -527,11 +561,9 @@ pb_part_clear(pb_part_t *part) {
     /* Update offsets if necessary */
     if (delta) {
       part->version++;
-      part->offset.start        = delta + part->offset.end;
-      part->offset.end         += delta;
-      part->offset.diff.origin  = 0;
-      part->offset.diff.tag     = 0;
-      part->offset.diff.length  = 0;
+      part->offset.start       = delta + part->offset.end;
+      part->offset.end        += delta;
+      part->offset.diff.origin = 0;
 
       /* Recursive length prefix update of parent messages */
       error = adjust(part, delta);

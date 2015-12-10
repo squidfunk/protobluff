@@ -26,6 +26,7 @@
 #include <assert.h>
 #include <stddef.h>
 
+#include <protobluff/core/descriptor.h>
 #include <protobluff/message/common.h>
 #include <protobluff/message/message.h>
 
@@ -37,8 +38,10 @@ typedef struct pb_cursor_t {
   pb_message_t message;                /*!< Message */
   pb_tag_t tag;                        /*!< Tag to look for */
   struct {
-    pb_tag_t tag;                      /*!< Current tag */
+    const pb_field_descriptor_t
+      *descriptor;                     /*!< Current field descriptor */
     pb_offset_t offset;                /*!< Current offsets */
+    pb_offset_t packed;                /*!< Current packed context */
   } current;
   size_t pos;                          /*!< Current position */
   pb_error_t error;                    /*!< Error code */
@@ -121,15 +124,15 @@ pb_cursor_message(const pb_cursor_t *cursor) {
 }
 
 /*!
- * Retrieve the tag at the current position of a cursor.
+ * Retrieve the field descriptor at the current position of a cursor.
  *
  * \param[in] cursor Cursor
- * \return           Current tag
+ * \return           Field descriptor
  */
-PB_INLINE pb_tag_t
-pb_cursor_tag(const pb_cursor_t *cursor) {
+PB_INLINE const pb_field_descriptor_t *
+pb_cursor_descriptor(const pb_cursor_t *cursor) {
   assert(cursor);
-  return cursor->current.tag;
+  return cursor->current.descriptor;
 }
 
 /*!
@@ -138,7 +141,7 @@ pb_cursor_tag(const pb_cursor_t *cursor) {
  * \param[in] cursor Cursor
  * \return           Current position
  */
-PB_INLINE pb_tag_t
+PB_INLINE size_t
 pb_cursor_pos(const pb_cursor_t *cursor) {
   assert(cursor);
   return cursor->pos;

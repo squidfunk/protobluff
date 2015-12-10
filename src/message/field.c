@@ -139,18 +139,15 @@ extern pb_field_t
 pb_field_create_from_cursor(pb_cursor_t *cursor) {
   assert(cursor);
   if (pb_cursor_valid(cursor)) {
-    const pb_message_t *message = pb_cursor_message(cursor);
-    const pb_field_descriptor_t *descriptor =
-      pb_descriptor_field_by_tag(
-        pb_message_descriptor(message), pb_cursor_tag(cursor));
-    if (descriptor)
-      if (pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE) {
-        pb_field_t field = {
-          .descriptor = descriptor,
-          .part       = pb_part_create_from_cursor(cursor)
-        };
-        return field;
-      }
+    const pb_field_descriptor_t *descriptor = pb_cursor_descriptor(cursor);
+    if (descriptor &&
+        pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE) {
+      pb_field_t field = {
+        .descriptor = descriptor,
+        .part       = pb_part_create_from_cursor(cursor)
+      };
+      return field;
+    }
   }
   return pb_field_create_invalid();
 }

@@ -49,7 +49,7 @@ pb_buffer_grow(
 /*!
  * Create a zero-copy buffer.
  *
- * This function is only for internal use (mainly be the decoder), as the size
+ * This function is only for internal use (mainly by the decoder), as the size
  * may be initialized to zero.
  *
  * \param[in,out] data[] Raw data
@@ -59,7 +59,6 @@ pb_buffer_grow(
 PB_WARN_UNUSED_RESULT
 PB_INLINE pb_buffer_t
 pb_buffer_create_zero_copy_internal(uint8_t data[], size_t size) {
-  assert(data);
   pb_buffer_t buffer = {
     .allocator = &allocator_zero_copy,
     .data      = data,

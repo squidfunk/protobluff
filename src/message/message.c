@@ -128,11 +128,9 @@ extern pb_message_t
 pb_message_create_from_cursor(pb_cursor_t *cursor) {
   assert(cursor);
   if (pb_cursor_valid(cursor)) {
-    const pb_message_t *message = pb_cursor_message(cursor);
-    const pb_field_descriptor_t *descriptor =
-      pb_descriptor_field_by_tag(message->descriptor,
-        pb_cursor_tag(cursor));
-    if (descriptor && pb_field_descriptor_type(descriptor) == PB_TYPE_MESSAGE) {
+    const pb_field_descriptor_t *descriptor = pb_cursor_descriptor(cursor);
+    if (descriptor &&
+        pb_field_descriptor_type(descriptor) == PB_TYPE_MESSAGE) {
       assert(pb_field_descriptor_reference(descriptor));
       pb_message_t submessage = {
         .descriptor = pb_field_descriptor_reference(descriptor),

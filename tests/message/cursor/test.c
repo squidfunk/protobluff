@@ -50,9 +50,9 @@ descriptor = { {
   (const pb_field_descriptor_t []){
     {  1, "F01", UINT32,  REPEATED },
     {  2, "F02", UINT64,  OPTIONAL },
-    {  3, "F03", SINT32,  REPEATED },
+    {  3, "F03", UINT32,  REPEATED, NULL, NULL, PACKED },
     {  4, "F04", SINT64,  REPEATED },
-    {  5, "F05", BOOL,    REPEATED },
+    {  5, "F05", FLOAT,   REPEATED, NULL, NULL, PACKED },
     {  6, "F06", FLOAT,   OPTIONAL, NULL, &default_float },
     {  7, "F07", DOUBLE,  REPEATED },
     {  8, "F08", STRING,  REPEATED },
@@ -112,6 +112,50 @@ START_TEST(test_create_absent) {
 
   /* Assert cursor tag and position */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Create a cursor over a message for a packed field.
+ */
+START_TEST(test_create_packed) {
+  const uint8_t data[] = { 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 6;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor tag and position */
+  ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Create a cursor over a merged message for a packed field.
+ */
+START_TEST(test_create_packed_merged) {
+  const uint8_t data[] = { 26, 2, 1, 2, 8, 1, 26, 2, 3, 4 };
+  const size_t  size   = 10;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor tag and position */
+  ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
   ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
@@ -387,7 +431,8 @@ START_TEST(test_next) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
   /* Walk through message and read fields */
-  for (size_t f = 1, value; f < 5; f++, pb_cursor_next(&cursor)) {
+  uint64_t value;
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
     pb_field_t field = pb_field_create_from_cursor(&cursor);
     ck_assert_uint_eq(PB_ERROR_NONE, pb_field_get(&field, &value));
     ck_assert_uint_eq(f, value);
@@ -432,6 +477,118 @@ START_TEST(test_next) {
 } END_TEST
 
 /*
+ * Move a cursor to the next field.
+ */
+START_TEST(test_next_packed) {
+  const uint8_t data[] = { 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 6;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Walk through message and read fields */
+  uint32_t value;
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    pb_field_t field = pb_field_create_from_cursor(&cursor);
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_field_get(&field, &value));
+    ck_assert_uint_eq(f, value);
+
+    /* Assert field validity and error */
+    fail_unless(pb_field_valid(&field));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_field_error(&field));
+
+    /* Assert field size and version */
+    fail_if(pb_field_empty(&field));
+    ck_assert_uint_eq(1, pb_field_size(&field));
+    ck_assert_uint_eq(0, pb_field_version(&field));
+
+    /* Assert field offsets */
+    ck_assert_uint_eq(1 + f, pb_field_start(&field));
+    ck_assert_uint_eq(2 + f, pb_field_end(&field));
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(6, pb_journal_size(&journal));
+
+    /* Free all allocated memory */
+    pb_field_destroy(&field);
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Move a cursor to the next field in a merged message.
+ */
+START_TEST(test_next_packed_merged) {
+  const uint8_t data[] = { 26, 2, 1, 2, 8, 1, 26, 2, 3, 4 };
+  const size_t  size   = 10;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Walk through message and read fields */
+  uint32_t value;
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    pb_field_t field = pb_field_create_from_cursor(&cursor);
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_field_get(&field, &value));
+    ck_assert_uint_eq(f, value);
+
+    /* Assert field validity and error */
+    fail_unless(pb_field_valid(&field));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_field_error(&field));
+
+    /* Assert field size and version */
+    fail_if(pb_field_empty(&field));
+    ck_assert_uint_eq(1, pb_field_size(&field));
+    ck_assert_uint_eq(0, pb_field_version(&field));
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(10, pb_journal_size(&journal));
+
+    /* Free all allocated memory */
+    pb_field_destroy(&field);
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
  * Move a cursor to the next length-prefixed field.
  */
 START_TEST(test_next_length) {
@@ -448,7 +605,8 @@ START_TEST(test_next_length) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
   /* Walk through message and read submessages */
-  for (size_t m = 1, value; m < 3; m++, pb_cursor_next(&cursor)) {
+  uint64_t value;
+  for (size_t m = 1; m < 3; m++, pb_cursor_next(&cursor)) {
     pb_message_t submessage = pb_message_create_from_cursor(&cursor);
     ck_assert_uint_eq(PB_ERROR_NONE, pb_message_get(&submessage, 2, &value));
     ck_assert_uint_eq(m, value);
@@ -509,7 +667,8 @@ START_TEST(test_next_unaligned) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
   /* Walk through message and read fields */
-  for (size_t f = 1, value; f < 5; f++, pb_cursor_next(&cursor)) {
+  uint64_t value;
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
     pb_field_t field = pb_field_create_from_cursor(&cursor);
     ck_assert_uint_eq(PB_ERROR_NONE, pb_field_get(&field, &value));
     ck_assert_uint_eq(f * 2, value);
@@ -698,7 +857,8 @@ START_TEST(test_rewind) {
   fail_unless(pb_cursor_rewind(&cursor));
 
   /* Walk through message and read fields */
-  for (size_t f = 1, value; f < 5; f++, pb_cursor_next(&cursor)) {
+  uint64_t value;
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
     pb_field_t field = pb_field_create_from_cursor(&cursor);
     ck_assert_uint_eq(PB_ERROR_NONE, pb_field_get(&field, &value));
     ck_assert_uint_eq(f, value);
@@ -743,6 +903,104 @@ START_TEST(test_rewind) {
 } END_TEST
 
 /*
+ * Rewind a cursor to its initial position.
+ */
+START_TEST(test_rewind_packed) {
+  const uint8_t data[] = { 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 6;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Use up and rewind cursor */
+  while (pb_cursor_next(&cursor));
+  fail_unless(pb_cursor_rewind(&cursor));
+
+  /* Walk through message and read fields */
+  uint32_t value;
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
+    ck_assert_uint_eq(f, value);
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(6, pb_journal_size(&journal));
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Rewind a cursor to its initial position.
+ */
+START_TEST(test_rewind_packed_merged) {
+  const uint8_t data[] = { 26, 4, 1, 2, 3, 4, 26, 2, 5, 6 };
+  const size_t  size   = 10;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Use up and rewind cursor */
+  while (pb_cursor_next(&cursor));
+  fail_unless(pb_cursor_rewind(&cursor));
+
+  /* Walk through message and read fields */
+  uint32_t value;
+  for (size_t f = 1; f < 7; f++, pb_cursor_next(&cursor)) {
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
+    ck_assert_uint_eq(f, value);
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(10, pb_journal_size(&journal));
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
  * Rewind an unaligned cursor to its initial position.
  */
 START_TEST(test_rewind_unaligned) {
@@ -770,17 +1028,17 @@ START_TEST(test_rewind_unaligned) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
+  /* Assert cursor tag and position */
+  ck_assert_uint_eq(2, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(2, pb_cursor_pos(&cursor));
+
   /* Seek value located before with cursor */
   value2 = 2;
   fail_if(pb_cursor_seek(&cursor, &value2));
 
-  /* Assert cursor validity and error again */
+  /* Assert cursor validity and error */
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
-
-  /* Assert cursor tag and position */
-  ck_assert_uint_eq(2, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(3, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -829,15 +1087,125 @@ START_TEST(test_seek) {
   /* Seek value with cursor */
   uint64_t value = 3;
   fail_unless(pb_cursor_seek(&cursor, &value));
-  fail_if(pb_cursor_seek(&cursor, &value));
-
-  /* Assert cursor validity and error again */
-  fail_if(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Assert cursor tag and position */
   ck_assert_uint_eq(2, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(3, pb_cursor_pos(&cursor));
+  ck_assert_uint_eq(2, pb_cursor_pos(&cursor));
+
+  /* Seek value with cursor again */
+  fail_if(pb_cursor_seek(&cursor, &value));
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Seek a cursor from its current position to a field containing the value.
+ */
+START_TEST(test_seek_packed) {
+  const uint8_t data[] = { 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 6;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Seek value with cursor */
+  uint32_t value = 3;
+  fail_unless(pb_cursor_seek(&cursor, &value));
+
+  /* Assert cursor tag and position */
+  ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(2, pb_cursor_pos(&cursor));
+
+  /* Seek value with cursor again */
+  fail_if(pb_cursor_seek(&cursor, &value));
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Seek a cursor from its current position to a field containing the value.
+ */
+START_TEST(test_seek_packed_merged) {
+  const uint8_t data[] = { 26, 2, 1, 2, 8, 1, 26, 2, 3, 4 };
+  const size_t  size   = 10;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Seek value with cursor */
+  uint32_t value = 3;
+  fail_unless(pb_cursor_seek(&cursor, &value));
+
+  /* Assert cursor tag and position */
+  ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(2, pb_cursor_pos(&cursor));
+
+  /* Seek value with cursor again */
+  fail_if(pb_cursor_seek(&cursor, &value));
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Seek a cursor from its current position to a field containing the value.
+ */
+START_TEST(test_seek_packed_invalid) {
+  const uint8_t data[] = { 26, 4, 1, 2, 3, 128 };
+  const size_t  size   = 6;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Seek value with cursor */
+  uint32_t value = 4;
+  fail_if(pb_cursor_seek(&cursor, &value));
+
+  /* Assert cursor tag and position */
+  ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(2, pb_cursor_pos(&cursor));
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_VARINT, pb_cursor_error(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -865,15 +1233,17 @@ START_TEST(test_seek_string) {
   /* Seek value with cursor */
   pb_string_t value = pb_string_init_from_chars("DEFAULT");
   fail_unless(pb_cursor_seek(&cursor, &value));
-  fail_if(pb_cursor_seek(&cursor, &value));
-
-  /* Assert cursor validity and error again */
-  fail_if(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Assert cursor tag and position */
   ck_assert_uint_eq(8, pb_cursor_tag(&cursor));
   ck_assert_uint_eq(1, pb_cursor_pos(&cursor));
+
+  /* Seek value with cursor again */
+  fail_if(pb_cursor_seek(&cursor, &value));
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -904,15 +1274,17 @@ START_TEST(test_seek_unaligned) {
   /* Seek value with cursor */
   uint64_t value2 = 3;
   fail_unless(pb_cursor_seek(&cursor, &value2));
-  fail_if(pb_cursor_seek(&cursor, &value2));
-
-  /* Assert cursor validity and error again */
-  fail_if(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Assert cursor tag and position */
   ck_assert_uint_eq(2, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(3, pb_cursor_pos(&cursor));
+  ck_assert_uint_eq(2, pb_cursor_pos(&cursor));
+
+  /* Seek value with cursor again */
+  fail_if(pb_cursor_seek(&cursor, &value2));
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -955,20 +1327,20 @@ START_TEST(test_seek_invalid_tag) {
   pb_cursor_t  cursor  = pb_cursor_create(&message, 11);
 
   /* Assert cursor validity and error */
-  fail_unless(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Seek value with cursor */
   uint32_t value = 1;
   fail_if(pb_cursor_seek(&cursor, &value));
 
   /* Assert cursor validity and error */
-  fail_unless(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Assert cursor tag and position */
-  ck_assert_uint_eq(11, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0,  pb_cursor_pos(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -996,7 +1368,7 @@ START_TEST(test_seek_invalid_type) {
   uint32_t value = 0;
   fail_if(pb_cursor_seek(&cursor, &value));
 
-  /* Assert cursor validity and error again */
+  /* Assert cursor validity and error */
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
@@ -1026,9 +1398,10 @@ START_TEST(test_match) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Read value from cursor */
+  /* Compare with values from cursor */
   for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
-    fail_unless(pb_cursor_match(&cursor, &f));
+    uint64_t value = f;
+    fail_unless(pb_cursor_match(&cursor, &value));
 
     /* Assert cursor validity and error */
     fail_unless(pb_cursor_valid(&cursor));
@@ -1054,6 +1427,120 @@ START_TEST(test_match) {
 } END_TEST
 
 /*
+ * Compare the value of the current field of a cursor with the given value.
+ */
+START_TEST(test_match_packed) {
+  const uint8_t data[] = { 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 6;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Compare with values from cursor */
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    uint32_t value = f;
+    fail_unless(pb_cursor_match(&cursor, &value));
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(6, pb_journal_size(&journal));
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Compare the value of the current field of a cursor with the given value.
+ */
+START_TEST(test_match_packed_merged) {
+  const uint8_t data[] = { 26, 2, 1, 2, 8, 1, 26, 2, 3, 4 };
+  const size_t  size   = 10;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Compare with values from cursor */
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    uint32_t value = f;
+    fail_unless(pb_cursor_match(&cursor, &value));
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(10, pb_journal_size(&journal));
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Compare the value of the current field of a cursor with the given value.
+ */
+START_TEST(test_match_packed_invalid) {
+  const uint8_t data[] = { 26, 1, 128 };
+  const size_t  size   = 3;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_VARINT, pb_cursor_error(&cursor));
+
+  /* Compare with value from cursor */
+  uint32_t value = 128;
+  fail_if(pb_cursor_match(&cursor, &value));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
  * Compare the value of a string field of a cursor with the given value.
  */
 START_TEST(test_match_string) {
@@ -1070,7 +1557,7 @@ START_TEST(test_match_string) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Read value from cursor */
+  /* Compare with values from cursor */
   for (size_t f = 0; f < 2; f++, pb_cursor_next(&cursor)) {
     pb_string_t value = pb_string_init_from_chars("DEFAULT");
     fail_unless(pb_cursor_match(&cursor, &value));
@@ -1125,7 +1612,7 @@ START_TEST(test_match_unaligned) {
   uint64_t value = 127;
   ck_assert_uint_eq(PB_ERROR_NONE, pb_field_put(&field, &value));
 
-  /* Compare value from cursor */
+  /* Compare with values from cursor */
   fail_unless(pb_cursor_match(&cursor, &value));
 
   /* Free all allocated memory */
@@ -1144,7 +1631,7 @@ START_TEST(test_match_invalid) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_error(&cursor));
 
-  /* Compare value from cursor */
+  /* Compare with value from cursor */
   uint32_t value = 1;
   fail_if(pb_cursor_match(&cursor, &value));
 
@@ -1169,20 +1656,20 @@ START_TEST(test_match_invalid_tag) {
   pb_cursor_t  cursor  = pb_cursor_create_without_tag(&message);
 
   /* Assert cursor validity and error */
-  fail_unless(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
-  /* Compare value from cursor */
+  /* Compare with value from cursor */
   uint32_t value = 1;
   fail_if(pb_cursor_match(&cursor, &value));
 
-  /* Assert cursor validity and error again */
-  fail_unless(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Assert cursor tag and position */
-  ck_assert_uint_eq(11, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0,  pb_cursor_pos(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -1206,11 +1693,11 @@ START_TEST(test_match_invalid_type) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Compare value from cursor */
+  /* Compare with value from cursor */
   uint32_t value = 0;
   fail_if(pb_cursor_match(&cursor, &value));
 
-  /* Assert cursor validity and error again */
+  /* Assert cursor validity and error */
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
@@ -1241,7 +1728,8 @@ START_TEST(test_get) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
   /* Read value from cursor */
-  for (size_t f = 1, value; f < 5; f++, pb_cursor_next(&cursor)) {
+  uint64_t value;
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
     ck_assert_uint_eq(f, value);
 
@@ -1261,6 +1749,122 @@ START_TEST(test_get) {
   /* Assert cursor validity and error */
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Read the value of the current field from a cursor.
+ */
+START_TEST(test_get_packed) {
+  const uint8_t data[] = { 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 6;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Read value from cursor */
+  uint32_t value;
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
+    ck_assert_uint_eq(f, value);
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(6, pb_journal_size(&journal));
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Read the value of the current field in a merged message from a cursor.
+ */
+START_TEST(test_get_packed_merged) {
+  const uint8_t data[] = { 26, 2, 1, 2, 8, 1, 26, 2, 3, 4 };
+  const size_t  size   = 10;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Read value from cursor */
+  uint32_t value;
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
+    ck_assert_uint_eq(f, value);
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(10, pb_journal_size(&journal));
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Read the value of the current field from a cursor.
+ */
+START_TEST(test_get_packed_invalid) {
+  const uint8_t data[] = { 26, 1, 128 };
+  const size_t  size   = 3;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_VARINT, pb_cursor_error(&cursor));
+
+  /* Read value from cursor */
+  uint32_t value;
+  ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_get(&cursor, &value));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -1386,20 +1990,20 @@ START_TEST(test_get_invalid_tag) {
   pb_cursor_t  cursor  = pb_cursor_create_without_tag(&message);
 
   /* Assert cursor validity and error */
-  fail_unless(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Read value from cursor */
   uint32_t value;
-  ck_assert_uint_eq(PB_ERROR_DESCRIPTOR, pb_cursor_get(&cursor, &value));
+  ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_get(&cursor, &value));
 
-  /* Assert cursor validity and error again */
-  fail_unless(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Assert cursor tag and position */
-  ck_assert_uint_eq(11, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0,  pb_cursor_pos(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -1427,7 +2031,7 @@ START_TEST(test_get_invalid_type) {
   uint32_t value;
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_get(&cursor, &value));
 
-  /* Assert cursor validity and error again */
+  /* Assert cursor validity and error */
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
@@ -1458,7 +2062,8 @@ START_TEST(test_put) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
   /* Write values to cursor */
-  for (size_t f = 1, value; f < 5; f++, pb_cursor_next(&cursor)) {
+  uint64_t value;
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_put(&cursor, &f));
 
     /* Assert cursor validity and error */
@@ -1481,6 +2086,128 @@ START_TEST(test_put) {
   /* Assert cursor validity and error */
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Write a value to the current field of a cursor.
+ */
+START_TEST(test_put_packed) {
+  const uint8_t data[] = { 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 6;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Write values to cursor */
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    uint32_t value = f + 127;
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_put(&cursor, &value));
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Read value from cursor */
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
+    ck_assert_uint_eq(f + 127, value);
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(f + 6, pb_journal_size(&journal));
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Write a value to the current field in a merged message of a cursor.
+ */
+START_TEST(test_put_packed_merged) {
+  const uint8_t data[] = { 26, 2, 1, 2, 8, 1, 26, 2, 3, 4 };
+  const size_t  size   = 10;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Write values to cursor */
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    uint32_t value = f + 127;
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_put(&cursor, &value));
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Read value from cursor */
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
+    ck_assert_uint_eq(f + 127, value);
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(f + 10, pb_journal_size(&journal));
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Write a value to the current field of a cursor.
+ */
+START_TEST(test_put_packed_invalid) {
+  const uint8_t data[] = { 26, 1, 128 };
+  const size_t  size   = 3;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_VARINT, pb_cursor_error(&cursor));
+
+  /* Read value from cursor */
+  uint32_t value = 1000;
+  ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_put(&cursor, &value));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -1648,8 +2375,7 @@ START_TEST(test_put_message_invalid) {
 
   /* Write values to cursor */
   for (size_t f = 0; f < 2; f++, pb_cursor_next(&cursor)) {
-    ck_assert_uint_eq(PB_ERROR_INVALID,
-      pb_cursor_put(&cursor, &message1));
+    ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_put(&cursor, &message1));
 
     /* Assert cursor validity and error */
     fail_unless(pb_cursor_valid(&cursor));
@@ -1706,20 +2432,20 @@ START_TEST(test_put_invalid_tag) {
   pb_cursor_t  cursor  = pb_cursor_create_without_tag(&message);
 
   /* Assert cursor validity and error */
-  fail_unless(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Write value to cursor */
   uint32_t value = 127;
-  ck_assert_uint_eq(PB_ERROR_DESCRIPTOR, pb_cursor_put(&cursor, &value));
+  ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_put(&cursor, &value));
 
-  /* Assert cursor validity and error again */
-  fail_unless(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Assert cursor tag and position */
-  ck_assert_uint_eq(11, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0,  pb_cursor_pos(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -1743,8 +2469,9 @@ START_TEST(test_erase) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Write value to cursor */
-  for (size_t f = 1, value; f < 5; f++, pb_cursor_next(&cursor)) {
+  /* Erase values from cursor */
+  uint64_t value;
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
     ck_assert_uint_eq(f, value);
 
@@ -1774,6 +2501,127 @@ START_TEST(test_erase) {
 } END_TEST
 
 /*
+ * Erase the current field from a cursor.
+ */
+START_TEST(test_erase_packed) {
+  const uint8_t data[] = { 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 6;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Erase values from cursor */
+  uint32_t value;
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
+    ck_assert_uint_eq(f, value);
+
+    /* Clear field */
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_erase(&cursor));
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_error(&cursor));
+
+  /* Assert journal size */
+  fail_unless(pb_journal_empty(&journal));
+  ck_assert_uint_eq(0, pb_journal_size(&journal));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Erase the current field in a merged message from a cursor.
+ */
+START_TEST(test_erase_packed_merged) {
+  const uint8_t data[] = { 26, 4, 1, 2, 3, 4, 26, 2, 5, 6 };
+  const size_t  size   = 10;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Erase values from cursor */
+  uint32_t value;
+  for (size_t f = 1; f < 7; f++, pb_cursor_next(&cursor)) {
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
+    ck_assert_uint_eq(f, value);
+
+    /* Clear field */
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_erase(&cursor));
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_error(&cursor));
+
+  /* Assert journal size */
+  fail_unless(pb_journal_empty(&journal));
+  ck_assert_uint_eq(0, pb_journal_size(&journal));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Erase the current field from a cursor.
+ */
+START_TEST(test_erase_packed_invalid) {
+  const uint8_t data[] = { 26, 1, 128 };
+  const size_t  size   = 3;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_VARINT, pb_cursor_error(&cursor));
+
+  /* Erase value from cursor */
+  ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_erase(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
  * Erase the current string field from a cursor.
  */
 START_TEST(test_erase_string) {
@@ -1790,7 +2638,7 @@ START_TEST(test_erase_string) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Clear value from cursor */
+  /* Erase values from cursor */
   for (size_t f = 0; f < 2; f++, pb_cursor_next(&cursor)) {
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_erase(&cursor));
 
@@ -1832,7 +2680,7 @@ START_TEST(test_erase_message) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Clear value from cursor */
+  /* Erase values from cursor */
   for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_erase(&cursor));
 
@@ -1885,7 +2733,7 @@ START_TEST(test_erase_unaligned) {
   uint64_t value = 127, check = 0;
   ck_assert_uint_eq(PB_ERROR_NONE, pb_field_put(&field, &value));
 
-  /* Clear value from cursor */
+  /* Erase value from cursor */
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_erase(&cursor));
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_get(&cursor, &check));
 
@@ -1912,7 +2760,7 @@ START_TEST(test_erase_invalid) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_error(&cursor));
 
-  /* Clear value from cursor */
+  /* Erase value from cursor */
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_erase(&cursor));
 
   /* Assert cursor tag and position */
@@ -1936,19 +2784,19 @@ START_TEST(test_erase_invalid_tag) {
   pb_cursor_t  cursor  = pb_cursor_create_without_tag(&message);
 
   /* Assert cursor validity and error */
-  fail_unless(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
-  /* Clear value from cursor */
-  ck_assert_uint_eq(PB_ERROR_DESCRIPTOR, pb_cursor_erase(&cursor));
+  /* Erase value from cursor */
+  ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_erase(&cursor));
 
-  /* Assert cursor validity and error again */
-  fail_unless(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Assert cursor tag and position */
-  ck_assert_uint_eq(11, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0,  pb_cursor_pos(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -1985,7 +2833,7 @@ START_TEST(test_raw) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
   fail_if(memcmp(raw, &value, sizeof(float)));
 
-  /* Assert cursor validity and error again */
+  /* Assert cursor validity and error */
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
@@ -1996,6 +2844,95 @@ START_TEST(test_raw) {
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
   pb_field_destroy(&field);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Retrieve a pointer to the raw data of the current field from a cursor.
+ */
+START_TEST(test_raw_packed) {
+  const uint8_t data[] = { 42, 8, 23, 183, 209, 56, 23, 183, 209, 56 };
+  const size_t  size   = 10;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 5);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Read value from cursor */
+  for (size_t f = 1; f < 3; f++, pb_cursor_next(&cursor)) {
+    float *raw = pb_cursor_raw(&cursor);
+    fail_if(memcmp(&default_float, raw, sizeof(float)));
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(5, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(10, pb_journal_size(&journal));
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Retrieve a pointer to the raw data of the current field from a cursor.
+ */
+START_TEST(test_raw_packed_merged) {
+  const uint8_t data[] = { 42, 8, 23, 183, 209, 56, 23, 183, 209, 56,
+                           42, 8, 23, 183, 209, 56, 23, 183, 209, 56 };
+  const size_t  size   = 20;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 5);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Read value from cursor */
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    float *raw = pb_cursor_raw(&cursor);
+    fail_if(memcmp(&default_float, raw, sizeof(float)));
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(5, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(20, pb_journal_size(&journal));
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
   pb_message_destroy(&message);
   pb_journal_destroy(&journal);
 } END_TEST
@@ -2033,7 +2970,7 @@ START_TEST(test_raw_unaligned) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value1));
   fail_if(memcmp(raw, &value1, sizeof(float)));
 
-  /* Assert cursor validity and error again */
+  /* Assert cursor validity and error */
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
@@ -2083,19 +3020,19 @@ START_TEST(test_raw_invalid_tag) {
   pb_cursor_t  cursor  = pb_cursor_create_without_tag(&message);
 
   /* Assert cursor validity and error */
-  fail_unless(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Obtain raw data */
   ck_assert_ptr_eq(NULL, pb_cursor_raw(&cursor));
 
-  /* Assert cursor validity and error again */
-  fail_unless(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Assert cursor tag and position */
-  ck_assert_uint_eq(11, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0,  pb_cursor_pos(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -2122,7 +3059,7 @@ START_TEST(test_raw_invalid_type) {
   /* Obtain raw data */
   ck_assert_ptr_eq(NULL, pb_cursor_raw(&cursor));
 
-  /* Assert cursor validity and error again */
+  /* Assert cursor validity and error */
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
@@ -2214,6 +3151,8 @@ main(void) {
   tcase = tcase_create("create");
   tcase_add_test(tcase, test_create);
   tcase_add_test(tcase, test_create_absent);
+  tcase_add_test(tcase, test_create_packed);
+  tcase_add_test(tcase, test_create_packed_merged);
   tcase_add_test(tcase, test_create_message_empty);
   tcase_add_test(tcase, test_create_message_invalid);
   tcase_add_test(tcase, test_create_without_tag);
@@ -2232,6 +3171,8 @@ main(void) {
   /* Add tests to test case "next" */
   tcase = tcase_create("next");
   tcase_add_test(tcase, test_next);
+  tcase_add_test(tcase, test_next_packed);
+  tcase_add_test(tcase, test_next_packed_merged);
   tcase_add_test(tcase, test_next_length);
   tcase_add_test(tcase, test_next_unaligned);
   tcase_add_test(tcase, test_next_invalid);
@@ -2244,6 +3185,8 @@ main(void) {
   /* Add tests to test case "rewind" */
   tcase = tcase_create("rewind");
   tcase_add_test(tcase, test_rewind);
+  tcase_add_test(tcase, test_rewind_packed);
+  tcase_add_test(tcase, test_rewind_packed_merged);
   tcase_add_test(tcase, test_rewind_unaligned);
   tcase_add_test(tcase, test_rewind_invalid);
   suite_add_tcase(suite, tcase);
@@ -2251,6 +3194,9 @@ main(void) {
   /* Add tests to test case "seek" */
   tcase = tcase_create("seek");
   tcase_add_test(tcase, test_seek);
+  tcase_add_test(tcase, test_seek_packed);
+  tcase_add_test(tcase, test_seek_packed_merged);
+  tcase_add_test(tcase, test_seek_packed_invalid);
   tcase_add_test(tcase, test_seek_string);
   tcase_add_test(tcase, test_seek_unaligned);
   tcase_add_test(tcase, test_seek_invalid);
@@ -2261,6 +3207,9 @@ main(void) {
   /* Add tests to test case "match" */
   tcase = tcase_create("match");
   tcase_add_test(tcase, test_match);
+  tcase_add_test(tcase, test_match_packed);
+  tcase_add_test(tcase, test_match_packed_merged);
+  tcase_add_test(tcase, test_match_packed_invalid);
   tcase_add_test(tcase, test_match_string);
   tcase_add_test(tcase, test_match_unaligned);
   tcase_add_test(tcase, test_match_invalid);
@@ -2271,6 +3220,9 @@ main(void) {
   /* Add tests to test case "get" */
   tcase = tcase_create("get");
   tcase_add_test(tcase, test_get);
+  tcase_add_test(tcase, test_get_packed);
+  tcase_add_test(tcase, test_get_packed_merged);
+  tcase_add_test(tcase, test_get_packed_invalid);
   tcase_add_test(tcase, test_get_string);
   tcase_add_test(tcase, test_get_unaligned);
   tcase_add_test(tcase, test_get_invalid);
@@ -2281,6 +3233,9 @@ main(void) {
   /* Add tests to test case "put" */
   tcase = tcase_create("put");
   tcase_add_test(tcase, test_put);
+  tcase_add_test(tcase, test_put_packed);
+  tcase_add_test(tcase, test_put_packed_merged);
+  tcase_add_test(tcase, test_put_packed_invalid);
   tcase_add_test(tcase, test_put_string);
   tcase_add_test(tcase, test_put_message);
   tcase_add_test(tcase, test_put_message_invalid);
@@ -2292,6 +3247,9 @@ main(void) {
   /* Add tests to test case "erase" */
   tcase = tcase_create("erase");
   tcase_add_test(tcase, test_erase);
+  tcase_add_test(tcase, test_erase_packed);
+  tcase_add_test(tcase, test_erase_packed_merged);
+  tcase_add_test(tcase, test_erase_packed_invalid);
   tcase_add_test(tcase, test_erase_string);
   tcase_add_test(tcase, test_erase_message);
   tcase_add_test(tcase, test_erase_unaligned);
@@ -2302,6 +3260,8 @@ main(void) {
   /* Add tests to test case "raw" */
   tcase = tcase_create("raw");
   tcase_add_test(tcase, test_raw);
+  tcase_add_test(tcase, test_raw_packed);
+  tcase_add_test(tcase, test_raw_packed_merged);
   tcase_add_test(tcase, test_raw_unaligned);
   tcase_add_test(tcase, test_raw_invalid);
   tcase_add_test(tcase, test_raw_invalid_tag);

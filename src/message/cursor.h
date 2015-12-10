@@ -92,15 +92,17 @@ pb_cursor_copy(const pb_cursor_t *cursor) {
 }
 
 /*!
- * Retrieve the tag a cursor is looking for.
+ * Retrieve the tag at the current position of a cursor.
  *
  * \param[in] cursor Cursor
- * \return           Tag to look for
+ * \return           Current tag
  */
 PB_INLINE pb_tag_t
-pb_cursor_tag_internal(const pb_cursor_t *cursor) {
+pb_cursor_tag(const pb_cursor_t *cursor) {
   assert(cursor);
-  return cursor->tag;
+  return !cursor->error && cursor->current.descriptor
+    ? pb_field_descriptor_tag(cursor->current.descriptor)
+    : 0;
 }
 
 /*!
@@ -134,7 +136,7 @@ pb_cursor_version(const pb_cursor_t *cursor) {
  * \return           Offsets
  */
 PB_INLINE const pb_offset_t *
-pb_cursor_current(const pb_cursor_t *cursor) {
+pb_cursor_offset(const pb_cursor_t *cursor) {
   assert(cursor);
   return &(cursor->current.offset);
 }

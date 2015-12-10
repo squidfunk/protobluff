@@ -31,11 +31,10 @@ static const char *error_map[] = {
   [PB_ERROR_NONE]       = "None",
   [PB_ERROR_ALLOC]      = "Allocation failed",
   [PB_ERROR_INVALID]    = "Invalid arguments or data",
-  [PB_ERROR_DESCRIPTOR] = "Invalid descriptor",
-  [PB_ERROR_WIRETYPE]   = "Invalid wiretype",
   [PB_ERROR_VARINT]     = "Invalid varint",
   [PB_ERROR_OFFSET]     = "Invalid offset",
-  [PB_ERROR_ABSENT]     = "Absent field or value"
+  [PB_ERROR_ABSENT]     = "Absent field or value",
+  [PB_ERROR_EOM]        = "Cursor reached end of message"
 };
 
 /* ----------------------------------------------------------------------------
