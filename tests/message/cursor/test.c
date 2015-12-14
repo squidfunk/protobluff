@@ -589,6 +589,64 @@ START_TEST(test_next_packed_merged) {
 } END_TEST
 
 /*
+ * Move a cursor to the next field.
+ */
+START_TEST(test_next_packed_wireonly) {
+  const uint8_t data[] = { 10, 4, 1, 2, 3, 4 };
+  const size_t  size   = 6;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 1);
+
+  /* Walk through message and read fields */
+  uint32_t value;
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    pb_field_t field = pb_field_create_from_cursor(&cursor);
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_field_get(&field, &value));
+    ck_assert_uint_eq(f, value);
+
+    /* Assert field validity and error */
+    fail_unless(pb_field_valid(&field));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_field_error(&field));
+
+    /* Assert field size and version */
+    fail_if(pb_field_empty(&field));
+    ck_assert_uint_eq(1, pb_field_size(&field));
+    ck_assert_uint_eq(0, pb_field_version(&field));
+
+    /* Assert field offsets */
+    ck_assert_uint_eq(1 + f, pb_field_start(&field));
+    ck_assert_uint_eq(2 + f, pb_field_end(&field));
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(1, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(6, pb_journal_size(&journal));
+
+    /* Free all allocated memory */
+    pb_field_destroy(&field);
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
  * Move a cursor to the next length-prefixed field.
  */
 START_TEST(test_next_length) {
@@ -3173,6 +3231,7 @@ main(void) {
   tcase_add_test(tcase, test_next);
   tcase_add_test(tcase, test_next_packed);
   tcase_add_test(tcase, test_next_packed_merged);
+  tcase_add_test(tcase, test_next_packed_wireonly);
   tcase_add_test(tcase, test_next_length);
   tcase_add_test(tcase, test_next_unaligned);
   tcase_add_test(tcase, test_next_invalid);

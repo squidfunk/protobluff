@@ -153,7 +153,8 @@ next(pb_cursor_t *cursor) {
     }
 
     /* Switch to packed context in case of packed field */
-    if (pb_field_descriptor_packed(cursor->current.descriptor)) {
+    if (wiretype != pb_field_descriptor_wiretype(cursor->current.descriptor) &&
+        wiretype == PB_WIRETYPE_LENGTH) {
       *packed = *offset;
 
       /* Prepare offsets for packed field members */
