@@ -185,7 +185,7 @@ START_TEST(test_check_message_empty) {
  * Validate a buffer with an extension field.
  */
 START_TEST(test_check_extension) {
-  const uint8_t data[] = { 8, 127, 16, 127, 162, 1, 127 };
+  const uint8_t data[] = { 8, 127, 16, 127, 160, 1, 127 };
   const size_t  size   = 7;
 
   /* Initialize descriptor extension */

@@ -176,6 +176,117 @@ encode_jump[] = {
 };
 
 /* ----------------------------------------------------------------------------
+ * Internal functions
+ * ------------------------------------------------------------------------- */
+
+/*!
+ * Encode values in packed encoding.
+ *
+ * \param[in,out] buffer     Buffer
+ * \param[in]     descriptor Field descriptor
+ * \param[in]     values     Pointer holding values
+ * \param[in]     size       Value count
+ * \return                   Error code
+ */
+static pb_error_t
+encode_packed(
+    pb_buffer_t *buffer, const pb_field_descriptor_t *descriptor,
+    const void *values, size_t size) {
+  assert(buffer && descriptor && values && size > 1);
+  assert(pb_buffer_valid(buffer));
+
+  /* Assert repeated and non-length-prefixed, packed field */
+  assert(
+    pb_field_descriptor_label(descriptor)    == PB_LABEL_REPEATED &&
+    pb_field_descriptor_wiretype(descriptor) != PB_WIRETYPE_LENGTH &&
+    pb_field_descriptor_packed(descriptor));
+  pb_type_t type = pb_field_descriptor_type(descriptor);
+  size_t    item = pb_field_descriptor_type_size(descriptor);
+
+  /* Calculate length of packed field */
+  size_t length = 0;
+  if (pb_field_descriptor_wiretype(descriptor) != PB_WIRETYPE_VARINT) {
+    length = size * item;
+  } else {
+    const uint8_t *temp = values;
+    for (size_t v = 0; v < size; v++) {
+      length += pb_varint_size(type, temp);
+      temp   += item;
+    }
+  }
+
+  /* Pack wiretype into tag */
+  pb_tag_t tag =
+    (pb_field_descriptor_tag(descriptor) << 3) | PB_WIRETYPE_LENGTH;
+
+  /* Encode tag, length prefix and values */
+  uint8_t *data = pb_buffer_grow(
+    buffer, pb_varint_size_uint32(&tag) +
+      pb_varint_size_uint32(&length) + length);
+  if (data) {
+    data += pb_varint_pack_uint32(data, &tag);
+    data += pb_varint_pack_uint32(data, &length);
+
+    /* Encode values */
+    if (pb_field_descriptor_wiretype(descriptor) != PB_WIRETYPE_VARINT) {
+      memcpy(data, values, length);
+    } else {
+      const uint8_t *temp = values;
+      for (size_t v = 0; v < size; v++) {
+
+#ifndef NDEBUG
+
+        /* Assert valid value for enum field */
+        if (type == PB_TYPE_ENUM)
+          assert(pb_enum_descriptor_value_by_number(
+            pb_field_descriptor_reference(descriptor),
+              *(const pb_enum_t *)temp));
+
+#endif /* NDEBUG */
+
+        /* Encode variable-sized integer according to type */
+        data += pb_varint_pack(type, data, temp);
+        temp += pb_field_descriptor_type_size(descriptor);
+      }
+    }
+    return PB_ERROR_NONE;
+  }
+  return PB_ERROR_ALLOC;
+}
+
+/*!
+ * Encode a value.
+ *
+ * \param[in,out] buffer     Buffer
+ * \param[in]     descriptor Field descriptor
+ * \param[in]     value      Pointer holding value
+ * \return                   Error code
+ */
+static pb_error_t
+encode(
+    pb_buffer_t *buffer, const pb_field_descriptor_t *descriptor,
+    const void *value) {
+  assert(buffer && descriptor && value);
+  assert(pb_buffer_valid(buffer));
+
+  /* Pack wiretype into tag */
+  pb_wiretype_t wiretype = pb_field_descriptor_wiretype(descriptor);
+  pb_tag_t tag = (pb_field_descriptor_tag(descriptor) << 3) | wiretype;
+
+  /* Encode tag and value */
+  uint8_t *data = pb_buffer_grow(
+    buffer, pb_varint_size_uint32(&tag));
+  if (data) {
+    pb_varint_pack_uint32(data, &tag);
+
+    /* Encode value */
+    assert(encode_jump[wiretype]);
+    return encode_jump[wiretype](buffer, descriptor, value);
+  }
+  return PB_ERROR_ALLOC;
+}
+
+/* ----------------------------------------------------------------------------
  * Interface
  * ------------------------------------------------------------------------- */
 
@@ -224,14 +335,10 @@ pb_encoder_destroy(pb_encoder_t *encoder) {
 }
 
 /*!
- * Encode a value.
+ * Encode a value or set of values.
  *
  * The encoder has a few limitations due to its simple and slim design that
  * may impact message validity:
- *
- * -# The encoder encodes a field regardless of its label (optional, required
- *    or repeated). The Protocol Buffers standard demands that only the last
- *    occurrence of an optional or required field is interpreted.
  *
  * -# The encoder does not check that all required fields are set. This can
  *    be done afterwards by creating a validator with pb_validator_create()
@@ -247,33 +354,39 @@ pb_encoder_destroy(pb_encoder_t *encoder) {
  *
  * \param[in,out] encoder Encoder
  * \param[in]     tag     Tag
- * \param[in]     value   Pointer holding value
+ * \param[in]     values  Pointer holding value(s)
+ * \param[in]     size    Value count
  * \return                Error code
  */
 extern pb_error_t
-pb_encoder_encode(pb_encoder_t *encoder, pb_tag_t tag, const void *value) {
-  assert(encoder && tag && value);
-  if (unlikely_(!pb_encoder_valid(encoder)) || encoder == value)
+pb_encoder_encode(
+    pb_encoder_t *encoder, pb_tag_t tag, const void *values, size_t size) {
+  assert(encoder && tag && values && size);
+  if (unlikely_(!pb_encoder_valid(encoder)))
     return PB_ERROR_INVALID;
+  pb_error_t error = PB_ERROR_NONE;
 
-  /* Assert descriptor */
+  /* Assert descriptor and correct label */
   const pb_field_descriptor_t *descriptor =
     pb_descriptor_field_by_tag(encoder->descriptor, tag);
-  assert(descriptor);
+  assert(descriptor && (
+    size == 1 || pb_field_descriptor_label(descriptor) == PB_LABEL_REPEATED));
 
-  /* Pack wiretype into tag */
-  pb_wiretype_t wiretype = pb_field_descriptor_wiretype(descriptor);
-  tag = (tag << 3) | wiretype;
+  /* Encode values based on potential packed flag */
+  if (size > 1 && pb_field_descriptor_packed(descriptor)) {
+    error = encode_packed(&(encoder->buffer), descriptor, values, size);
+  } else {
+    size_t type_size = pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE
+      ? pb_field_descriptor_type_size(descriptor)
+      : sizeof(pb_encoder_t);
 
-  /* Encode tag and value */
-  uint8_t *data = pb_buffer_grow(
-    &(encoder->buffer), pb_varint_size_uint32(&tag));
-  if (data) {
-    pb_varint_pack_uint32(data, &tag);
-
-    /* Encode value */
-    assert(encode_jump[wiretype]);
-    return encode_jump[wiretype](&(encoder->buffer), descriptor, value);
+    /* Encode values one-by-one */
+    const uint8_t *temp = values;
+    for (size_t v = 0; v < size; v++) {
+      assert(encoder != (void *)temp);
+      error = encode(&(encoder->buffer), descriptor, temp);
+      temp += type_size;
+    }
   }
-  return PB_ERROR_ALLOC;
+  return error;
 }

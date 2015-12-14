@@ -75,7 +75,7 @@ descriptor = { {
     {  3, "F03", SINT32,  OPTIONAL },
     {  4, "F04", SINT64,  OPTIONAL },
     {  5, "F05", BOOL,    OPTIONAL },
-    {  6, "F06", FLOAT,   OPTIONAL },
+    {  6, "F06", FLOAT,   OPTIONAL, NULL, NULL, PACKED },
     {  7, "F07", DOUBLE,  OPTIONAL },
     {  8, "F08", STRING,  OPTIONAL },
     {  9, "F09", BYTES,   OPTIONAL },
@@ -133,7 +133,7 @@ START_TEST(test_decode) {
 } END_TEST
 
 /*
- * Decode a buffer using a handler.
+ * Decode a buffer with a message using a handler.
  */
 START_TEST(test_decode_message) {
   const uint8_t data[] = { 98, 2, 8, 127, 8, 127 };
@@ -191,6 +191,34 @@ START_TEST(test_decode_skip) {
 } END_TEST
 
 /*
+ * Decode a buffer with a packed field using a handler.
+ */
+START_TEST(test_decode_packed) {
+  const uint8_t data[] = { 50, 8, 0, 202, 154, 59, 0, 202, 154, 59 };
+  const size_t  size   = 10;
+
+  /* Create buffer and decoder */
+  pb_buffer_t  buffer  = pb_buffer_create(data, size);
+  pb_decoder_t decoder = pb_decoder_create(&descriptor, &buffer);
+
+  /* Assert decoder validity and error */
+  fail_unless(pb_decoder_valid(&decoder));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_decoder_error(&decoder));
+
+  /* Decode using the handler */
+  pb_tag_t tags[12] = {};
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_decoder_decode(&decoder, handler, tags));
+
+  /* Assert expected occurences */
+  ck_assert_uint_eq(2, tags[5]);
+
+  /* Free all allocated memory */
+  pb_decoder_destroy(&decoder);
+  pb_buffer_destroy(&buffer);
+} END_TEST
+
+/*
  * Decode an invalid buffer using a handler.
  */
 START_TEST(test_decode_invalid) {
@@ -235,10 +263,82 @@ START_TEST(test_decode_invalid_tag) {
 } END_TEST
 
 /*
+ * Decode a buffer with an invalid length prefix using a handler.
+ */
+START_TEST(test_decode_invalid_length) {
+  const uint8_t data[] = { 26, 5 };
+  const size_t  size   = 2;
+
+  /* Create buffer and decoder */
+  pb_buffer_t  buffer  = pb_buffer_create(data, size);
+  pb_decoder_t decoder = pb_decoder_create(&descriptor, &buffer);
+
+  /* Assert decoder validity and error */
+  fail_unless(pb_decoder_valid(&decoder));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_decoder_error(&decoder));
+
+  /* Decode using the handler */
+  ck_assert_uint_eq(PB_ERROR_OFFSET,
+    pb_decoder_decode(&decoder, handler, NULL));
+
+  /* Free all allocated memory */
+  pb_decoder_destroy(&decoder);
+  pb_buffer_destroy(&buffer);
+} END_TEST
+
+/*
+ * Decode a buffer with an invalid length prefix using a handler.
+ */
+START_TEST(test_decode_invalid_length_data) {
+  const uint8_t data[] = { 26, 130, 131, 132, 133, 134, 135, 136 };
+  const size_t  size   = 7;
+
+  /* Create buffer and decoder */
+  pb_buffer_t  buffer  = pb_buffer_create(data, size);
+  pb_decoder_t decoder = pb_decoder_create(&descriptor, &buffer);
+
+  /* Assert decoder validity and error */
+  fail_unless(pb_decoder_valid(&decoder));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_decoder_error(&decoder));
+
+  /* Decode using the handler */
+  ck_assert_uint_eq(PB_ERROR_VARINT,
+    pb_decoder_decode(&decoder, handler, NULL));
+
+  /* Free all allocated memory */
+  pb_decoder_destroy(&decoder);
+  pb_buffer_destroy(&buffer);
+} END_TEST
+
+/*
  * Decode a buffer with an invalid value using a handler.
  */
 START_TEST(test_decode_invalid_value) {
   const uint8_t data[] = { 8, 255 };
+  const size_t  size   = 2;
+
+  /* Create buffer and decoder */
+  pb_buffer_t  buffer  = pb_buffer_create(data, size);
+  pb_decoder_t decoder = pb_decoder_create(&descriptor, &buffer);
+
+  /* Assert decoder validity and error */
+  fail_unless(pb_decoder_valid(&decoder));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_decoder_error(&decoder));
+
+  /* Decode using the handler */
+  ck_assert_uint_eq(PB_ERROR_VARINT,
+    pb_decoder_decode(&decoder, handler, NULL));
+
+  /* Free all allocated memory */
+  pb_decoder_destroy(&decoder);
+  pb_buffer_destroy(&buffer);
+} END_TEST
+
+/*
+ * Decode a buffer with an invalid packed field using a handler.
+ */
+START_TEST(test_decode_invalid_packed) {
+  const uint8_t data[] = { 50, 255 };
   const size_t  size   = 2;
 
   /* Create buffer and decoder */
@@ -283,9 +383,13 @@ main(void) {
   tcase_add_test(tcase, test_decode);
   tcase_add_test(tcase, test_decode_message);
   tcase_add_test(tcase, test_decode_skip);
+  tcase_add_test(tcase, test_decode_packed);
   tcase_add_test(tcase, test_decode_invalid);
   tcase_add_test(tcase, test_decode_invalid_tag);
+  tcase_add_test(tcase, test_decode_invalid_length);
+  tcase_add_test(tcase, test_decode_invalid_length_data);
   tcase_add_test(tcase, test_decode_invalid_value);
+  tcase_add_test(tcase, test_decode_invalid_packed);
   suite_add_tcase(suite, tcase);
 
   /* Create a test suite runner in no-fork mode */

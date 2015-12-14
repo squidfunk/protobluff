@@ -65,29 +65,27 @@ main(void) {
         (error = person_encode_email(&person, &email)))
       break;
 
-    /* Set home number */
-    pb_encoder_t phone1 = person_phonenumber_encoder_create();
-    if (!(error = person_phonenumber_encode_number(&phone1, &home)) &&
-        !(error = person_phonenumber_encode_type_home(&phone1)) &&
-        !(error = person_encode_phone(&person, &phone1))) {
+    /* Set home and mobile number */
+    pb_encoder_t phone[] = {
+      person_phonenumber_encoder_create(),
+      person_phonenumber_encoder_create()
+    };
+    if (!(error = person_phonenumber_encode_number(&(phone[0]), &home)) &&
+        !(error = person_phonenumber_encode_type_home(&(phone[0]))) &&
+        !(error = person_phonenumber_encode_number(&(phone[1]), &mobile)) &&
+        !(error = person_phonenumber_encode_type_mobile(&(phone[1]))) &&
+        !(error = person_encode_phone(&person, phone, 2))) {
 
-      /* Set mobile number */
-      pb_encoder_t phone2 = person_phonenumber_encoder_create();
-      if (!(error = person_phonenumber_encode_number(&phone2, &mobile)) &&
-          !(error = person_phonenumber_encode_type_mobile(&phone2)) &&
-          !(error = person_encode_phone(&person, &phone2))) {
+      /* Dump the internal buffer */
+      const pb_buffer_t *buffer = pb_encoder_buffer(&person);
+      pb_buffer_dump(buffer);
 
-        /* Dump the internal buffer */
-        const pb_buffer_t *buffer = pb_encoder_buffer(&person);
-        pb_buffer_dump(buffer);
-
-        /* The encoded message can be accessed as follows */
-        // const uint8_t *data = pb_buffer_data(buffer);
-        // const size_t   size = pb_buffer_size(buffer);
-      }
-      person_phonenumber_encoder_destroy(&phone2);
+      /* The encoded message can be accessed as follows */
+      // const uint8_t *data = pb_buffer_data(buffer);
+      // const size_t   size = pb_buffer_size(buffer);
     }
-    person_phonenumber_encoder_destroy(&phone1);
+    person_phonenumber_encoder_destroy(&(phone[0]));
+    person_phonenumber_encoder_destroy(&(phone[1]));
   } while (0);
 
   /* Print error, if any */

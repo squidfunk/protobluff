@@ -24,7 +24,7 @@
   Validation
 
     Message validation was refactored into a separate "validator" structure,
-    so that validation can directly take place on a binary. This step was
+    so that validation can directly take place on a buffer. This step was
     necessary to make validation available to the lite runtime.
 
     < 0.3.0:

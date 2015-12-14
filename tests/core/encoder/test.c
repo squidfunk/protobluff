@@ -85,7 +85,17 @@ descriptor = { {
     { 10, "F10", ENUM,    OPTIONAL, &enum_descriptor },
     { 11, "F11", MESSAGE, OPTIONAL, &descriptor },
     { 12, "F12", MESSAGE, REPEATED, &descriptor }
-  }, 12 } };
+  }, 14 } };
+
+/* Descriptor with packed fields */
+static pb_descriptor_t
+descriptor_packed = { {
+  (const pb_field_descriptor_t []){
+    {  1, "F01", UINT64,  REPEATED, NULL, NULL, PACKED },
+    {  2, "F02", ENUM,    REPEATED, &enum_descriptor, NULL, PACKED },
+    {  3, "F03", FLOAT,   REPEATED, NULL, NULL, PACKED },
+    {  4, "F04", DOUBLE,  REPEATED, NULL, NULL, PACKED }
+  }, 4 } };
 
 /* ----------------------------------------------------------------------------
  * Tests
@@ -170,7 +180,8 @@ START_TEST(test_encode) {
 
   /* Encode a value */
   uint32_t value1 = 1000000000;
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_encoder_encode(&encoder, 1, &value1));
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_encoder_encode(&encoder, 1, &value1, 1));
 
   /* Assert buffer validity and error */
   fail_unless(pb_buffer_valid(buffer));
@@ -182,7 +193,8 @@ START_TEST(test_encode) {
 
   /* Encode another value */
   pb_string_t value2 = pb_string_init_from_chars("SOME DATA");
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_encoder_encode(&encoder, 8, &value2));
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_encoder_encode(&encoder, 8, &value2, 1));
 
   /* Assert buffer validity and error again */
   fail_unless(pb_buffer_valid(buffer));
@@ -197,6 +209,88 @@ START_TEST(test_encode) {
 } END_TEST
 
 /*
+ * Encode values in packed encoding.
+ */
+START_TEST(test_encode_packed) {
+  pb_encoder_t encoder = pb_encoder_create(&descriptor_packed);
+  const pb_buffer_t *buffer = pb_encoder_buffer(&encoder);
+
+  /* Encode values */
+  pb_enum_t values[] = { 0, 1, 2 };
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_encoder_encode(&encoder, 2, values, 3));
+
+  /* Assert buffer validity and error */
+  fail_unless(pb_buffer_valid(buffer));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_buffer_error(buffer));
+
+  /* Assert buffer size */
+  fail_if(pb_buffer_empty(buffer));
+  ck_assert_uint_eq(5, pb_buffer_size(buffer));
+
+  /* Free all allocated memory */
+  pb_encoder_destroy(&encoder);
+} END_TEST
+
+/*
+ * Encode variable-sized integers with an invalid encoder.
+ */
+START_TEST(test_encode_packed_invalid) {
+  pb_encoder_t encoder = pb_encoder_create_invalid();
+  const pb_buffer_t *buffer = pb_encoder_buffer(&encoder);
+
+  /* Encode values */
+  uint64_t values[] = { 10, 100, 1000, 10000, 100000, 1000000 };
+  ck_assert_uint_eq(PB_ERROR_INVALID,
+    pb_encoder_encode(&encoder, 1, &values, 6));
+
+  /* Assert buffer validity and error */
+  fail_if(pb_buffer_valid(buffer));
+  ck_assert_uint_eq(PB_ERROR_ALLOC, pb_buffer_error(buffer));
+
+  /* Assert buffer size */
+  fail_unless(pb_buffer_empty(buffer));
+  ck_assert_uint_eq(0, pb_buffer_size(buffer));
+
+  /* Free all allocated memory */
+  pb_encoder_destroy(&encoder);
+} END_TEST
+
+/*
+ * Encode variable-sized integers for which reallocation fails.
+ */
+START_TEST(test_encode_packed_invalid_resize) {
+  pb_allocator_t allocator = {
+    .proc = {
+      .allocate = allocator_default.proc.allocate,
+      .resize   = allocator_resize_fail,
+      .free     = allocator_default.proc.free
+    }
+  };
+
+  /* Create encoder */
+  pb_encoder_t encoder =
+    pb_encoder_create_with_allocator(&allocator, &descriptor_packed);
+  const pb_buffer_t *buffer = pb_encoder_buffer(&encoder);
+
+  /* Encode values */
+  uint64_t values[] = { 10, 100, 1000, 10000, 100000, 1000000 };
+  ck_assert_uint_eq(PB_ERROR_ALLOC,
+    pb_encoder_encode(&encoder, 1, &values, 6));
+
+  /* Assert buffer validity and error */
+  fail_unless(pb_buffer_valid(buffer));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_buffer_error(buffer));
+
+  /* Assert buffer size */
+  fail_unless(pb_buffer_empty(buffer));
+  ck_assert_uint_eq(0, pb_buffer_size(buffer));
+
+  /* Free all allocated memory */
+  pb_encoder_destroy(&encoder);
+} END_TEST
+
+/*
  * Encode a variable-sized integer.
  */
 START_TEST(test_encode_varint) {
@@ -205,7 +299,8 @@ START_TEST(test_encode_varint) {
 
   /* Encode a value */
   pb_enum_t value = 0;
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_encoder_encode(&encoder, 10, &value));
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_encoder_encode(&encoder, 10, &value, 1));
 
   /* Assert buffer validity and error */
   fail_unless(pb_buffer_valid(buffer));
@@ -220,6 +315,56 @@ START_TEST(test_encode_varint) {
 } END_TEST
 
 /*
+ * Encode variable-sized integers in packed encoding.
+ */
+START_TEST(test_encode_varint_packed) {
+  pb_encoder_t encoder = pb_encoder_create(&descriptor_packed);
+  const pb_buffer_t *buffer = pb_encoder_buffer(&encoder);
+
+  /* Encode values */
+  uint64_t values[] = { 10, 100, 1000, 10000, 100000, 1000000 };
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_encoder_encode(&encoder, 1, values, 6));
+
+  /* Assert buffer validity and error */
+  fail_unless(pb_buffer_valid(buffer));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_buffer_error(buffer));
+
+  /* Assert buffer size */
+  fail_if(pb_buffer_empty(buffer));
+  ck_assert_uint_eq(14, pb_buffer_size(buffer));
+
+  /* Free all allocated memory */
+  pb_encoder_destroy(&encoder);
+} END_TEST
+
+/*
+ * Encode variable-sized integers in packed encoding.
+ */
+START_TEST(test_encode_varint_packed_merged) {
+  pb_encoder_t encoder = pb_encoder_create(&descriptor_packed);
+  const pb_buffer_t *buffer = pb_encoder_buffer(&encoder);
+
+  /* Encode values */
+  uint64_t values[] = { 10, 100, 1000, 10000, 100000, 1000000 };
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_encoder_encode(&encoder, 1, values, 6));
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_encoder_encode(&encoder, 1, values, 6));
+
+  /* Assert buffer validity and error */
+  fail_unless(pb_buffer_valid(buffer));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_buffer_error(buffer));
+
+  /* Assert buffer size */
+  fail_if(pb_buffer_empty(buffer));
+  ck_assert_uint_eq(28, pb_buffer_size(buffer));
+
+  /* Free all allocated memory */
+  pb_encoder_destroy(&encoder);
+} END_TEST
+
+/*
  * Encode a variable-sized integer with an invalid encoder.
  */
 START_TEST(test_encode_varint_invalid) {
@@ -228,7 +373,8 @@ START_TEST(test_encode_varint_invalid) {
 
   /* Encode a value */
   pb_enum_t value = 0;
-  ck_assert_uint_eq(PB_ERROR_INVALID, pb_encoder_encode(&encoder, 10, &value));
+  ck_assert_uint_eq(PB_ERROR_INVALID,
+    pb_encoder_encode(&encoder, 10, &value, 1));
 
   /* Assert buffer validity and error */
   fail_if(pb_buffer_valid(buffer));
@@ -261,7 +407,8 @@ START_TEST(test_encode_varint_invalid_resize) {
 
   /* Encode a value */
   pb_enum_t value = 0;
-  ck_assert_uint_eq(PB_ERROR_ALLOC, pb_encoder_encode(&encoder, 10, &value));
+  ck_assert_uint_eq(PB_ERROR_ALLOC,
+    pb_encoder_encode(&encoder, 10, &value, 1));
 
   /* Assert buffer validity and error */
   fail_unless(pb_buffer_valid(buffer));
@@ -284,7 +431,8 @@ START_TEST(test_encode_64bit) {
 
   /* Encode a value */
   double value = 0.00000001;
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_encoder_encode(&encoder, 7, &value));
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_encoder_encode(&encoder, 7, &value, 1));
 
   /* Assert buffer validity and error */
   fail_unless(pb_buffer_valid(buffer));
@@ -299,6 +447,56 @@ START_TEST(test_encode_64bit) {
 } END_TEST
 
 /*
+ * Encode fixed-sized 64-bit values in packed encoding.
+ */
+START_TEST(test_encode_64bit_packed) {
+  pb_encoder_t encoder = pb_encoder_create(&descriptor_packed);
+  const pb_buffer_t *buffer = pb_encoder_buffer(&encoder);
+
+  /* Encode values */
+  double values[] = { 0.00000001, 0.000001, 0.0001, 0.01, 1.0, 100.0 };
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_encoder_encode(&encoder, 4, &values, 6));
+
+  /* Assert buffer validity and error */
+  fail_unless(pb_buffer_valid(buffer));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_buffer_error(buffer));
+
+  /* Assert buffer size */
+  fail_if(pb_buffer_empty(buffer));
+  ck_assert_uint_eq(50, pb_buffer_size(buffer));
+
+  /* Free all allocated memory */
+  pb_encoder_destroy(&encoder);
+} END_TEST
+
+/*
+ * Encode fixed-sized 64-bit values in packed encoding.
+ */
+START_TEST(test_encode_64bit_packed_merged) {
+  pb_encoder_t encoder = pb_encoder_create(&descriptor_packed);
+  const pb_buffer_t *buffer = pb_encoder_buffer(&encoder);
+
+  /* Encode values */
+  double values[] = { 0.00000001, 0.000001, 0.0001, 0.01, 1.0, 100.0 };
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_encoder_encode(&encoder, 4, &values, 6));
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_encoder_encode(&encoder, 4, &values, 6));
+
+  /* Assert buffer validity and error */
+  fail_unless(pb_buffer_valid(buffer));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_buffer_error(buffer));
+
+  /* Assert buffer size */
+  fail_if(pb_buffer_empty(buffer));
+  ck_assert_uint_eq(100, pb_buffer_size(buffer));
+
+  /* Free all allocated memory */
+  pb_encoder_destroy(&encoder);
+} END_TEST
+
+/*
  * Encode a fixed-sized 64-bit value with an invalid encoder.
  */
 START_TEST(test_encode_64bit_invalid) {
@@ -307,7 +505,8 @@ START_TEST(test_encode_64bit_invalid) {
 
   /* Encode a value */
   double value = 0.00000001;
-  ck_assert_uint_eq(PB_ERROR_INVALID, pb_encoder_encode(&encoder, 7, &value));
+  ck_assert_uint_eq(PB_ERROR_INVALID,
+    pb_encoder_encode(&encoder, 7, &value, 1));
 
   /* Assert buffer validity and error */
   fail_if(pb_buffer_valid(buffer));
@@ -340,7 +539,8 @@ START_TEST(test_encode_64bit_invalid_resize) {
 
   /* Encode a value */
   double value = 0.00000001;
-  ck_assert_uint_eq(PB_ERROR_ALLOC, pb_encoder_encode(&encoder, 7, &value));
+  ck_assert_uint_eq(PB_ERROR_ALLOC,
+    pb_encoder_encode(&encoder, 7, &value, 1));
 
   /* Assert buffer validity and error */
   fail_unless(pb_buffer_valid(buffer));
@@ -363,7 +563,8 @@ START_TEST(test_encode_length) {
 
   /* Encode a value */
   pb_string_t value = pb_string_init_from_chars("SOME DATA");
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_encoder_encode(&encoder, 8, &value));
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_encoder_encode(&encoder, 8, &value, 1));
 
   /* Assert buffer validity and error */
   fail_unless(pb_buffer_valid(buffer));
@@ -387,9 +588,10 @@ START_TEST(test_encode_length_message) {
 
   /* Encode a value and a message */
   double value = 0.00000001;
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_encoder_encode(&encoder2, 7, &value));
   ck_assert_uint_eq(PB_ERROR_NONE,
-    pb_encoder_encode(&encoder1, 11, &encoder2));
+    pb_encoder_encode(&encoder2, 7, &value, 1));
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_encoder_encode(&encoder1, 11, &encoder2, 1));
 
   /* Assert buffer validity and error */
   fail_unless(pb_buffer_valid(buffer));
@@ -413,7 +615,8 @@ START_TEST(test_encode_length_invalid) {
 
   /* Encode a value */
   pb_string_t value = pb_string_init_from_chars("SOME DATA");
-  ck_assert_uint_eq(PB_ERROR_INVALID, pb_encoder_encode(&encoder, 8, &value));
+  ck_assert_uint_eq(PB_ERROR_INVALID,
+    pb_encoder_encode(&encoder, 8, &value, 1));
 
   /* Assert buffer validity and error */
   fail_if(pb_buffer_valid(buffer));
@@ -422,31 +625,6 @@ START_TEST(test_encode_length_invalid) {
   /* Assert buffer size */
   fail_unless(pb_buffer_empty(buffer));
   ck_assert_uint_eq(0, pb_buffer_size(buffer));
-
-  /* Free all allocated memory */
-  pb_encoder_destroy(&encoder);
-} END_TEST
-
-/*
- * Encode a length-prefixed message within itself.
- */
-START_TEST(test_encode_length_invalid_message) {
-  pb_encoder_t encoder = pb_encoder_create(&descriptor);
-  const pb_buffer_t *buffer = pb_encoder_buffer(&encoder);
-
-  /* Encode a value and a message */
-  double value = 0.00000001;
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_encoder_encode(&encoder, 7, &value));
-  ck_assert_uint_eq(PB_ERROR_INVALID,
-    pb_encoder_encode(&encoder, 11, &encoder));
-
-  /* Assert buffer validity and error */
-  fail_unless(pb_buffer_valid(buffer));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_buffer_error(buffer));
-
-  /* Assert buffer size */
-  fail_if(pb_buffer_empty(buffer));
-  ck_assert_uint_eq(9, pb_buffer_size(buffer));
 
   /* Free all allocated memory */
   pb_encoder_destroy(&encoder);
@@ -471,7 +649,8 @@ START_TEST(test_encode_length_invalid_resize) {
 
   /* Encode a value */
   pb_string_t value = pb_string_init_from_chars("SOME DATA");
-  ck_assert_uint_eq(PB_ERROR_ALLOC, pb_encoder_encode(&encoder, 8, &value));
+  ck_assert_uint_eq(PB_ERROR_ALLOC,
+    pb_encoder_encode(&encoder, 8, &value, 1));
 
   /* Assert buffer validity and error */
   fail_unless(pb_buffer_valid(buffer));
@@ -486,7 +665,7 @@ START_TEST(test_encode_length_invalid_resize) {
 } END_TEST
 
 /*
- * Encode a fixed-sized 64-bit value.
+ * Encode a fixed-sized 32-bit value.
  */
 START_TEST(test_encode_32bit) {
   pb_encoder_t encoder = pb_encoder_create(&descriptor);
@@ -494,7 +673,8 @@ START_TEST(test_encode_32bit) {
 
   /* Encode a value */
   float value = 0.0001;
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_encoder_encode(&encoder, 6, &value));
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_encoder_encode(&encoder, 6, &value, 1));
 
   /* Assert buffer validity and error */
   fail_unless(pb_buffer_valid(buffer));
@@ -509,6 +689,56 @@ START_TEST(test_encode_32bit) {
 } END_TEST
 
 /*
+ * Encode fixed-sized 32-bit values in packed encoding.
+ */
+START_TEST(test_encode_32bit_packed) {
+  pb_encoder_t encoder = pb_encoder_create(&descriptor_packed);
+  const pb_buffer_t *buffer = pb_encoder_buffer(&encoder);
+
+  /* Encode values */
+  float values[] = { 0.0001, 0.01, 1.0, 100.0, 10000.0, 1000000.0 };
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_encoder_encode(&encoder, 3, &values, 6));
+
+  /* Assert buffer validity and error */
+  fail_unless(pb_buffer_valid(buffer));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_buffer_error(buffer));
+
+  /* Assert buffer size */
+  fail_if(pb_buffer_empty(buffer));
+  ck_assert_uint_eq(26, pb_buffer_size(buffer));
+
+  /* Free all allocated memory */
+  pb_encoder_destroy(&encoder);
+} END_TEST
+
+/*
+ * Encode fixed-sized 32-bit values in packed encoding.
+ */
+START_TEST(test_encode_32bit_packed_merged) {
+  pb_encoder_t encoder = pb_encoder_create(&descriptor_packed);
+  const pb_buffer_t *buffer = pb_encoder_buffer(&encoder);
+
+  /* Encode values */
+  float values[] = { 0.0001, 0.01, 1.0, 100.0, 10000.0, 1000000.0 };
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_encoder_encode(&encoder, 3, &values, 6));
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_encoder_encode(&encoder, 3, &values, 6));
+
+  /* Assert buffer validity and error */
+  fail_unless(pb_buffer_valid(buffer));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_buffer_error(buffer));
+
+  /* Assert buffer size */
+  fail_if(pb_buffer_empty(buffer));
+  ck_assert_uint_eq(52, pb_buffer_size(buffer));
+
+  /* Free all allocated memory */
+  pb_encoder_destroy(&encoder);
+} END_TEST
+
+/*
  * Encode a fixed-sized 32-bit value with an invalid encoder.
  */
 START_TEST(test_encode_32bit_invalid) {
@@ -517,7 +747,8 @@ START_TEST(test_encode_32bit_invalid) {
 
   /* Encode a value */
   float value = 0.0001;
-  ck_assert_uint_eq(PB_ERROR_INVALID, pb_encoder_encode(&encoder, 6, &value));
+  ck_assert_uint_eq(PB_ERROR_INVALID,
+    pb_encoder_encode(&encoder, 6, &value, 1));
 
   /* Assert buffer validity and error */
   fail_if(pb_buffer_valid(buffer));
@@ -550,7 +781,8 @@ START_TEST(test_encode_32bit_invalid_resize) {
 
   /* Encode a value */
   float value = 0.0001;
-  ck_assert_uint_eq(PB_ERROR_ALLOC, pb_encoder_encode(&encoder, 6, &value));
+  ck_assert_uint_eq(PB_ERROR_ALLOC,
+    pb_encoder_encode(&encoder, 6, &value, 1));
 
   /* Assert buffer validity and error */
   fail_unless(pb_buffer_valid(buffer));
@@ -589,18 +821,26 @@ main(void) {
   /* Add tests to test case "encode" */
   tcase = tcase_create("encode");
   tcase_add_test(tcase, test_encode);
+  tcase_add_test(tcase, test_encode_packed);
+  tcase_add_test(tcase, test_encode_packed_invalid);
+  tcase_add_test(tcase, test_encode_packed_invalid_resize);
   tcase_add_test(tcase, test_encode_varint);
+  tcase_add_test(tcase, test_encode_varint_packed);
+  tcase_add_test(tcase, test_encode_varint_packed_merged);
   tcase_add_test(tcase, test_encode_varint_invalid);
   tcase_add_test(tcase, test_encode_varint_invalid_resize);
   tcase_add_test(tcase, test_encode_64bit);
+  tcase_add_test(tcase, test_encode_64bit_packed);
+  tcase_add_test(tcase, test_encode_64bit_packed_merged);
   tcase_add_test(tcase, test_encode_64bit_invalid);
   tcase_add_test(tcase, test_encode_64bit_invalid_resize);
   tcase_add_test(tcase, test_encode_length);
   tcase_add_test(tcase, test_encode_length_message);
   tcase_add_test(tcase, test_encode_length_invalid);
-  tcase_add_test(tcase, test_encode_length_invalid_message);
   tcase_add_test(tcase, test_encode_length_invalid_resize);
   tcase_add_test(tcase, test_encode_32bit);
+  tcase_add_test(tcase, test_encode_32bit_packed);
+  tcase_add_test(tcase, test_encode_32bit_packed_merged);
   tcase_add_test(tcase, test_encode_32bit_invalid);
   tcase_add_test(tcase, test_encode_32bit_invalid_resize);
   suite_add_tcase(suite, tcase);

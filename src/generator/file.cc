@@ -200,11 +200,11 @@ namespace protobluff {
       "#ifndef `guard`_PB_H\n"
       "#define `guard`_PB_H\n"
       "\n"
+      "#include <protobluff.h>\n"
+      "\n"
       "#if PB_VERSION != `version`\n"
       "  #error Version mismatch - please regenerate this file using protoc\n"
       "#endif\n"
-      "\n"
-      "#include <protobluff.h>\n"
       "\n");
 
     /* Generate dependent includes */

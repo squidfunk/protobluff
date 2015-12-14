@@ -65,7 +65,8 @@ PB_EXPORT pb_error_t
 pb_encoder_encode(
   pb_encoder_t *encoder,               /* Encoder */
   pb_tag_t tag,                        /* Tag */
-  const void *value);                  /* Pointer holding value */
+  const void *values,                  /* Pointer holding value(s) */
+  size_t size);                        /* Value count */
 
 /* ----------------------------------------------------------------------------
  * Inline functions

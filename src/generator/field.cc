@@ -375,18 +375,35 @@ namespace protobluff {
   void Field::
   GenerateEncoder(Printer *printer) const {
     assert(printer);
-    printer->Print(variables_,
-      "/* `signature` : encode */\n"
-      "`define.deprecated`"
-      "PB_WARN_UNUSED_RESULT\n"
-      "PB_INLINE pb_error_t\n"
-      "`define.symbol`_encode_`define.name`(\n"
-      "    pb_encoder_t *encoder, const `define.type` *value) {\n"
-      "  assert(pb_encoder_descriptor(encoder) == \n"
-      "    &`define.symbol`_descriptor);\n"
-      "  return pb_encoder_encode(encoder, `define.tag`, value);\n"
-      "}\n"
-      "\n");
+
+    /* Generate encoder */
+    if (descriptor_->is_repeated())
+      printer->Print(variables_,
+        "/* `signature` : encode */\n"
+        "`define.deprecated`"
+        "PB_WARN_UNUSED_RESULT\n"
+        "PB_INLINE pb_error_t\n"
+        "`define.symbol`_encode_`define.name`(\n"
+        "    pb_encoder_t *encoder, const `define.type` *value, "
+             "size_t size) {\n"
+        "  assert(pb_encoder_descriptor(encoder) == \n"
+        "    &`define.symbol`_descriptor);\n"
+        "  return pb_encoder_encode(encoder, `define.tag`, value, size);\n"
+        "}\n"
+        "\n");
+    else
+      printer->Print(variables_,
+        "/* `signature` : encode */\n"
+        "`define.deprecated`"
+        "PB_WARN_UNUSED_RESULT\n"
+        "PB_INLINE pb_error_t\n"
+        "`define.symbol`_encode_`define.name`(\n"
+        "    pb_encoder_t *encoder, const `define.type` *value) {\n"
+        "  assert(pb_encoder_descriptor(encoder) == \n"
+        "    &`define.symbol`_descriptor);\n"
+        "  return pb_encoder_encode(encoder, `define.tag`, value, 1);\n"
+        "}\n"
+        "\n");
 
     /* Generate encoder for enum fields */
     if (descriptor_->enum_type()) {
@@ -424,7 +441,7 @@ namespace protobluff {
           "  assert(pb_encoder_descriptor(encoder) == \n"
           "    &`define.symbol`_descriptor);\n"
           "  return pb_encoder_encode(encoder, `define.tag`,\n"
-          "    `define.value`);\n"
+          "    `define.value`, 1);\n"
           "}\n"
           "\n");
       }

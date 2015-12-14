@@ -70,6 +70,8 @@ pb_decoder_destroy(pb_decoder_t *decoder) {
 /*!
  * Decode a buffer using a handler.
  *
+ * The decoder
+ *
  * \param[in]     decoder Decoder
  * \param[in]     handler Handler
  * \param[in,out] user    User data
@@ -103,30 +105,50 @@ pb_decoder_decode(
     }
 
     /* Allocate temporary space for type-agnostic decoding */
-    size_t size = pb_field_descriptor_type_size(descriptor);
-    void *value = alloca(size);
+    size_t item = pb_field_descriptor_type_size(descriptor);
+    void *value = alloca(item);
+
+    /* Non-packed fields may also be encoded in packed encoding */
+    pb_type_t type = pb_field_descriptor_type(descriptor);
+    if (wiretype != pb_field_descriptor_wiretype(descriptor) &&
+        wiretype == PB_WIRETYPE_LENGTH) {
+      uint32_t length;
+      if (unlikely_(error = pb_stream_read(&stream, PB_TYPE_UINT32, &length)))
+        break;
+
+      /* Ensure we're within the stream's boundaries */
+      size_t offset = pb_stream_offset(&stream);
+      if (pb_stream_offset(&stream) + length > pb_buffer_size(decoder->buffer))
+        error = PB_ERROR_OFFSET;
+
+      /* Iterate values of packed field */
+      while (!error && pb_stream_offset(&stream) < offset + length)
+        if (likely_(!(error = pb_stream_read(&stream, type, value))))
+          error = handler(descriptor, value, user);
 
     /* Read value of given type from stream */
-    pb_type_t type = pb_field_descriptor_type(descriptor);
-    if (unlikely_(error = pb_stream_read(&stream, type, value)))
-      break;
-
-    /* Invoke handler */
-    if (pb_field_descriptor_type(descriptor) == PB_TYPE_MESSAGE) {
-      pb_buffer_t buffer = pb_buffer_create_zero_copy_internal(
-        pb_string_data(value), pb_string_size(value));
-
-      /* Create decoder for nested message and invoke handler */
-      pb_decoder_t subdecoder = pb_decoder_create(
-        pb_field_descriptor_reference(descriptor), &buffer);
-      error = handler(descriptor, &subdecoder, user);
-
-      /* Free all allocated memory */
-      pb_decoder_destroy(&subdecoder);
-      pb_buffer_destroy(&buffer);
     } else {
-      error = handler(descriptor, value, user);
+      if (unlikely_(error = pb_stream_read(&stream, type, value)))
+        break;
+
+      /* Invoke handler */
+      if (pb_field_descriptor_type(descriptor) == PB_TYPE_MESSAGE) {
+        pb_buffer_t buffer = pb_buffer_create_zero_copy_internal(
+          pb_string_data(value), pb_string_size(value));
+
+        /* Create decoder for nested message and invoke handler */
+        pb_decoder_t subdecoder = pb_decoder_create(
+          pb_field_descriptor_reference(descriptor), &buffer);
+        error = handler(descriptor, &subdecoder, user);
+
+        /* Free all allocated memory */
+        pb_decoder_destroy(&subdecoder);
+        pb_buffer_destroy(&buffer);
+      } else {
+        error = handler(descriptor, value, user);
+      }
     }
   }
+  pb_stream_destroy(&stream);
   return error;
 }
