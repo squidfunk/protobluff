@@ -236,7 +236,8 @@ AC_MSG_RESULT([
     CFLAGS:                 ${CFLAGS} ${OPTIMIZATIONS}
     CXX:                    ${CXX}
     CXXFLAGS:               ${CXXFLAGS} ${OPTIMIZATIONS}
-    CPPFLAGS:               ${CPPFLAGS}
+    CPPFLAGS:               ${CPPFLAGS} ${coverage_CPPFLAGS}
+    LDFLAGS:                ${LDFLAGS} ${coverage_LDFLAGS}
 
     prefix:                 ${prefix}
     sysconfdir:             ${sysconfdir}
