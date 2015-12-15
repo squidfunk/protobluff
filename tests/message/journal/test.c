@@ -751,7 +751,7 @@ START_TEST(test_align_grow) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_journal_error(&journal));
 
   /* Insert data to into journal */
-  uint8_t new_data[] = { 0, 0, 0, 0, 0, 0, 0 };
+  uint8_t new_data[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
   ck_assert_uint_eq(PB_ERROR_NONE,
     pb_journal_write(&journal, 2, 2, 3, new_data, 8));
 

@@ -5,6 +5,7 @@ protobluff-0.x.x
 
   Runtime:
 
+  * Fixed invalid reads reported when compiling with -fsanitize
   * Fixed incorrectly reported position in pb_cursor_seek()
   * Added support for packed fields
   * Added missing error string for PB_ERROR_EOM (could have caused segfault)

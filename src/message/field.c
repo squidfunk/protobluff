@@ -37,15 +37,45 @@
 #include "message/part.h"
 
 /* ----------------------------------------------------------------------------
+ * Defaults
+ * ------------------------------------------------------------------------- */
+
+/* 8-bit default value */
+static const uint8_t
+default_8bit = 0;
+
+/* 32-bit default value */
+static const uint32_t
+default_32bit = 0;
+
+/* 64-bit default value */
+static const uint64_t
+default_64bit = 0;
+
+/* ----------------------------------------------------------------------------
  * Mappings
  * ------------------------------------------------------------------------- */
 
-/* Mapping: wiretype ==> default value */
+/* Mapping: type ==> default value */
 static const void *
-default_map[7] = {
-  [PB_WIRETYPE_VARINT] = (const uint8_t  []){ 0 },
-  [PB_WIRETYPE_64BIT]  = (const uint64_t []){ 0 },
-  [PB_WIRETYPE_32BIT]  = (const uint32_t []){ 0 }
+default_map[] = {
+  [PB_TYPE_INT32]    = &default_32bit,
+  [PB_TYPE_INT64]    = &default_64bit,
+  [PB_TYPE_UINT32]   = &default_32bit,
+  [PB_TYPE_UINT64]   = &default_64bit,
+  [PB_TYPE_SINT32]   = &default_32bit,
+  [PB_TYPE_SINT64]   = &default_64bit,
+  [PB_TYPE_FIXED32]  = &default_32bit,
+  [PB_TYPE_FIXED64]  = &default_64bit,
+  [PB_TYPE_SFIXED32] = &default_32bit,
+  [PB_TYPE_SFIXED64] = &default_64bit,
+  [PB_TYPE_BOOL]     = &default_8bit,
+  [PB_TYPE_ENUM]     = &default_32bit,
+  [PB_TYPE_FLOAT]    = &default_32bit,
+  [PB_TYPE_DOUBLE]   = &default_64bit,
+  [PB_TYPE_STRING]   = NULL,
+  [PB_TYPE_BYTES]    = NULL,
+  [PB_TYPE_MESSAGE]  = NULL
 };
 
 /* ----------------------------------------------------------------------------
@@ -72,7 +102,7 @@ pb_field_create(pb_message_t *message, pb_tag_t tag) {
     /* Write explicit or implicit default value to field */
     const void *value = pb_field_descriptor_default(descriptor)
       ? pb_field_descriptor_default(descriptor)
-      : default_map[pb_field_descriptor_wiretype(descriptor)];
+      : default_map[pb_field_descriptor_type(descriptor)];
     if (value && pb_field_put(&field, value)) {
       pb_field_destroy(&field);                            /* LCOV_EXCL_LINE */
       return pb_field_create_invalid();                    /* LCOV_EXCL_LINE */

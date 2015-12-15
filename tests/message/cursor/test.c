@@ -3016,7 +3016,7 @@ START_TEST(test_raw_unaligned) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
   /* Write a field with a smaller tag to ensure misalignment */
-  uint32_t value2 = 127;
+  uint64_t value2 = 127;
   ck_assert_uint_eq(PB_ERROR_NONE, pb_message_put(&message, 2, &value2));
 
   /* Obtain and change raw data */
