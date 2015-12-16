@@ -165,7 +165,7 @@ START_TEST(test_create_packed_merged) {
 } END_TEST
 
 /*
- * Create a cursor over a message for a packed field.
+ * Create a cursor over a nested message for a packed field.
  */
 START_TEST(test_create_packed_nested) {
   const uint8_t data[] = { 82, 6, 26, 4, 1, 2, 3, 4 };
@@ -2228,9 +2228,9 @@ START_TEST(test_get_string) {
 
   /* Read value from cursor */
   for (size_t f = 0; f < 2; f++, pb_cursor_next(&cursor)) {
-    pb_string_t value1 = pb_string_init_from_chars("DEFAULT"), value2;
-    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value2));
-    fail_unless(pb_string_equals(&value1, &value2));
+    pb_string_t check = pb_string_init_from_chars("DEFAULT"), value;
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
+    fail_unless(pb_string_equals(&check, &value));
 
     /* Assert cursor validity and error */
     fail_unless(pb_cursor_valid(&cursor));
@@ -2399,9 +2399,9 @@ START_TEST(test_put) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
   /* Write values to cursor */
-  uint64_t value;
   for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
-    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_put(&cursor, &f));
+    uint64_t check = f, value;
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_put(&cursor, &check));
 
     /* Assert cursor validity and error */
     fail_unless(pb_cursor_valid(&cursor));
@@ -2409,7 +2409,7 @@ START_TEST(test_put) {
 
     /* Read value from cursor */
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
-    ck_assert_uint_eq(f, value);
+    ck_assert_uint_eq(check, value);
 
     /* Assert cursor tag and position */
     ck_assert_uint_eq(2, pb_cursor_tag(&cursor));

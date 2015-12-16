@@ -77,9 +77,10 @@ START_TEST(test_has) {
 
   /* Create a hundred nested submessages and write values to them */
   for (size_t m = 1; m < 101; m++) {
+    uint64_t value = m;
     messages[m] = pb_message_create_within(&(messages[m - 1]), 11);
     ck_assert_uint_eq(PB_ERROR_NONE,
-      pb_message_put(&(messages[m]), 2, &m));
+      pb_message_put(&(messages[m]), 2, &value));
   }
 
   /* Iterate over submessages */
@@ -139,9 +140,10 @@ START_TEST(test_has_repeated) {
 
   /* Create a hundred nested submessages and write values to them */
   for (size_t m = 1; m < 101; m++) {
+    uint64_t value = m;
     messages[m] = pb_message_create_within(&(messages[m - 1]), 11);
     ck_assert_uint_eq(PB_ERROR_NONE,
-      pb_message_put(&(messages[m]), 4, &m));
+      pb_message_put(&(messages[m]), 4, &value));
   }
 
   /* Iterate over submessages */
@@ -176,9 +178,10 @@ START_TEST(test_has_unaligned) {
 
   /* Create a hundred nested submessages and write values to them */
   for (size_t m = 1; m < 101; m++) {
+    uint64_t value = m;
     messages[m] = pb_message_create_within(&(messages[m - 1]), 11);
     ck_assert_uint_eq(PB_ERROR_NONE,
-      pb_message_put(&(messages[m]), 2, &m));
+      pb_message_put(&(messages[m]), 2, &value));
   }
 
   /* Write value to message */
@@ -241,9 +244,10 @@ START_TEST(test_match) {
 
   /* Create a hundred nested submessages and write values to them */
   for (size_t m = 1; m < 101; m++) {
+    uint64_t value = m;
     messages[m] = pb_message_create_within(&(messages[m - 1]), 11);
     ck_assert_uint_eq(PB_ERROR_NONE,
-      pb_message_put(&(messages[m]), 2, &m));
+      pb_message_put(&(messages[m]), 2, &value));
   }
 
   /* Iterate over submessages */
@@ -301,9 +305,10 @@ START_TEST(test_match_repeated) {
 
   /* Create a hundred nested submessages and write values to them */
   for (size_t m = 1; m < 101; m++) {
+    uint64_t value = m;
     messages[m] = pb_message_create_within(&(messages[m - 1]), 11);
     ck_assert_uint_eq(PB_ERROR_NONE,
-      pb_message_put(&(messages[m]), 4, &m));
+      pb_message_put(&(messages[m]), 4, &value));
   }
 
   /* Iterate over submessages */
@@ -339,9 +344,10 @@ START_TEST(test_match_unaligned) {
 
   /* Create a hundred nested submessages and write values to them */
   for (size_t m = 1; m < 101; m++) {
+    uint64_t value = m;
     messages[m] = pb_message_create_within(&(messages[m - 1]), 11);
     ck_assert_uint_eq(PB_ERROR_NONE,
-      pb_message_put(&(messages[m]), 2, &m));
+      pb_message_put(&(messages[m]), 2, &value));
   }
 
   /* Write value to message */
@@ -402,9 +408,10 @@ START_TEST(test_get) {
 
   /* Create a hundred nested submessages and write values to them */
   for (size_t m = 1; m < 101; m++) {
+    uint64_t value = m;
     messages[m] = pb_message_create_within(&(messages[m - 1]), 11);
     ck_assert_uint_eq(PB_ERROR_NONE,
-      pb_message_put(&(messages[m]), 2, &m));
+      pb_message_put(&(messages[m]), 2, &value));
   }
 
   /* Iterate over submessages */
@@ -471,9 +478,10 @@ START_TEST(test_get_absent) {
 
   /* Create a hundred nested submessages and write values to them */
   for (size_t m = 1; m < 101; m++) {
+    uint64_t value = m;
     messages[m] = pb_message_create_within(&(messages[m - 1]), 11);
     ck_assert_uint_eq(PB_ERROR_NONE,
-      pb_message_put(&(messages[m]), 2, &m));
+      pb_message_put(&(messages[m]), 2, &value));
   }
 
   /* Create tags */
@@ -507,9 +515,10 @@ START_TEST(test_get_unaligned) {
 
   /* Create a hundred nested submessages and write values to them */
   for (size_t m = 1; m < 101; m++) {
+    uint64_t value = m;
     messages[m] = pb_message_create_within(&(messages[m - 1]), 11);
     ck_assert_uint_eq(PB_ERROR_NONE,
-      pb_message_put(&(messages[m]), 2, &m));
+      pb_message_put(&(messages[m]), 2, &value));
   }
 
   /* Write value to message */
