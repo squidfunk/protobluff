@@ -371,6 +371,11 @@ pb_journal_align(
       if (entry->origin >= offset->start) {
         offset->end += entry->delta;
 
+        /* Current part is a packed field: invalidate */
+        if (offset->diff.origin && !offset->diff.tag &&
+            offset->start == offset->end)
+          invalid = 1;
+
       /* Current part was cleared: clear */
       } else if ((offset->start + offset->diff.origin) -
                  (offset->end   + entry->delta) == 0) {

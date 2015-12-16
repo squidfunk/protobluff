@@ -90,6 +90,33 @@ pb_message_version(const pb_message_t *message) {
 }
 
 /*!
+ * Test whether a message is properly aligned.
+ *
+ * \param[in] message Message
+ * \return            Test result
+ */
+PB_INLINE int
+pb_message_aligned(const pb_message_t *message) {
+  assert(message);
+  return pb_part_aligned(&(message->part));
+}
+
+/*!
+ * Ensure that a message is properly aligned.
+ *
+ * \param[in,out] message Message
+ * \return                Error code
+ */
+PB_WARN_UNUSED_RESULT
+PB_INLINE pb_error_t
+pb_message_align(pb_message_t *message) {
+  assert(message);
+  return !pb_part_aligned(&(message->part))
+    ? pb_part_align(&(message->part))
+    : PB_ERROR_NONE;
+}
+
+/*!
  * Retrieve the start offset of a message within its underlying journal.
  *
  * \param[in] message Message
@@ -135,21 +162,6 @@ PB_INLINE int
 pb_message_empty(const pb_message_t *message) {
   assert(message);
   return pb_part_empty(&(message->part));
-}
-
-/*!
- * Ensure that a message is properly aligned.
- *
- * \param[in,out] message Message
- * \return                Error code
- */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_error_t
-pb_message_align(pb_message_t *message) {
-  assert(message);
-  return !pb_part_aligned(&(message->part))
-    ? pb_part_align(&(message->part))
-    : PB_ERROR_NONE;
 }
 
 /* ------------------------------------------------------------------------- */

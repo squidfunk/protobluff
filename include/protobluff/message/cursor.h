@@ -142,6 +142,7 @@ pb_cursor_descriptor(const pb_cursor_t *cursor) {
  * \param[in] cursor Cursor
  * \return           Current position
  */
+PB_DEPRECATED
 PB_INLINE size_t
 pb_cursor_pos(const pb_cursor_t *cursor) {
   assert(cursor);

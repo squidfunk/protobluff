@@ -24,7 +24,7 @@
 
 AC_PREREQ(2.69)
 
-AC_INIT([protobluff], [0.3.0], [martin.donath@squidfunk.com])
+AC_INIT([protobluff], [0.4.0], [martin.donath@squidfunk.com])
 AM_INIT_AUTOMAKE([subdir-objects foreign])
 
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -48,7 +48,7 @@ AC_CONFIG_MACRO_DIR([m4])
 
 # Library versioning as <current:revision:age> - also remember to synchronize
 # this value with the version info in the core/common.h header file.
-AC_SUBST([VERSION_INFO], [2:0:0])
+AC_SUBST([VERSION_INFO], [3:0:0])
 
 # Checks for programs
 AC_PROG_AWK

@@ -172,7 +172,9 @@ adjust_recursive(pb_part_t *part, pb_stream_t *stream, ptrdiff_t *delta) {
       temp.offset.end += *delta;
 
       /* If a tag is given, we're not inside a packed field */
-      if (part->offset.diff.tag) {
+      if (part->offset.diff.tag || (
+        part->offset.start + part->offset.diff.origin >
+        temp.offset.start  + temp.offset.diff.origin)) {
 
         /* The parts don't match, so recurse */
         if (temp.offset.start != part->offset.start ||
@@ -185,8 +187,7 @@ adjust_recursive(pb_part_t *part, pb_stream_t *stream, ptrdiff_t *delta) {
             break;                                         /* LCOV_EXCL_LINE */
 
           /* Parts may be unaligned due to length prefix update */
-          if ((!pb_part_aligned(part)  && (error = pb_part_align(part))) ||
-              (!pb_part_aligned(&temp) && (error = pb_part_align(&temp))))
+          if (!pb_part_aligned(&temp) && (error = pb_part_align(&temp)))
             break;                                         /* LCOV_EXCL_LINE */
         }
 
@@ -199,10 +200,8 @@ adjust_recursive(pb_part_t *part, pb_stream_t *stream, ptrdiff_t *delta) {
         break;
       }
 
-      /* Adjust length prefix and ensure aligned part */
+      /* Adjust length prefix */
       error = adjust_prefix(&temp, delta);
-      if (!error && !pb_part_aligned(part))
-        error = pb_part_align(part);
       break;
 
     /* Otherwise just skip stream part */
@@ -528,6 +527,10 @@ pb_part_write(pb_part_t *part, const uint8_t data[], size_t size) {
         error = adjust_prefix(part, &delta);
       if (!error)
         error = adjust(part, delta);
+
+      /* Ensure aligned part */
+      if (!error && !pb_part_aligned(part))
+        error = pb_part_align(part);
     }
   }
   return error;
@@ -561,9 +564,12 @@ pb_part_clear(pb_part_t *part) {
     /* Update offsets if necessary */
     if (delta) {
       part->version++;
-      part->offset.start       = delta + part->offset.end;
-      part->offset.end        += delta;
-      part->offset.diff.origin = 0;
+      part->offset.start = delta + part->offset.end;
+      part->offset.end  += delta;
+
+      /* Reset origin for non-packed fields */
+      if (part->offset.diff.tag)
+        part->offset.diff.origin = 0;
 
       /* Recursive length prefix update of parent messages */
       error = adjust(part, delta);

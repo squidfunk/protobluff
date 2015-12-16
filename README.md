@@ -25,13 +25,6 @@ journal. If no alterations that change the size of the underlying journal are
 expected, the journal can be used in *zero-copy mode*, omitting all dynamic
 allocations.
 
-Updates on fixed-sized wire types on little-endian machines can be carried out
-in-place using raw-pointers to the underlying data. These include the native
-Protocol Buffers types `fixed(32|64)`, `sfixed(32|64)`, `float` and `double`
-(see the [Protocol Buffers Encoding Guide][] for more information). Strings may
-also be accessed through raw-pointers, however writing a string of different
-length may result in garbled data, and is thus not recommended.
-
 ## Installation
 
 ### Building from source
@@ -197,21 +190,19 @@ PKG_CHECK_MODULES([protobluff], [protobluff])
 7. Imports
 8. Packages
 9. Extensions and nested extensions
-10. Deprecation warnings
+10. Deprecations for messages, fields, enums and enum values
+11. Packed fields
 
 ### Not yet supported
 
-1. Packed fields
-2. Oneofs
+1. Oneofs
+2. proto3 support
 3. Services (using gRPC and/or ZMQ)
 4. Groups (unsure)
-5. General proto3 support (unsure)
 
-### Roadmap
-
-1. Oneofs
-2. Packed fields
-3. Services
+These features will be implemented in the order presented. protobluff is
+basically compatible with proto3, as proto2 is binary compatible, but some
+special types like maps and the Any type need to be implemented.
 
 ## License
 

@@ -41,7 +41,6 @@ pb_cursor_create_internal(
   pb_message_t *message,               /* Message */
   pb_tag_t tag);                       /* Tag */
 
-PB_WARN_UNUSED_RESULT
 extern pb_error_t
 pb_cursor_align(
   pb_cursor_t *cursor);                /* Cursor */
@@ -127,6 +126,18 @@ PB_INLINE pb_version_t
 pb_cursor_version(const pb_cursor_t *cursor) {
   assert(cursor);
   return pb_message_version(&(cursor->message));
+}
+
+/*!
+ * Test whether a cursor is properly aligned.
+ *
+ * \param[in] cursor Cursor
+ * \return           Test result
+ */
+PB_INLINE int
+pb_cursor_aligned(const pb_cursor_t *cursor) {
+  assert(cursor);
+  return pb_message_aligned(&(cursor->message));
 }
 
 /*!

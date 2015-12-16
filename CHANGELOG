@@ -1,12 +1,25 @@
-protobluff-0.x.x
+protobluff-0.4.0 (2015-12-16)
 
-  In progress.
+  This release adds full support for packed fields (in lite and full runtime).
+  Furthermore, some functions have been deprecated to prepare for the 1.0.0
+  release, in particular raw pointer access, because unaligned access of floats
+  and doubles may cause undefined behavior on some architectures, and the
+  position of the cursor, as due to the possible erasure of fields during a
+  cursor's lifetime, the position may not be accurately determined.
+
+  Again, this release is mostly compatible with prior versions, but a few
+  breaking changes to the ABI could not be omitted. See the MIGRATION file for
+  further assistance. However, approaching the 1.0.0 release, the ABI can be
+  considered stable very soon. The libtool version has been updated to 3.0.0.
 
   Runtime:
 
   * Deprecated raw pointer access (will be removed in 1.0.0)
+  * Deprecated pb_cursor_pos() (will be removed in 1.0.0)
   * Fixed invalid reads reported when compiling with -fsanitize
   * Fixed incorrectly reported position in pb_cursor_seek()
+  * Fixed cursor state when erasing the last field in a message
+  * Fixed alignment issues and checks after erasing parts
   * Added support for packed fields
   * Added missing error string for PB_ERROR_EOM (could have caused segfault)
   * Added tests for packed fields

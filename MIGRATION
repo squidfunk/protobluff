@@ -1,3 +1,27 @@
+0.3.x => 0.4.0
+
+  Encoder
+
+    In order to handle packed fields, the encoder does now take a fourth
+    argument, namely the amount of values to be encoded. This is a prerequisite
+    for the support of packed fields. Now, multiple values can be encoded all
+    at once, regardless of whether a field is packed or not. This also applies
+    for messages, which have already been implemented as nested encoders.
+
+    This makes it necessary to regenerate the bindings and change all accessors
+    that write values to repeated fields.
+
+    < 0.4.0:
+
+      pb_encoder_t person = person_encoder_create(...);
+      person_encode_phone(&person, &phonenumbers[0]);
+      person_encode_phone(&person, &phonenumbers[1]);
+
+    = 0.4.0:
+
+      pb_encoder_t person = person_encoder_create(...);
+      person_encode_phone(&person, &phonenumbers, 2);
+
 0.2.x => 0.3.0
 
   Binaries

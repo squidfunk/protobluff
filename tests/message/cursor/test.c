@@ -165,6 +165,32 @@ START_TEST(test_create_packed_merged) {
 } END_TEST
 
 /*
+ * Create a cursor over a message for a packed field.
+ */
+START_TEST(test_create_packed_nested) {
+  const uint8_t data[] = { 82, 6, 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 8;
+
+  /* Create journal, message and submessage */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_message_t submessage = pb_message_create_within(&message, 10);
+
+  /* Create cursor */
+  pb_cursor_t cursor = pb_cursor_create(&submessage, 3);
+
+  /* Assert cursor tag and position */
+  ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&submessage);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
  * Create a cursor over an empty message for a specific tag.
  */
 START_TEST(test_create_message_empty) {
@@ -584,6 +610,68 @@ START_TEST(test_next_packed_merged) {
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Move a cursor to the next field.
+ */
+START_TEST(test_next_packed_nested) {
+  const uint8_t data[] = { 82, 6, 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 8;
+
+  /* Create journal, message and submessage */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_message_t submessage = pb_message_create_within(&message, 10);
+
+  /* Create cursor */
+  pb_cursor_t cursor = pb_cursor_create(&submessage, 3);
+
+  /* Walk through message and read fields */
+  uint32_t value;
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    pb_field_t field = pb_field_create_from_cursor(&cursor);
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_field_get(&field, &value));
+    ck_assert_uint_eq(f, value);
+
+    /* Assert field validity and error */
+    fail_unless(pb_field_valid(&field));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_field_error(&field));
+
+    /* Assert field size and version */
+    fail_if(pb_field_empty(&field));
+    ck_assert_uint_eq(1, pb_field_size(&field));
+    ck_assert_uint_eq(0, pb_field_version(&field));
+
+    /* Assert field offsets */
+    ck_assert_uint_eq(3 + f, pb_field_start(&field));
+    ck_assert_uint_eq(4 + f, pb_field_end(&field));
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(8, pb_journal_size(&journal));
+
+    /* Free all allocated memory */
+    pb_field_destroy(&field);
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&submessage);
   pb_message_destroy(&message);
   pb_journal_destroy(&journal);
 } END_TEST
@@ -1059,6 +1147,59 @@ START_TEST(test_rewind_packed_merged) {
 } END_TEST
 
 /*
+ * Rewind a cursor to its initial position.
+ */
+START_TEST(test_rewind_packed_nested) {
+  const uint8_t data[] = { 82, 6, 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 8;
+
+  /* Create journal, message and submessage */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_message_t submessage = pb_message_create_within(&message, 10);
+
+  /* Create cursor */
+  pb_cursor_t cursor = pb_cursor_create(&submessage, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Use up and rewind cursor */
+  while (pb_cursor_next(&cursor));
+  fail_unless(pb_cursor_rewind(&cursor));
+
+  /* Walk through message and read fields */
+  uint32_t value;
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
+    ck_assert_uint_eq(f, value);
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(8, pb_journal_size(&journal));
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&submessage);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
  * Rewind an unaligned cursor to its initial position.
  */
 START_TEST(test_rewind_unaligned) {
@@ -1233,6 +1374,47 @@ START_TEST(test_seek_packed_merged) {
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Seek a cursor from its current position to a field containing the value.
+ */
+START_TEST(test_seek_packed_nested) {
+  const uint8_t data[] = { 82, 6, 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 8;
+
+  /* Create journal, message and submessage */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_message_t submessage = pb_message_create_within(&message, 10);
+
+  /* Create cursor */
+  pb_cursor_t cursor = pb_cursor_create(&submessage, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Seek value with cursor */
+  uint32_t value = 3;
+  fail_unless(pb_cursor_seek(&cursor, &value));
+
+  /* Assert cursor tag and position */
+  ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(2, pb_cursor_pos(&cursor));
+
+  /* Seek value with cursor again */
+  fail_if(pb_cursor_seek(&cursor, &value));
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&submessage);
   pb_message_destroy(&message);
   pb_journal_destroy(&journal);
 } END_TEST
@@ -1575,6 +1757,54 @@ START_TEST(test_match_packed_merged) {
 /*
  * Compare the value of the current field of a cursor with the given value.
  */
+START_TEST(test_match_packed_nested) {
+  const uint8_t data[] = { 82, 6, 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 8;
+
+  /* Create journal, message and submessage */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_message_t submessage = pb_message_create_within(&message, 10);
+
+  /* Create cursor */
+  pb_cursor_t cursor = pb_cursor_create(&submessage, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Compare with values from cursor */
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    uint32_t value = f;
+    fail_unless(pb_cursor_match(&cursor, &value));
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(8, pb_journal_size(&journal));
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&submessage);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Compare the value of the current field of a cursor with the given value.
+ */
 START_TEST(test_match_packed_invalid) {
   const uint8_t data[] = { 26, 1, 128 };
   const size_t  size   = 3;
@@ -1900,6 +2130,55 @@ START_TEST(test_get_packed_merged) {
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Read the value of the current field in a nested message from a cursor.
+ */
+START_TEST(test_get_packed_nested) {
+  const uint8_t data[] = { 82, 6, 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 8;
+
+  /* Create journal, message and submessage */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_message_t submessage = pb_message_create_within(&message, 10);
+
+  /* Create cursor */
+  pb_cursor_t cursor = pb_cursor_create(&submessage, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Read value from cursor */
+  uint32_t value;
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
+    ck_assert_uint_eq(f, value);
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(8, pb_journal_size(&journal));
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&submessage);
   pb_message_destroy(&message);
   pb_journal_destroy(&journal);
 } END_TEST
@@ -2248,6 +2527,58 @@ START_TEST(test_put_packed_merged) {
 } END_TEST
 
 /*
+ * Write a value to the current field in a nested message of a cursor.
+ */
+START_TEST(test_put_packed_nested) {
+  const uint8_t data[] = { 82, 6, 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 8;
+
+  /* Create journal, message and submessage */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_message_t submessage = pb_message_create_within(&message, 10);
+
+  /* Create cursor */
+  pb_cursor_t cursor = pb_cursor_create(&submessage, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Write values to cursor */
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    uint32_t value = f + 127;
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_put(&cursor, &value));
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Read value from cursor */
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
+    ck_assert_uint_eq(f + 127, value);
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    fail_if(pb_journal_empty(&journal));
+    ck_assert_uint_eq(f + 8, pb_journal_size(&journal));
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&submessage);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
  * Write a value to the current field of a cursor.
  */
 START_TEST(test_put_packed_invalid) {
@@ -2535,6 +2866,7 @@ START_TEST(test_erase) {
 
     /* Clear field */
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_erase(&cursor));
+    ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_erase(&cursor));
 
     /* Assert cursor validity and error */
     fail_unless(pb_cursor_valid(&cursor));
@@ -2550,7 +2882,7 @@ START_TEST(test_erase) {
 
   /* Assert cursor validity and error */
   fail_if(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_error(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -2582,6 +2914,7 @@ START_TEST(test_erase_packed) {
 
     /* Clear field */
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_erase(&cursor));
+    ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_erase(&cursor));
 
     /* Assert cursor validity and error */
     fail_unless(pb_cursor_valid(&cursor));
@@ -2594,7 +2927,7 @@ START_TEST(test_erase_packed) {
 
   /* Assert cursor validity and error */
   fail_if(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_error(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Assert journal size */
   fail_unless(pb_journal_empty(&journal));
@@ -2630,6 +2963,7 @@ START_TEST(test_erase_packed_merged) {
 
     /* Clear field */
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_erase(&cursor));
+    ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_erase(&cursor));
 
     /* Assert cursor validity and error */
     fail_unless(pb_cursor_valid(&cursor));
@@ -2642,7 +2976,7 @@ START_TEST(test_erase_packed_merged) {
 
   /* Assert cursor validity and error */
   fail_if(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_error(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Assert journal size */
   fail_unless(pb_journal_empty(&journal));
@@ -2650,6 +2984,59 @@ START_TEST(test_erase_packed_merged) {
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Erase the current field in a nested message from a cursor.
+ */
+START_TEST(test_erase_packed_nested) {
+  const uint8_t data[] = { 82, 6, 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 8;
+
+  /* Create journal, message and submessage */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_message_t submessage = pb_message_create_within(&message, 10);
+
+  /* Create cursor */
+  pb_cursor_t cursor = pb_cursor_create(&submessage, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Erase values from cursor */
+  uint32_t value;
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
+    ck_assert_uint_eq(f, value);
+
+    /* Clear field */
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_erase(&cursor));
+    ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_erase(&cursor));
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Assert journal size */
+  fail_if(pb_journal_empty(&journal));
+  ck_assert_uint_eq(2, pb_journal_size(&journal));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&submessage);
   pb_message_destroy(&message);
   pb_journal_destroy(&journal);
 } END_TEST
@@ -2699,6 +3086,7 @@ START_TEST(test_erase_string) {
   /* Erase values from cursor */
   for (size_t f = 0; f < 2; f++, pb_cursor_next(&cursor)) {
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_erase(&cursor));
+    ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_erase(&cursor));
 
     /* Assert cursor validity and error */
     fail_unless(pb_cursor_valid(&cursor));
@@ -2714,7 +3102,7 @@ START_TEST(test_erase_string) {
 
   /* Assert cursor validity and error */
   fail_if(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_error(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -2741,6 +3129,7 @@ START_TEST(test_erase_message) {
   /* Erase values from cursor */
   for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_erase(&cursor));
+    ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_erase(&cursor));
 
     /* Assert cursor validity and error */
     fail_unless(pb_cursor_valid(&cursor));
@@ -2756,10 +3145,57 @@ START_TEST(test_erase_message) {
 
   /* Assert cursor validity and error */
   fail_if(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_error(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Erase the current submessage with a nested message from a cursor.
+ */
+START_TEST(test_erase_message_nested) {
+  const uint8_t data[] = { 82, 8, 74, 0, 74, 0, 74, 0, 74, 0 };
+  const size_t  size   = 10;
+
+  /* Create journal, message and submessage */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_message_t submessage = pb_message_create_within(&message, 10);
+
+  /* Create cursor */
+  pb_cursor_t cursor = pb_cursor_create_without_tag(&submessage);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Erase values from cursor */
+  for (size_t f = 1; f < 5; f++, pb_cursor_next(&cursor)) {
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_erase(&cursor));
+    ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_erase(&cursor));
+
+    /* Assert cursor validity and error */
+    fail_unless(pb_cursor_valid(&cursor));
+    ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+    /* Assert cursor tag and position */
+    ck_assert_uint_eq(9, pb_cursor_tag(&cursor));
+    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
+
+    /* Assert journal size */
+    ck_assert_uint_eq(10 - f * 2, pb_journal_size(&journal));
+  }
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&submessage);
   pb_message_destroy(&message);
   pb_journal_destroy(&journal);
 } END_TEST
@@ -3211,6 +3647,7 @@ main(void) {
   tcase_add_test(tcase, test_create_absent);
   tcase_add_test(tcase, test_create_packed);
   tcase_add_test(tcase, test_create_packed_merged);
+  tcase_add_test(tcase, test_create_packed_nested);
   tcase_add_test(tcase, test_create_message_empty);
   tcase_add_test(tcase, test_create_message_invalid);
   tcase_add_test(tcase, test_create_without_tag);
@@ -3231,6 +3668,7 @@ main(void) {
   tcase_add_test(tcase, test_next);
   tcase_add_test(tcase, test_next_packed);
   tcase_add_test(tcase, test_next_packed_merged);
+  tcase_add_test(tcase, test_next_packed_nested);
   tcase_add_test(tcase, test_next_packed_wireonly);
   tcase_add_test(tcase, test_next_length);
   tcase_add_test(tcase, test_next_unaligned);
@@ -3246,6 +3684,7 @@ main(void) {
   tcase_add_test(tcase, test_rewind);
   tcase_add_test(tcase, test_rewind_packed);
   tcase_add_test(tcase, test_rewind_packed_merged);
+  tcase_add_test(tcase, test_rewind_packed_nested);
   tcase_add_test(tcase, test_rewind_unaligned);
   tcase_add_test(tcase, test_rewind_invalid);
   suite_add_tcase(suite, tcase);
@@ -3255,6 +3694,7 @@ main(void) {
   tcase_add_test(tcase, test_seek);
   tcase_add_test(tcase, test_seek_packed);
   tcase_add_test(tcase, test_seek_packed_merged);
+  tcase_add_test(tcase, test_seek_packed_nested);
   tcase_add_test(tcase, test_seek_packed_invalid);
   tcase_add_test(tcase, test_seek_string);
   tcase_add_test(tcase, test_seek_unaligned);
@@ -3268,6 +3708,7 @@ main(void) {
   tcase_add_test(tcase, test_match);
   tcase_add_test(tcase, test_match_packed);
   tcase_add_test(tcase, test_match_packed_merged);
+  tcase_add_test(tcase, test_match_packed_nested);
   tcase_add_test(tcase, test_match_packed_invalid);
   tcase_add_test(tcase, test_match_string);
   tcase_add_test(tcase, test_match_unaligned);
@@ -3281,6 +3722,7 @@ main(void) {
   tcase_add_test(tcase, test_get);
   tcase_add_test(tcase, test_get_packed);
   tcase_add_test(tcase, test_get_packed_merged);
+  tcase_add_test(tcase, test_get_packed_nested);
   tcase_add_test(tcase, test_get_packed_invalid);
   tcase_add_test(tcase, test_get_string);
   tcase_add_test(tcase, test_get_unaligned);
@@ -3294,6 +3736,7 @@ main(void) {
   tcase_add_test(tcase, test_put);
   tcase_add_test(tcase, test_put_packed);
   tcase_add_test(tcase, test_put_packed_merged);
+  tcase_add_test(tcase, test_put_packed_nested);
   tcase_add_test(tcase, test_put_packed_invalid);
   tcase_add_test(tcase, test_put_string);
   tcase_add_test(tcase, test_put_message);
@@ -3308,9 +3751,11 @@ main(void) {
   tcase_add_test(tcase, test_erase);
   tcase_add_test(tcase, test_erase_packed);
   tcase_add_test(tcase, test_erase_packed_merged);
+  tcase_add_test(tcase, test_erase_packed_nested);
   tcase_add_test(tcase, test_erase_packed_invalid);
   tcase_add_test(tcase, test_erase_string);
   tcase_add_test(tcase, test_erase_message);
+  tcase_add_test(tcase, test_erase_message_nested);
   tcase_add_test(tcase, test_erase_unaligned);
   tcase_add_test(tcase, test_erase_invalid);
   tcase_add_test(tcase, test_erase_invalid_tag);

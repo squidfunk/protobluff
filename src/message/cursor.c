@@ -164,16 +164,18 @@ next(pb_cursor_t *cursor) {
     }
 
     /* Cleanup and return */
-    pb_buffer_destroy(&buffer);
     pb_stream_destroy(&stream);
+    pb_buffer_destroy(&buffer);
     return !packed->end;
   }
 
-  /* Cleanup and invalidate cursor */
-  pb_buffer_destroy(&buffer);
-  pb_stream_destroy(&stream);
-  if (!cursor->error)
+  /* Invalidate cursor if at end */
+  if (!(pb_stream_left(&stream) && cursor->error))
     cursor->error = PB_ERROR_EOM;
+
+  /* Cleanup and return */
+  pb_stream_destroy(&stream);
+  pb_buffer_destroy(&buffer);
   return 0;
 }
 
@@ -289,7 +291,7 @@ pb_cursor_next(pb_cursor_t *cursor) {
   assert(cursor);
   int result = 0;
   if (pb_cursor_valid(cursor)) {
-    cursor->error = pb_cursor_align(cursor);
+    pb_cursor_align(cursor);
     do {
       result = cursor->current.packed.end
         ? next_packed(cursor)
@@ -531,9 +533,8 @@ pb_cursor_align(pb_cursor_t *cursor) {
   assert(pb_cursor_valid(cursor));
   pb_error_t error = PB_ERROR_NONE;
 
-  /* Check, if current part is already aligned */
-  const pb_part_t *part = pb_message_part(&(cursor->message));
-  if (unlikely_(!pb_part_aligned(part))) {
+  /* Check, if cursor is already aligned */
+  if (unlikely_(!pb_cursor_aligned(cursor))) {
     pb_version_t version = pb_cursor_version(cursor);
 
     /* Align current packed context offset, if given */

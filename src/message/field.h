@@ -100,6 +100,33 @@ pb_field_version(const pb_field_t *field) {
 }
 
 /*!
+ * Test whether a field is properly aligned.
+ *
+ * \param[in] field Field
+ * \return          Test result
+ */
+PB_INLINE int
+pb_field_aligned(const pb_field_t *field) {
+  assert(field);
+  return pb_part_aligned(&(field->part));
+}
+
+/*!
+ * Ensure that a field is properly aligned.
+ *
+ * \param[in,out] field Field
+ * \return              Error code
+ */
+PB_WARN_UNUSED_RESULT
+PB_INLINE pb_error_t
+pb_field_align(pb_field_t *field) {
+  assert(field);
+  return !pb_part_aligned(&(field->part))
+    ? pb_part_align(&(field->part))
+    : PB_ERROR_NONE;
+}
+
+/*!
  * Retrieve the start offset of a field within its underlying journal.
  *
  * \param[in] field Field
@@ -145,21 +172,6 @@ PB_INLINE int
 pb_field_empty(const pb_field_t *field) {
   assert(field);
   return pb_part_empty(&(field->part));
-}
-
-/*!
- * Ensure that a field is properly aligned.
- *
- * \param[in,out] field Field
- * \return              Error code
- */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_error_t
-pb_field_align(pb_field_t *field) {
-  assert(field);
-  return !pb_part_aligned(&(field->part))
-    ? pb_part_align(&(field->part))
-    : PB_ERROR_NONE;
 }
 
 /* ------------------------------------------------------------------------- */
