@@ -618,6 +618,7 @@ namespace protobluff {
       case FieldDescriptor::TYPE_DOUBLE:
         printer->Print(variables_,
           "/* `signature` : raw */\n"
+          "PB_DEPRECATED\n"
           "PB_INLINE `define.type` *\n"
           "`define.symbol`_raw_`define.name`(\n"
           "    pb_message_t *message) {\n"
@@ -838,7 +839,7 @@ namespace protobluff {
       case FieldDescriptor::TYPE_DOUBLE:
         printer->Print(variables,
           "/* `signature` : raw */\n"
-          "`define.deprecated`"
+          "PB_DEPRECATED\n"
           "PB_INLINE `define.type` *\n"
           "`define.symbol`_raw_`define.name`(\n"
           "    pb_message_t *message) {\n"

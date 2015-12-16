@@ -1,10 +1,10 @@
 protobluff-0.x.x
 
-  This release is not finished yet, packed fields are implemented in the
-  message library but not in core. This is going to be fixed in a few days.
+  In progress.
 
   Runtime:
 
+  * Deprecated raw pointer access (will be removed in 1.0.0)
   * Fixed invalid reads reported when compiling with -fsanitize
   * Fixed incorrectly reported position in pb_cursor_seek()
   * Added support for packed fields
