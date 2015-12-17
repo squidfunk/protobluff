@@ -533,7 +533,7 @@ pb_cursor_align(pb_cursor_t *cursor) {
   assert(pb_cursor_valid(cursor));
   pb_error_t error = PB_ERROR_NONE;
 
-  /* Check, if cursor is already aligned */
+  /* Check if cursor is already aligned */
   if (unlikely_(!pb_cursor_aligned(cursor))) {
     pb_version_t version = pb_cursor_version(cursor);
 

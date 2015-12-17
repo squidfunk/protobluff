@@ -94,6 +94,9 @@ adjust_prefix(pb_part_t *part, ptrdiff_t *delta) {
  * exactly, we must have found a submessage and need to recurse. The length
  * prefixes must be updated from within, since they are encoded as
  * variable-sized integers and may also affect the size of parent messages.
+ * However, packed field are also length-prefixed, so it's important to
+ * distinguish them from submessages. This is done by comparing the start
+ * offsets and origins of the part and the stream part.
  *
  * After recursing, it is mandatory to check if the part needs to be
  * realigned, since there may have been updates on the length prefixes of
@@ -162,19 +165,17 @@ adjust_recursive(pb_part_t *part, pb_stream_t *stream, ptrdiff_t *delta) {
     temp.offset.diff.length -= temp.offset.start;
 
     /* Abort, if we're not inside a packed field and past the origin */
-    if (part->offset.diff.tag &&
-        temp.offset.start > part->offset.start + part->offset.diff.origin)
+    size_t origin = part->offset.start + part->offset.diff.origin;
+    if (part->offset.diff.tag && temp.offset.start > origin)
       break;
 
-    /* The temporary part lies within the part */
+    /* The part lies within the temporary part */
     if (temp.offset.start <= part->offset.start &&
         temp.offset.end   >= part->offset.end - *delta) {
       temp.offset.end += *delta;
 
-      /* If a tag is given, we're not inside a packed field */
-      if (part->offset.diff.tag || (
-        part->offset.start + part->offset.diff.origin >
-        temp.offset.start  + temp.offset.diff.origin)) {
+      /* Check if we might be at the edge of a packed field */
+      if (temp.offset.start + temp.offset.diff.origin < origin) {
 
         /* The parts don't match, so recurse */
         if (temp.offset.start != part->offset.start ||
@@ -191,7 +192,7 @@ adjust_recursive(pb_part_t *part, pb_stream_t *stream, ptrdiff_t *delta) {
             break;                                         /* LCOV_EXCL_LINE */
         }
 
-      /* Delete the packed field tag and length-prefix if part is empty */
+      /* We're inside a packed field, so clear it, if the part is empty */
       } else if (*delta < 0 && pb_part_empty(&temp)) {
         error = pb_journal_clear(part->journal,
           temp.offset.start + temp.offset.diff.origin,
