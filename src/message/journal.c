@@ -377,9 +377,9 @@ pb_journal_align(
           invalid = 1;
 
       /* Current part was cleared: clear */
-      } else if ((offset->start + offset->diff.origin) -
-                 (offset->end   + entry->delta) == 0) {
-        offset->start      += offset->diff.origin;
+      } else if (offset->start + offset->diff.tag >=
+                 offset->end   + entry->delta) {
+        offset->start      += offset->diff.tag;
         offset->end        += entry->delta;
         offset->diff.origin = 0;
         offset->diff.tag    = 0;

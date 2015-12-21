@@ -2894,8 +2894,8 @@ START_TEST(test_erase) {
  * Erase the current field from a cursor.
  */
 START_TEST(test_erase_packed) {
-  const uint8_t data[] = { 26, 4, 1, 2, 3, 4 };
-  const size_t  size   = 6;
+  const uint8_t data[] = { 8, 1, 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 8;
 
   /* Create journal, message and cursor */
   pb_journal_t journal = pb_journal_create(data, size);
@@ -2930,8 +2930,8 @@ START_TEST(test_erase_packed) {
   ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Assert journal size */
-  fail_unless(pb_journal_empty(&journal));
-  ck_assert_uint_eq(0, pb_journal_size(&journal));
+  fail_if(pb_journal_empty(&journal));
+  ck_assert_uint_eq(2, pb_journal_size(&journal));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -2943,8 +2943,8 @@ START_TEST(test_erase_packed) {
  * Erase the current field in a merged message from a cursor.
  */
 START_TEST(test_erase_packed_merged) {
-  const uint8_t data[] = { 26, 4, 1, 2, 3, 4, 26, 2, 5, 6 };
-  const size_t  size   = 10;
+  const uint8_t data[] = { 26, 4, 1, 2, 3, 4, 8, 1, 26, 2, 5, 6 };
+  const size_t  size   = 12;
 
   /* Create journal, message and cursor */
   pb_journal_t journal = pb_journal_create(data, size);
@@ -2979,8 +2979,8 @@ START_TEST(test_erase_packed_merged) {
   ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
   /* Assert journal size */
-  fail_unless(pb_journal_empty(&journal));
-  ck_assert_uint_eq(0, pb_journal_size(&journal));
+  fail_if(pb_journal_empty(&journal));
+  ck_assert_uint_eq(2, pb_journal_size(&journal));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -2992,8 +2992,8 @@ START_TEST(test_erase_packed_merged) {
  * Erase the current field in a nested message from a cursor.
  */
 START_TEST(test_erase_packed_nested) {
-  const uint8_t data[] = { 82, 6, 26, 4, 1, 2, 3, 4 };
-  const size_t  size   = 8;
+  const uint8_t data[] = { 82, 8, 8, 1, 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 10;
 
   /* Create journal, message and submessage */
   pb_journal_t journal = pb_journal_create(data, size);
@@ -3032,7 +3032,7 @@ START_TEST(test_erase_packed_nested) {
 
   /* Assert journal size */
   fail_if(pb_journal_empty(&journal));
-  ck_assert_uint_eq(2, pb_journal_size(&journal));
+  ck_assert_uint_eq(4, pb_journal_size(&journal));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);

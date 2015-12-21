@@ -59,7 +59,7 @@ descriptor = { {
     {  7, "F07", DOUBLE,  OPTIONAL },
     {  8, "F08", STRING,  OPTIONAL },
     {  9, "F09", BYTES,   OPTIONAL },
-    { 10, "F10", UINT32,  OPTIONAL },
+    { 10, "F10", UINT32,  REPEATED, NULL, NULL, PACKED },
     { 11, "F11", MESSAGE, OPTIONAL, &descriptor },
     { 12, "F12", MESSAGE, REPEATED, &descriptor }
   }, 12 } };
@@ -646,6 +646,45 @@ START_TEST(test_put_existing) {
 } END_TEST
 
 /*
+ * Write a value for a branch of tags to a packed field in a nested message.
+ */
+START_TEST(test_put_packed) {
+  pb_journal_t journal = pb_journal_create_empty();
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Create tags */
+  pb_tag_t tags[102] = {};
+  for (size_t t = 0; t < 101; t++)
+    tags[t] = 11;
+  tags[101] = 10;
+
+  /* Write value to nested submessage */
+  uint32_t value = 127;
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_message_nested_put(&message, tags, 102, &value));
+
+  /* Create nested cursor */
+  pb_cursor_t cursor = pb_cursor_create_nested(&message, tags, 102);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Read value from nested submessage */
+  value = 0;
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
+  ck_assert_uint_eq(127, value);
+
+  /* Assert message validity and error */
+  fail_unless(pb_message_valid(&message));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
+
+  /* Free all allocated memory */
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
  * Write a message for a branch of tags to a nested message.
  */
 START_TEST(test_put_message) {
@@ -813,6 +852,47 @@ START_TEST(test_erase_empty) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
 
   /* Free all allocated memory */
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Erase a field for a branch of tags from a nested message.
+ */
+START_TEST(test_erase_packed) {
+  pb_journal_t journal = pb_journal_create_empty();
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Create tags */
+  pb_tag_t tags[102] = {};
+  for (size_t t = 0; t < 101; t++)
+    tags[t] = 11;
+  tags[101] = 10;
+
+  /* Write value to nested submessage */
+  uint32_t value = 127;
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_message_nested_put(&message, tags, 102, &value));
+
+  /* Clear field from nested submessage */
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_message_nested_erase(&message, tags, 102));
+  ck_assert_uint_eq(PB_ERROR_NONE,
+    pb_message_nested_erase(&message, tags, 102));
+
+  /* Create nested cursor */
+  pb_cursor_t cursor = pb_cursor_create_nested(&message, tags, 102);
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Assert message validity and error */
+  fail_unless(pb_message_valid(&message));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
   pb_message_destroy(&message);
   pb_journal_destroy(&journal);
 } END_TEST
@@ -1075,6 +1155,7 @@ main(void) {
   tcase = tcase_create("put");
   tcase_add_test(tcase, test_put);
   tcase_add_test(tcase, test_put_existing);
+  tcase_add_test(tcase, test_put_packed);
   tcase_add_test(tcase, test_put_message);
   tcase_add_test(tcase, test_put_unaligned);
   tcase_add_test(tcase, test_put_invalid);
@@ -1084,6 +1165,7 @@ main(void) {
   tcase = tcase_create("erase");
   tcase_add_test(tcase, test_erase);
   tcase_add_test(tcase, test_erase_empty);
+  tcase_add_test(tcase, test_erase_packed);
   tcase_add_test(tcase, test_erase_message);
   tcase_add_test(tcase, test_erase_unaligned);
   tcase_add_test(tcase, test_erase_invalid);

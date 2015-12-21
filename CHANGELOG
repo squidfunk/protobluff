@@ -1,3 +1,13 @@
+protobluff-0.4.1 (xxxx-xx-xx)
+
+  In progress - some fixes for packed fields + support for oneofs.
+
+  Runtime:
+
+  * Fixed alignment bug for packed fields after erasing from cursor
+  * Added tests for corner cases of packed fields
+  * Refactored part alignment internals
+
 protobluff-0.4.0 (2015-12-16)
 
   This release adds full support for packed fields (in lite and full runtime).

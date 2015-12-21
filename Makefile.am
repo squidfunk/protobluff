@@ -96,7 +96,7 @@ memcheck: check
 	@for t in `find tests -maxdepth 3 -perm +111 -type f`; do \
 	  @LIBTOOL@ --mode=execute @VALGRIND@ --dsymutil=yes --tool=memcheck \
 	  --track-origins=yes --leak-check=full --show-reachable=yes \
-		--suppressions=valgrind.supp $$t; \
+	  --suppressions=valgrind.supp $$t; \
 	done
 
 endif # HAVE_VALGRIND
