@@ -1,6 +1,6 @@
-protobluff-0.4.1 (xxxx-xx-xx)
+protobluff-0.4.1 (2015-12-21)
 
-  In progress - some fixes for packed fields + support for oneofs.
+  Bugfix release for packed field support, no interface changes.
 
   Runtime:
 
