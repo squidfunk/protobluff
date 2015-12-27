@@ -24,7 +24,7 @@
 
 AC_PREREQ(2.69)
 
-AC_INIT([protobluff], [0.4.0], [martin.donath@squidfunk.com])
+AC_INIT([protobluff], [0.4.1], [martin.donath@squidfunk.com])
 AM_INIT_AUTOMAKE([subdir-objects foreign])
 
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
