@@ -1280,6 +1280,31 @@ START_TEST(test_match_empty) {
 } END_TEST
 
 /*
+ * Compare the value for a given tag from a message with the given value.
+ */
+START_TEST(test_match_merged) {
+  const uint8_t data[] = { 8, 1, 8, 2, 8, 3, 8, 4 };
+  const size_t  size   = 8;
+
+  /* Create journal and message */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Assert message validity and error */
+  fail_unless(pb_message_valid(&message));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
+
+  /* Compare value with value from message */
+  uint32_t value1 = 1, value2 = 4;
+  fail_if(pb_message_match(&message, 1, &value1));
+  fail_unless(pb_message_match(&message, 1, &value2));
+
+  /* Free all allocated memory */
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
  * Compare the value from an unaligned message with the given value.
  */
 START_TEST(test_match_unaligned) {
@@ -1352,6 +1377,36 @@ START_TEST(test_get) {
   /* Assert message size and version */
   fail_if(pb_message_empty(&message));
   ck_assert_uint_eq(2, pb_message_size(&message));
+  ck_assert_uint_eq(0, pb_message_version(&message));
+
+  /* Free all allocated memory */
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Read the value for a given tag from a merged message.
+ */
+START_TEST(test_get_merged) {
+  const uint8_t data[] = { 8, 1, 8, 2, 8, 3, 8, 4 };
+  const size_t  size   = 8;
+
+  /* Create journal and message */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Assert message validity and error */
+  fail_unless(pb_message_valid(&message));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
+
+  /* Read value from message */
+  uint32_t value = 0;
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_get(&message, 1, &value));
+  ck_assert_uint_eq(4, value);
+
+  /* Assert message size and version */
+  fail_if(pb_message_empty(&message));
+  ck_assert_uint_eq(8, pb_message_size(&message));
   ck_assert_uint_eq(0, pb_message_version(&message));
 
   /* Free all allocated memory */
@@ -2784,6 +2839,7 @@ main(void) {
   tcase = tcase_create("match");
   tcase_add_test(tcase, test_match);
   tcase_add_test(tcase, test_match_empty);
+  tcase_add_test(tcase, test_match_merged);
   tcase_add_test(tcase, test_match_unaligned);
   tcase_add_test(tcase, test_match_invalid);
   suite_add_tcase(suite, tcase);
@@ -2791,6 +2847,7 @@ main(void) {
   /* Add tests to test case "get" */
   tcase = tcase_create("get");
   tcase_add_test(tcase, test_get);
+  tcase_add_test(tcase, test_get_merged);
   tcase_add_test(tcase, test_get_default_uint32);
   tcase_add_test(tcase, test_get_default_uint64);
   tcase_add_test(tcase, test_get_default_int32);

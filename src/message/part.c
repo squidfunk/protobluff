@@ -416,6 +416,7 @@ pb_part_create(pb_message_t *message, pb_tag_t tag) {
       return part;
     }
     pb_cursor_destroy(&temp);
+    pb_cursor_destroy(&cursor);
   }
   return pb_part_create_invalid();
 }
@@ -549,7 +550,7 @@ pb_part_clear(pb_part_t *part) {
   if (!pb_part_valid(part) || (!pb_part_aligned(part) && pb_part_align(part)))
     return PB_ERROR_INVALID;
 
-  /* Adjust origin for correct journaling of packed fields */
+  /* Adjust origin for correct journaling of packed field */
   ptrdiff_t origin = part->offset.diff.tag
     ? part->offset.diff.origin
     : 0;
@@ -568,7 +569,7 @@ pb_part_clear(pb_part_t *part) {
       part->offset.start = delta + part->offset.end;
       part->offset.end  += delta;
 
-      /* Reset origin for non-packed fields */
+      /* Reset origin for non-packed field */
       if (part->offset.diff.tag)
         part->offset.diff.origin = 0;
 

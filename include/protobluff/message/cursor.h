@@ -73,7 +73,11 @@ pb_cursor_next(
   pb_cursor_t *cursor);                /* Cursor */
 
 PB_EXPORT int
-pb_cursor_rewind(
+pb_cursor_first(
+  pb_cursor_t *cursor);                /* Cursor */
+
+PB_EXPORT int
+pb_cursor_last(
   pb_cursor_t *cursor);                /* Cursor */
 
 PB_EXPORT int

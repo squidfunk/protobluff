@@ -278,7 +278,7 @@ pb_cursor_destroy(pb_cursor_t *cursor) {
 }
 
 /*!
- * Move a cursor to the next field.
+ * Move a cursor to the next occurrence of a field.
  *
  * If alignment yields an invalid result, the current part was most probably
  * deleted, but the cursor must not necessarily be invalid.
@@ -304,19 +304,47 @@ pb_cursor_next(pb_cursor_t *cursor) {
 }
 
 /*!
- * Rewind a cursor to its initial position.
+ * Move a cursor to the first occurrence of a field.
  *
  * \param[in,out] cursor Cursor
  * \return               Test result
  */
 extern int
-pb_cursor_rewind(pb_cursor_t *cursor) {
+pb_cursor_first(pb_cursor_t *cursor) {
   assert(cursor);
-  pb_cursor_t copy = pb_cursor_create_internal(
+  pb_cursor_t temp = pb_cursor_create_internal(
     &(cursor->message), cursor->tag);
   pb_cursor_destroy(cursor);
-  *cursor = copy;
+  *cursor = temp;
   return pb_cursor_valid(cursor);
+}
+
+/*!
+ * Move a cursor to the last occurrence of a field.
+ *
+ * \param[in,out] cursor Cursor
+ * \return               Test result
+ */
+extern int
+pb_cursor_last(pb_cursor_t *cursor) {
+  assert(cursor);
+  int result = 0;
+  if (cursor->tag) {
+    pb_cursor_t temp = pb_cursor_create_internal(
+      &(cursor->message), cursor->tag);
+    if (pb_cursor_valid(&temp)) {
+      do {
+        if (cursor->tag == pb_cursor_tag(&temp)) {
+          pb_cursor_destroy(cursor);
+          *cursor = temp;
+        }
+      } while (pb_cursor_next(&temp));
+    }
+    if (temp.error == PB_ERROR_EOM)
+      result = 1;
+    pb_cursor_destroy(&temp);
+  }
+  return result;
 }
 
 /*!

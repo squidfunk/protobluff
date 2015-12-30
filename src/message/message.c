@@ -229,8 +229,9 @@ pb_message_match(pb_message_t *message, pb_tag_t tag, const void *value) {
 
   /* Use cursor to seek for matching value */
   pb_cursor_t cursor = pb_cursor_create_internal(message, tag);
-  int result = pb_cursor_match(&cursor, value) ||
-               pb_cursor_seek(&cursor, value);
+  int result = pb_field_descriptor_label(descriptor) == PB_LABEL_REPEATED
+    ? pb_cursor_match(&cursor, value) || pb_cursor_seek(&cursor, value)
+    : pb_cursor_last(&cursor) && pb_cursor_match(&cursor, value);
   pb_cursor_destroy(&cursor);
   return result;
 }
@@ -264,11 +265,9 @@ pb_message_get(pb_message_t *message, pb_tag_t tag, void *value) {
 
   /* Use cursor to omit field creation */
   pb_cursor_t cursor = pb_cursor_create_internal(message, tag);
-  if (pb_cursor_valid(&cursor)) {
-    error = pb_cursor_get(&cursor, value);
-  } else if ((error = pb_cursor_error(&cursor)) == PB_ERROR_EOM) {
 
-    /* Extract default value, if present */
+  /* Cursor didn't find field, try default value */
+  if ((error = pb_cursor_error(&cursor)) == PB_ERROR_EOM) {
     if (unlikely_(!pb_field_descriptor_default(descriptor))) {
       error = PB_ERROR_ABSENT;
     } else {
@@ -276,6 +275,10 @@ pb_message_get(pb_message_t *message, pb_tag_t tag, void *value) {
         pb_field_descriptor_type_size(descriptor));
       error = PB_ERROR_NONE;
     }
+
+  /* Cursor found field, retrieve value */
+  } else if (pb_cursor_last(&cursor)) {
+    error = pb_cursor_get(&cursor, value);
   }
   pb_cursor_destroy(&cursor);
   return error;

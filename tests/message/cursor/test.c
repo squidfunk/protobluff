@@ -983,9 +983,9 @@ START_TEST(test_next_invalid_length_data) {
 } END_TEST
 
 /*
- * Rewind a cursor to its initial position.
+ * Move a cursor to the first occurrence of a field.
  */
-START_TEST(test_rewind) {
+START_TEST(test_first) {
   const uint8_t data[] = { 16, 1, 16, 2, 16, 3, 16, 4 };
   const size_t  size   = 8;
 
@@ -1000,7 +1000,7 @@ START_TEST(test_rewind) {
 
   /* Use up and rewind cursor */
   while (pb_cursor_next(&cursor));
-  fail_unless(pb_cursor_rewind(&cursor));
+  fail_unless(pb_cursor_first(&cursor));
 
   /* Walk through message and read fields */
   uint64_t value;
@@ -1049,9 +1049,9 @@ START_TEST(test_rewind) {
 } END_TEST
 
 /*
- * Rewind a cursor to its initial position.
+ * Move a cursor to the first occurrence of a field.
  */
-START_TEST(test_rewind_packed) {
+START_TEST(test_first_packed) {
   const uint8_t data[] = { 26, 4, 1, 2, 3, 4 };
   const size_t  size   = 6;
 
@@ -1066,7 +1066,7 @@ START_TEST(test_rewind_packed) {
 
   /* Use up and rewind cursor */
   while (pb_cursor_next(&cursor));
-  fail_unless(pb_cursor_rewind(&cursor));
+  fail_unless(pb_cursor_first(&cursor));
 
   /* Walk through message and read fields */
   uint32_t value;
@@ -1098,9 +1098,9 @@ START_TEST(test_rewind_packed) {
 } END_TEST
 
 /*
- * Rewind a cursor to its initial position.
+ * Move a cursor to the first occurrence of a field.
  */
-START_TEST(test_rewind_packed_merged) {
+START_TEST(test_first_packed_merged) {
   const uint8_t data[] = { 26, 4, 1, 2, 3, 4, 26, 2, 5, 6 };
   const size_t  size   = 10;
 
@@ -1115,7 +1115,7 @@ START_TEST(test_rewind_packed_merged) {
 
   /* Use up and rewind cursor */
   while (pb_cursor_next(&cursor));
-  fail_unless(pb_cursor_rewind(&cursor));
+  fail_unless(pb_cursor_first(&cursor));
 
   /* Walk through message and read fields */
   uint32_t value;
@@ -1147,9 +1147,9 @@ START_TEST(test_rewind_packed_merged) {
 } END_TEST
 
 /*
- * Rewind a cursor to its initial position.
+ * Move a cursor to the first occurrence of a field.
  */
-START_TEST(test_rewind_packed_nested) {
+START_TEST(test_first_packed_nested) {
   const uint8_t data[] = { 82, 6, 26, 4, 1, 2, 3, 4 };
   const size_t  size   = 8;
 
@@ -1167,7 +1167,7 @@ START_TEST(test_rewind_packed_nested) {
 
   /* Use up and rewind cursor */
   while (pb_cursor_next(&cursor));
-  fail_unless(pb_cursor_rewind(&cursor));
+  fail_unless(pb_cursor_first(&cursor));
 
   /* Walk through message and read fields */
   uint32_t value;
@@ -1200,9 +1200,9 @@ START_TEST(test_rewind_packed_nested) {
 } END_TEST
 
 /*
- * Rewind an unaligned cursor to its initial position.
+ * Move an unaligned cursor to the first occurrence of a field.
  */
-START_TEST(test_rewind_unaligned) {
+START_TEST(test_first_unaligned) {
   const uint8_t data[] = { 16, 1, 16, 2, 16, 3, 16, 4 };
   const size_t  size   = 8;
 
@@ -1217,7 +1217,7 @@ START_TEST(test_rewind_unaligned) {
 
   /* Use up and rewind cursor */
   while (pb_cursor_next(&cursor));
-  fail_unless(pb_cursor_rewind(&cursor));
+  fail_unless(pb_cursor_first(&cursor));
 
   /* Seek value with cursor */
   uint64_t value2 = 3;
@@ -1246,14 +1246,210 @@ START_TEST(test_rewind_unaligned) {
 } END_TEST
 
 /*
- * Rewind an invalid cursor to its initial position.
+ * Move an invalid cursor to the first occurrence of a field.
  */
-START_TEST(test_rewind_invalid) {
+START_TEST(test_first_invalid) {
   pb_cursor_t cursor = pb_cursor_create_invalid();
 
   /* Use up and rewind cursor */
   while (pb_cursor_next(&cursor));
-  fail_if(pb_cursor_rewind(&cursor));
+  fail_if(pb_cursor_first(&cursor));
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_error(&cursor));
+
+  /* Assert cursor tag and position */
+  ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+} END_TEST
+
+/*
+ * Move a cursor to the last occurrence of a field.
+ */
+START_TEST(test_last) {
+  const uint8_t data[] = { 16, 1, 16, 2, 16, 3, 16, 4 };
+  const size_t  size   = 8;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 2);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Use up and move cursor to last occurrence */
+  while (pb_cursor_next(&cursor));
+  fail_unless(pb_cursor_last(&cursor));
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Compare with value from cursor */
+  uint64_t value = 4;
+  fail_unless(pb_cursor_match(&cursor, &value));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Move a cursor to the last occurrence of a field.
+ */
+START_TEST(test_last_packed) {
+  const uint8_t data[] = { 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 6;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Use up and move cursor to last occurrence */
+  while (pb_cursor_next(&cursor));
+  fail_unless(pb_cursor_last(&cursor));
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Compare with value from cursor */
+  uint64_t value = 4;
+  fail_unless(pb_cursor_match(&cursor, &value));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Move a cursor to the last occurrence of a field.
+ */
+START_TEST(test_last_packed_merged) {
+  const uint8_t data[] = { 26, 4, 1, 2, 3, 4, 26, 2, 5, 6 };
+  const size_t  size   = 10;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Use up and move cursor to last occurrence */
+  while (pb_cursor_next(&cursor));
+  fail_unless(pb_cursor_last(&cursor));
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Compare with value from cursor */
+  uint64_t value = 6;
+  fail_unless(pb_cursor_match(&cursor, &value));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Move a cursor to the last occurrence of a field.
+ */
+START_TEST(test_last_packed_nested) {
+  const uint8_t data[] = { 82, 6, 26, 4, 1, 2, 3, 4 };
+  const size_t  size   = 8;
+
+  /* Create journal, message and submessage */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_message_t submessage = pb_message_create_within(&message, 10);
+
+  /* Create cursor */
+  pb_cursor_t cursor = pb_cursor_create(&submessage, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Use up and move cursor to last occurrence */
+  while (pb_cursor_next(&cursor));
+  fail_unless(pb_cursor_last(&cursor));
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Compare with value from cursor */
+  uint64_t value = 4;
+  fail_unless(pb_cursor_match(&cursor, &value));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&submessage);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Move an unaligned cursor to the last occurrence of a field.
+ */
+START_TEST(test_last_unaligned) {
+  const uint8_t data[] = { 16, 1, 16, 2, 16, 3, 16, 4 };
+  const size_t  size   = 8;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 2);
+
+  /* Write a field with a smaller tag to ensure misalignment */
+  uint32_t value1 = 127;
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_put(&message, 1, &value1));
+
+  /* Use up and move cursor to last occurrence */
+  while (pb_cursor_next(&cursor));
+  fail_unless(pb_cursor_last(&cursor));
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Compare with value from cursor */
+  uint64_t value = 4;
+  fail_unless(pb_cursor_match(&cursor, &value));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Move an invalid cursor to the last occurrence of a field.
+ */
+START_TEST(test_last_invalid) {
+  pb_cursor_t cursor = pb_cursor_create_invalid();
+
+  /* Use up and rewind cursor */
+  while (pb_cursor_next(&cursor));
+  fail_if(pb_cursor_last(&cursor));
 
   /* Assert cursor validity and error */
   fail_if(pb_cursor_valid(&cursor));
@@ -3679,14 +3875,24 @@ main(void) {
   tcase_add_test(tcase, test_next_invalid_length_data);
   suite_add_tcase(suite, tcase);
 
-  /* Add tests to test case "rewind" */
-  tcase = tcase_create("rewind");
-  tcase_add_test(tcase, test_rewind);
-  tcase_add_test(tcase, test_rewind_packed);
-  tcase_add_test(tcase, test_rewind_packed_merged);
-  tcase_add_test(tcase, test_rewind_packed_nested);
-  tcase_add_test(tcase, test_rewind_unaligned);
-  tcase_add_test(tcase, test_rewind_invalid);
+  /* Add tests to test case "first" */
+  tcase = tcase_create("first");
+  tcase_add_test(tcase, test_first);
+  tcase_add_test(tcase, test_first_packed);
+  tcase_add_test(tcase, test_first_packed_merged);
+  tcase_add_test(tcase, test_first_packed_nested);
+  tcase_add_test(tcase, test_first_unaligned);
+  tcase_add_test(tcase, test_first_invalid);
+  suite_add_tcase(suite, tcase);
+
+  /* Add tests to test case "last" */
+  tcase = tcase_create("last");
+  tcase_add_test(tcase, test_last);
+  tcase_add_test(tcase, test_last_packed);
+  tcase_add_test(tcase, test_last_packed_merged);
+  tcase_add_test(tcase, test_last_packed_nested);
+  tcase_add_test(tcase, test_last_unaligned);
+  tcase_add_test(tcase, test_last_invalid);
   suite_add_tcase(suite, tcase);
 
   /* Add tests to test case "seek" */
