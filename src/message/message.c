@@ -212,10 +212,6 @@ pb_message_has(pb_message_t *message, pb_tag_t tag) {
 extern int
 pb_message_match(pb_message_t *message, pb_tag_t tag, const void *value) {
   assert(message && tag && value);
-
-#ifndef NDEBUG
-
-  /* Check is only necessary in debug mode */
   if (unlikely_(!pb_message_valid(message)))
     return 0;
 
@@ -224,8 +220,6 @@ pb_message_match(pb_message_t *message, pb_tag_t tag, const void *value) {
     pb_descriptor_field_by_tag(message->descriptor, tag);
   assert(descriptor &&
     pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE);
-
-#endif /* NDEBUG */
 
   /* Use cursor to seek for matching value */
   pb_cursor_t cursor = pb_cursor_create_internal(message, tag);
