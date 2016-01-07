@@ -434,19 +434,6 @@ namespace protobluff {
       "}\n"
       "\n");
 
-    /* Generate constructor for byte fields */
-    printer->Print(variables_,
-      "/* `signature` : create from field */\n"
-      "`descriptor.deprecated`"
-      "PB_WARN_UNUSED_RESULT\n"
-      "PB_INLINE pb_message_t\n"
-      "`descriptor.symbol`_create_from_field(\n"
-      "    pb_field_t *field) {\n"
-      "  return pb_message_create_from_field(\n"
-      "    &`descriptor.symbol`_descriptor, field);\n"
-      "}\n"
-      "\n");
-
     /* Generate destructor */
     printer->Print(variables_,
       "/* `signature` : destroy */\n"

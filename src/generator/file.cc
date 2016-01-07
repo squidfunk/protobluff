@@ -203,7 +203,7 @@ namespace protobluff {
       "#include <protobluff.h>\n"
       "\n"
       "#if PB_VERSION != `version`\n"
-      "  #error Version mismatch - please regenerate this file using protoc\n"
+      "  #error version mismatch - please regenerate this file using protoc\n"
       "#endif\n"
       "\n");
 
@@ -252,36 +252,40 @@ namespace protobluff {
       }
     }
 
-    /* Generate descriptor banner */
-    PrintBanner(printer, "Descriptors");
+    /* Generate descriptor for messages, if any */
+    if (descriptor_->message_type_count()) {
+      PrintBanner(printer, "Descriptors");
 
-    /* Generate descriptor for messages and nested messages */
-    for (size_t m = 0; m < descriptor_->message_type_count(); m++)
-      messages_[m]->GenerateDeclaration(printer);
+      /* Generate descriptor for messages and nested messages */
+      for (size_t m = 0; m < descriptor_->message_type_count(); m++)
+        messages_[m]->GenerateDeclaration(printer);
 
-    /* Generate decoder banner */
-    PrintBanner(printer, "Decoders");
+      /* Generate decoder banner */
+      PrintBanner(printer, "Decoders");
 
-    /* Generate decoder for messages and nested messages */
-    for (size_t m = 0; m < descriptor_->message_type_count(); m++)
-      messages_[m]->GenerateDecoder(printer);
+      /* Generate decoder for messages and nested messages */
+      for (size_t m = 0; m < descriptor_->message_type_count(); m++)
+        messages_[m]->GenerateDecoder(printer);
 
-    /* Generate encoder banner */
-    PrintBanner(printer, "Encoders");
+      /* Generate encoder banner */
+      PrintBanner(printer, "Encoders");
 
-    /* Generate encoder for messages and nested messages */
-    for (size_t m = 0; m < descriptor_->message_type_count(); m++)
-      messages_[m]->GenerateEncoder(printer);
+      /* Generate encoder for messages and nested messages */
+      for (size_t m = 0; m < descriptor_->message_type_count(); m++)
+        messages_[m]->GenerateEncoder(printer);
+    }
 
     /* Don't generate accessor code for lite runtime */
     if (mode_ != FileOptions::LITE_RUNTIME) {
 
-      /* Generate accessor banner */
-      PrintBanner(printer, "Accessors");
+      /* Generate accessors for messages, if any */
+      if (descriptor_->message_type_count()) {
+        PrintBanner(printer, "Accessors");
 
-      /* Generate accessors for messages and nested messages */
-      for (size_t m = 0; m < descriptor_->message_type_count(); m++)
-        messages_[m]->GenerateAccessors(printer);
+        /* Generate accessors for messages and nested messages */
+        for (size_t m = 0; m < descriptor_->message_type_count(); m++)
+          messages_[m]->GenerateAccessors(printer);
+      }
 
       /* Generate accessors for extensions, if any */
       if (HasExtensions()) {
@@ -365,12 +369,14 @@ namespace protobluff {
       }
     }
 
-    /* Generate descriptor banner */
-    PrintBanner(printer, "Descriptors");
+    /* Generate descriptors for messages, if any */
+    if (descriptor_->message_type_count()) {
+      PrintBanner(printer, "Descriptors");
 
-    /* Generate descriptors for messages and nested messages */
-    for (size_t m = 0; m < descriptor_->message_type_count(); m++)
-      messages_[m]->GenerateDescriptor(printer);
+      /* Generate descriptors for messages and nested messages */
+      for (size_t m = 0; m < descriptor_->message_type_count(); m++)
+        messages_[m]->GenerateDescriptor(printer);
+    }
 
     /* Generate descriptors and initializers for extensions, if any */
     if (HasExtensions()) {
