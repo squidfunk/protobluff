@@ -54,6 +54,7 @@
 #define REQUIRED   PB_LABEL_REQUIRED   /*!< Required field */
 #define OPTIONAL   PB_LABEL_OPTIONAL   /*!< Optional field */
 #define REPEATED   PB_LABEL_REPEATED   /*!< Repeated field */
+#define ONEOF      PB_LABEL_ONEOF      /*!< Oneof member */
 
 /* ------------------------------------------------------------------------- */
 

@@ -299,14 +299,22 @@ init(pb_part_t *part, pb_wiretype_t wiretype, pb_tag_t tag) {
  * This function returns a part to read or alter a certain field or submessage
  * of a message. However, how and when a field or submessage is created in the
  * underlying buffer depends on the label of the part, which is defined in the
- * message's descriptor. There are two cases:
+ * message's descriptor. There are three cases:
  *
  * -# Required and optional parts are directly returned when they are already
- *    contained in the message. Otherwise, they are created and returned empty.
+ *    contained in the message. If a message contains multiple occurrences of
+ *    such a part, the last occurrence is returned. Otherwise, they are created
+ *    and returned empty.
+ *
+ * -# Additionally to the process described in 1, if a part is member of a
+ *    oneof, all succeeding members of the oneof are erased, so the part
+ *    corresponding to the given tag is ensured to be active/visible.
+ *    Preceeding members of the oneof are not erased from the message.
  *
  * -# Repeated parts are always appended to the end of the list of already
- *    contained parts with the same tag when created. Dedicated instances of
- *    repeated parts can be accessed through cursors.
+ *    contained parts with the same tag (or as a value to the last packed
+ *    field, if applicable) when created. Dedicated instances of repeated
+ *    parts can be accessed through cursors.
  *
  * At first we try to find the exact offset of the specified part. If there is
  * no exact offset, meaning the part does currently not exist, we record the
@@ -343,7 +351,11 @@ init(pb_part_t *part, pb_wiretype_t wiretype, pb_tag_t tag) {
 extern pb_part_t
 pb_part_create(pb_message_t *message, pb_tag_t tag) {
   assert(message && tag);
-  if (pb_message_valid(message) && !pb_message_align(message)) {
+  do {
+    if (!pb_message_valid(message) || pb_message_align(message))
+      break;
+
+    /* Assert descriptor */
     const pb_field_descriptor_t *descriptor =
       pb_descriptor_field_by_tag(pb_message_descriptor(message), tag);
     assert(descriptor);
@@ -361,13 +373,32 @@ pb_part_create(pb_message_t *message, pb_tag_t tag) {
     }
 
     /* Don't indicate an error, if the cursor just reached the end */
-    if (pb_cursor_valid(&temp) ||
-        pb_cursor_error(&temp) == PB_ERROR_EOM) {
+    if (pb_cursor_error(&temp) == PB_ERROR_EOM) {
       pb_cursor_destroy(&temp);
 
-      /* If the tag matches and the field is non-repeated, we're done */
+      /* Record start offset and handle different cases */
       size_t start = pb_message_start(message);
       if (pb_cursor_valid(&cursor)) {
+
+        /* If the tag is part of a oneof ensure it is the active tag */
+        if (pb_field_descriptor_label(descriptor) == PB_LABEL_ONEOF) {
+          temp = pb_cursor_copy(&cursor);
+          do {
+            int member = pb_field_descriptor_oneof(descriptor) ==
+              pb_field_descriptor_oneof(pb_cursor_descriptor(&temp));
+            if (member && tag != pb_cursor_tag(&temp))
+              if (pb_cursor_erase(&temp))
+                break;
+          } while (pb_cursor_next(&temp));
+          pb_cursor_destroy(&temp);
+
+          /* Ensure alignment of cursor and message */
+          pb_cursor_align(&cursor);
+          if (pb_message_align(message))
+            break;
+        }
+
+        /* If the tag matches and the field is non-repeated, we're done */
         if (pb_cursor_tag(&cursor) == tag &&
             pb_field_descriptor_label(descriptor) != PB_LABEL_REPEATED) {
           pb_part_t part = pb_part_create_from_cursor(&cursor);
@@ -377,7 +408,7 @@ pb_part_create(pb_message_t *message, pb_tag_t tag) {
 
         /* Otherwise correct insert vector in documented cases */
         const pb_offset_t *offset = pb_cursor_offset(&cursor);
-        if (pb_cursor_pos(&cursor) || pb_cursor_tag(&cursor) <= tag)
+        if (pb_cursor_pos(&cursor) || pb_cursor_tag(&cursor) <= tag)            // TODO: pb_cursor_pos check seems unnecessary - find edge test cacses
           start = offset->end;
       }
 
@@ -417,7 +448,7 @@ pb_part_create(pb_message_t *message, pb_tag_t tag) {
     }
     pb_cursor_destroy(&temp);
     pb_cursor_destroy(&cursor);
-  }
+  } while (0);
   return pb_part_create_invalid();
 }
 
@@ -599,14 +630,14 @@ pb_part_dump(const pb_part_t *part) {
   assert(pb_part_valid(part));
 
   /* Non-destructive alignment for printing */
-  pb_part_t copy = pb_part_copy(part);
-  if (!pb_part_aligned(&copy) && pb_part_align(&copy)) {
+  pb_part_t temp = pb_part_copy(part);
+  if (!pb_part_aligned(&temp) && pb_part_align(&temp)) {
     fprintf(stderr, "ERROR - libprotobluff: invalid part\n");
   } else {
     pb_buffer_dump_range(pb_journal_buffer(part->journal),
-      copy.offset.start, copy.offset.end);
+      temp.offset.start, temp.offset.end);
   }
-  pb_part_destroy(&copy);
+  pb_part_destroy(&temp);
 }
 
 /* LCOV_EXCL_STOP <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */

@@ -53,20 +53,32 @@ allocator_resize_fail(void *data, void *block, size_t size) {
 
 /* Descriptor */
 static pb_descriptor_t
+descriptor;
+
+/* Oneof descriptor */
+static const pb_oneof_descriptor_t
+oneof_descriptor = {
+  &descriptor, {
+  (const size_t []){
+    2, 3, 5, 11
+  }, 4 } };
+
+/* Descriptor */
+static pb_descriptor_t
 descriptor = { {
   (const pb_field_descriptor_t []){
     {  1, "F01", UINT32,  OPTIONAL },
     {  2, "F02", UINT64,  OPTIONAL },
-    {  3, "F03", SINT32,  OPTIONAL },
-    {  4, "F04", SINT64,  OPTIONAL },
+    {  3, "F03", SINT32,  ONEOF, NULL, &oneof_descriptor },
+    {  4, "F04", SINT64,  ONEOF, NULL, &oneof_descriptor },
     {  5, "F05", BOOL,    OPTIONAL },
-    {  6, "F06", FLOAT,   OPTIONAL },
+    {  6, "F06", FLOAT,   ONEOF, NULL, &oneof_descriptor },
     {  7, "F07", DOUBLE,  OPTIONAL },
     {  8, "F08", STRING,  OPTIONAL },
     {  9, "F09", UINT32,  REPEATED },
     { 10, "F10", UINT64,  REPEATED },
     { 11, "F11", STRING,  REPEATED },
-    { 12, "F12", MESSAGE, OPTIONAL, &descriptor }
+    { 12, "F12", MESSAGE, ONEOF, &descriptor, &oneof_descriptor }
   }, 12 } };
 
 /* ----------------------------------------------------------------------------
@@ -231,6 +243,142 @@ START_TEST(test_create_message_invalid) {
   /* Free all allocated memory */
   pb_part_destroy(&part);
   pb_message_destroy(&message);
+} END_TEST
+
+/*
+ * Create a part from a message for a specific tag that is part of a oneof.
+ */
+START_TEST(test_create_oneof) {
+  pb_journal_t journal = pb_journal_create_empty();
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_part_t    part    = pb_part_create(&message, 3);
+
+  /* Assert part validity and error */
+  fail_unless(pb_part_valid(&part));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_part_error(&part));
+
+  /* Assert part size and version */
+  fail_unless(pb_part_empty(&part));
+  ck_assert_uint_eq(0, pb_part_size(&part));
+  ck_assert_uint_eq(1, pb_part_version(&part));
+
+  /* Assert part offsets */
+  ck_assert_uint_eq(1, pb_part_start(&part));
+  ck_assert_uint_eq(1, pb_part_end(&part));
+
+  /* Assert journal size */
+  fail_if(pb_journal_empty(&journal));
+  ck_assert_uint_eq(1, pb_journal_size(&journal));
+
+  /* Free all allocated memory */
+  pb_part_destroy(&part);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Create a part from a message for a specific tag that is part of a oneof.
+ */
+START_TEST(test_create_oneof_existing) {
+  const uint8_t data[] = { 24, 127 };
+  const size_t  size   = 2;
+
+  /* Create journal, message and part */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_part_t    part    = pb_part_create(&message, 3);
+
+  /* Assert part validity and error */
+  fail_unless(pb_part_valid(&part));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_part_error(&part));
+
+  /* Assert part size and version */
+  fail_if(pb_part_empty(&part));
+  ck_assert_uint_eq(1, pb_part_size(&part));
+  ck_assert_uint_eq(0, pb_part_version(&part));
+
+  /* Assert part offsets */
+  ck_assert_uint_eq(1, pb_part_start(&part));
+  ck_assert_uint_eq(2, pb_part_end(&part));
+
+  /* Assert journal size */
+  fail_if(pb_journal_empty(&journal));
+  ck_assert_uint_eq(2, pb_journal_size(&journal));
+
+  /* Free all allocated memory */
+  pb_part_destroy(&part);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Create a part from a message for a specific tag that is part of a oneof.
+ */
+START_TEST(test_create_oneof_existing_before) {
+  const uint8_t data[] = { 32, 127, 53, 0, 0, 0, 0, 98, 2, 8, 1 };
+  const size_t  size   = 11;
+
+  /* Create journal, message and part */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_part_t    part    = pb_part_create(&message, 12);
+
+  /* Assert part validity and error */
+  fail_unless(pb_part_valid(&part));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_part_error(&part));
+
+  /* Assert part size and version */
+  fail_if(pb_part_empty(&part));
+  ck_assert_uint_eq(2, pb_part_size(&part));
+  ck_assert_uint_eq(0, pb_part_version(&part));
+
+  /* Assert part offsets */
+  ck_assert_uint_eq(9, pb_part_start(&part));
+  ck_assert_uint_eq(11, pb_part_end(&part));
+
+  /* Assert journal size */
+  fail_if(pb_journal_empty(&journal));
+  ck_assert_uint_eq(11, pb_journal_size(&journal));
+
+  /* Free all allocated memory */
+  pb_part_destroy(&part);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Create a part from a message for a specific tag that is part of a oneof.
+ */
+START_TEST(test_create_oneof_existing_after) {
+  const uint8_t data[] = { 32, 127, 53, 0, 0, 0, 0, 98, 0 };
+  const size_t  size   = 9;
+
+  /* Create journal, message and part */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_part_t    part    = pb_part_create(&message, 3);
+
+  /* Assert part validity and error */
+  fail_unless(pb_part_valid(&part));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_part_error(&part));
+
+  /* Assert part size and version */
+  fail_unless(pb_part_empty(&part));
+  ck_assert_uint_eq(0, pb_part_size(&part));
+  ck_assert_uint_eq(4, pb_part_version(&part));
+
+  /* Assert part offsets */
+  ck_assert_uint_eq(1, pb_part_start(&part));
+  ck_assert_uint_eq(1, pb_part_end(&part));
+
+  /* Assert journal size */
+  fail_if(pb_journal_empty(&journal));
+  ck_assert_uint_eq(1, pb_journal_size(&journal));
+
+  /* Free all allocated memory */
+  pb_part_destroy(&part);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
 } END_TEST
 
 /*
@@ -852,6 +1000,10 @@ main(void) {
   tcase_add_test(tcase, test_create_message_empty);
   tcase_add_test(tcase, test_create_message_merged);
   tcase_add_test(tcase, test_create_message_invalid);
+  tcase_add_test(tcase, test_create_oneof);
+  tcase_add_test(tcase, test_create_oneof_existing);
+  tcase_add_test(tcase, test_create_oneof_existing_before);
+  tcase_add_test(tcase, test_create_oneof_existing_after);
   tcase_add_test(tcase, test_create_from_journal);
   tcase_add_test(tcase, test_create_from_journal_invalid);
   tcase_add_test(tcase, test_create_from_cursor);

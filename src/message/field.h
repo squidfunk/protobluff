@@ -63,7 +63,7 @@ pb_field_create_invalid(void) {
 }
 
 /*!
- * Create a copy of a field.
+ * Create a shallow copy of a field.
  *
  * \param[in] field Field
  * \return          Field copy

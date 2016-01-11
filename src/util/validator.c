@@ -27,7 +27,7 @@
 
 #include "core/common.h"
 #include "core/decoder.h"
-#include "util/descriptor.h"
+#include "core/descriptor.h"
 #include "util/validator.h"
 
 /* ----------------------------------------------------------------------------
@@ -65,7 +65,7 @@ handler(
   pb_validator_tags_t *tags = user;
 
   /* Count field occurrence */
-  uint8_t miss = 1;
+  int miss = 1;
   for (size_t t = 0; miss && t < tags->size; ++t)
     if (tags->data[t] == pb_field_descriptor_tag(descriptor))
       miss = 0;
@@ -112,7 +112,7 @@ check(const pb_decoder_t *decoder) {
         const pb_field_descriptor_t *descriptor =
           pb_descriptor_iter_current(&it);
         if (pb_field_descriptor_label(descriptor) == PB_LABEL_REQUIRED) {
-          uint8_t miss = 1;
+          int miss = 1;
           for (size_t t = 0; miss && t < tags.size; ++t)
             if (tags.data[t] == pb_field_descriptor_tag(descriptor))
               miss = 0;

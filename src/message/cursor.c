@@ -186,6 +186,14 @@ next(pb_cursor_t *cursor) {
 /*!
  * Create a cursor over a message for a specific tag.
  *
+ * This is the normal way of creating a cursor. If the cursor is created for
+ * an optional or required field, it is ensured that the cursor points to the
+ * last occurrence, which is the active/visible value. This is exactly the way
+ * it is demanded by the Protocol Buffers specification.
+ *
+ * Furthermore, if the tag is part of a oneof and the tag exists, it is ensured
+ * that the tag is the currently active/visible part of the oneof.
+ *
  * \warning After creating a cursor, it is mandatory to check its validity
  * with the macro pb_cursor_valid().
  *
@@ -196,23 +204,51 @@ next(pb_cursor_t *cursor) {
 extern pb_cursor_t
 pb_cursor_create(pb_message_t *message, pb_tag_t tag) {
   assert(message && tag);
-  return pb_cursor_create_internal(message, tag);
+  pb_cursor_t cursor = pb_cursor_create_unsafe(message, tag);
+  if (pb_cursor_valid(&cursor)) {
+    const pb_field_descriptor_t *descriptor = cursor.current.descriptor;
+
+    /* If the field is non-repeated, move the cursor to the last occurrence */
+    if (pb_field_descriptor_label(descriptor) != PB_LABEL_REPEATED) {
+      pb_cursor_t temp = pb_cursor_copy(&cursor);
+      while (pb_cursor_next(&temp)) {
+        if (tag == pb_cursor_tag(&temp)) {
+          pb_cursor_destroy(&cursor);
+          cursor = pb_cursor_copy(&temp);
+        }
+      }
+      pb_cursor_destroy(&temp);
+
+      /* If the tag is part of a oneof ensure it is the active tag */
+      if (pb_field_descriptor_label(descriptor) == PB_LABEL_ONEOF) {
+        pb_cursor_t temp = pb_cursor_copy(&cursor); temp.tag = 0;
+        while (pb_cursor_next(&temp)) {
+          int member = pb_field_descriptor_oneof(descriptor) ==
+            pb_field_descriptor_oneof(cursor.current.descriptor);
+          if (member && (cursor.error = PB_ERROR_EOM))
+            break;
+        }
+        pb_cursor_destroy(&temp);
+      }
+    }
+  }
+  return cursor;
 }
 
 /*!
  * Create a cursor over a message.
  *
- * Internally, the tag may also be initialized to zero, in which case the
- * cursor will halt on every field. The cursor position is initialized with
- * the maximum offset for the subsequent call to pb_cursor_next(), so that
- * the offset will simply wrap around.
+ * The cursor will halt on every occurrence of a field, even though a field is
+ * declared optional or required. Internally, the tag may also be initialized
+ * to zero, in which case the cursor will halt on every field. This function is
+ * only meant for internal use (e.g. by pb_message_erase()).
  *
  * \param[in,out] message Message
  * \param[in]     tag     Tag
  * \return                Cursor
  */
 extern pb_cursor_t
-pb_cursor_create_internal(pb_message_t *message, pb_tag_t tag) {
+pb_cursor_create_unsafe(pb_message_t *message, pb_tag_t tag) {
   assert(message);
   if (pb_message_valid(message) && !pb_message_align(message)) {
     const pb_field_descriptor_t *descriptor = tag
@@ -310,41 +346,13 @@ pb_cursor_next(pb_cursor_t *cursor) {
  * \return               Test result
  */
 extern int
-pb_cursor_first(pb_cursor_t *cursor) {
+pb_cursor_rewind(pb_cursor_t *cursor) {
   assert(cursor);
-  pb_cursor_t temp = pb_cursor_create_internal(
+  pb_cursor_t temp = pb_cursor_create_unsafe(
     &(cursor->message), cursor->tag);
   pb_cursor_destroy(cursor);
-  *cursor = temp;
+  *cursor = pb_cursor_copy(&temp);
   return pb_cursor_valid(cursor);
-}
-
-/*!
- * Move a cursor to the last occurrence of a field.
- *
- * \param[in,out] cursor Cursor
- * \return               Test result
- */
-extern int
-pb_cursor_last(pb_cursor_t *cursor) {
-  assert(cursor);
-  int result = 0;
-  if (cursor->tag) {
-    pb_cursor_t temp = pb_cursor_create_internal(
-      &(cursor->message), cursor->tag);
-    if (pb_cursor_valid(&temp)) {
-      do {
-        if (cursor->tag == pb_cursor_tag(&temp)) {
-          pb_cursor_destroy(cursor);
-          *cursor = temp;
-        }
-      } while (pb_cursor_next(&temp));
-    }
-    if (temp.error == PB_ERROR_EOM)
-      result = 1;
-    pb_cursor_destroy(&temp);
-  }
-  return result;
 }
 
 /*!
@@ -377,7 +385,7 @@ pb_cursor_seek(pb_cursor_t *cursor, const void *value) {
 }
 
 /*!
- * Compare the value of the current field of a cursor with the given value.
+ * Compare values for the current field of a cursor.
  *
  * \warning If a cursor is created without a tag, the caller is obliged to
  * check the current tag before reading or altering the value in any way.
@@ -486,6 +494,13 @@ pb_cursor_put(pb_cursor_t *cursor, const void *value) {
  *
  * The cursor is reset to the previous part's end offset, so advancing the
  * cursor will set the position to the actual next field.
+ *
+ * If the underlying message contains multiple occurrences for an optional or
+ * required field or submessage (in case it was merged), erasing the last field
+ * or submessage will uncover a former one. The cursor will at all times only
+ * erase the current occurrence. In order to safely erase all occurrences, use
+ * pb_message_erase() on the underlying message, which handles fields,
+ * submessages and oneofs.
  *
  * \param[in,out] cursor Cursor
  * \return               Error code

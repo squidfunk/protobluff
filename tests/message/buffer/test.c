@@ -34,8 +34,12 @@
  * System-default allocator callback overrides
  * ------------------------------------------------------------------------- */
 
-/*
+/*!
  * Allocator with failing allocation.
+ *
+ * \param[in,out] data Internal allocator data
+ * \param[in]     size Bytes to be allocated
+ * \return             Memory block
  */
 static void *
 allocator_allocate_fail(void *data, size_t size) {
@@ -43,8 +47,13 @@ allocator_allocate_fail(void *data, size_t size) {
   return NULL;
 }
 
-/*
+/*!
  * Allocator with failing reallocation.
+ *
+ * \param[in,out] data  Internal allocator data
+ * \param[in,out] block Memory block to be resized
+ * \param[in]     size  Bytes to be allocated
+ * \return              Memory block
  */
 static void *
 allocator_resize_fail(void *data, void *block, size_t size) {
@@ -132,8 +141,8 @@ START_TEST(test_write_zero_copy) {
   fail_unless(pb_buffer_valid(&buffer));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_buffer_error(&buffer));
 
-  /* Update buffer: "SOME DATA" => "MORE DATA" */
-  uint8_t new_data[] = "MORE DATA";
+  /* Update buffer: "SOME DATA" => "NEW STUFF" */
+  uint8_t new_data[] = "NEW STUFF";
   ck_assert_uint_eq(PB_ERROR_NONE,
     pb_buffer_write(&buffer, 0, size, new_data, size));
 
@@ -657,7 +666,7 @@ START_TEST(test_clear_invalid_range) {
 } END_TEST
 
 /*
- * Clear data from a buffer for which allocation failed.
+ * Clear data from a buffer for which allocation fails.
  */
 START_TEST(test_clear_invalid_allocate) {
   const uint8_t data[] = "SOME DATA";
@@ -699,7 +708,7 @@ START_TEST(test_clear_invalid_allocate) {
 } END_TEST
 
 /*
- * Clear data from a buffer for which reallocation will always fail.
+ * Clear data from a buffer for which reallocation fails.
  */
 START_TEST(test_clear_invalid_resize) {
   const uint8_t data[] = "SOME DATA";

@@ -1,3 +1,44 @@
+protobluff-0.5.0 (xxxx-xx-xx)
+
+  In progress + support for oneofs. NOTE: Upgrade ABI due to descriptor renaming! (maybe make this reverse for 0.4.2 release!)
+
+  TODO:
+
+  Integrate into generator:
+
+  person_which_type(&person) --> rename to which
+    pb_oneof_t oneof = pb_oneof_create(&oneof_descriptor, person);
+    pb_tag_t   tag   = pb_oneof_which(&oneof);
+    pb_oneof_destroy(&oneof);                   // build an INLINE function for messages, that doe exactly this!
+    return tag;
+
+  pb_message_which(&oneof_descriptor, message); --->
+
+  person_clear_type()
+
+  person_erase_foo() --> handles type...
+
+  * Document that oneofs are rather expensive in protobluff (and document why)
+  * Document philosophy of creating oneofs, and optional fields etc. (merged messages)
+  * Change copyright banners to 2013-2016
+  * Remove cursor_pos from part_create (test cases!)
+  * Callgrind!
+
+  Runtime:
+
+  * Fixed occurrence handling of non-repeated fields in message and cursor
+  * Added regression tests for occurrence handling
+  * Added support for oneofs
+  * Added tests for oneofs
+  * Moved descriptor iterators from util into core (won't affect core size)
+  * Changed field descriptor accessors for clarity ("nested", "enum", "oneof")
+  * Adapted copyright banners to include 2016
+
+  Generator:
+
+  * Removed banners for empty sections in generated source
+  * Removed from field constructors (may be introduced with "Any" in proto3)
+
 protobluff-0.4.1 (2015-12-21)
 
   Bugfix release for packed field support, no interface changes.

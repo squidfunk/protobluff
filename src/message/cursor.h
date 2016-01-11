@@ -27,6 +27,7 @@
 
 #include <protobluff/message/cursor.h>
 
+#include "core/descriptor.h"
 #include "message/common.h"
 #include "message/journal.h"
 #include "message/message.h"
@@ -37,7 +38,7 @@
 
 PB_WARN_UNUSED_RESULT
 extern pb_cursor_t
-pb_cursor_create_internal(
+pb_cursor_create_unsafe(
   pb_message_t *message,               /* Message */
   pb_tag_t tag);                       /* Tag */
 
@@ -59,7 +60,7 @@ PB_WARN_UNUSED_RESULT
 PB_INLINE pb_cursor_t
 pb_cursor_create_without_tag(pb_message_t *message) {
   assert(message);
-  return pb_cursor_create_internal(message, 0);
+  return pb_cursor_create_unsafe(message, 0);
 }
 
 /*!
@@ -78,7 +79,7 @@ pb_cursor_create_invalid(void) {
 }
 
 /*!
- * Create a copy of a cursor.
+ * Create a shallow copy of a cursor.
  *
  * \param[in] cursor Cursor
  * \return           Cursor copy
@@ -88,20 +89,6 @@ PB_INLINE pb_cursor_t
 pb_cursor_copy(const pb_cursor_t *cursor) {
   assert(cursor);
   return *cursor;
-}
-
-/*!
- * Retrieve the tag at the current position of a cursor.
- *
- * \param[in] cursor Cursor
- * \return           Current tag
- */
-PB_INLINE pb_tag_t
-pb_cursor_tag(const pb_cursor_t *cursor) {
-  assert(cursor);
-  return !cursor->error && cursor->current.descriptor
-    ? pb_field_descriptor_tag(cursor->current.descriptor)
-    : 0;
 }
 
 /*!
@@ -141,6 +128,24 @@ pb_cursor_aligned(const pb_cursor_t *cursor) {
 }
 
 /*!
+ * Retrieve the tag at the current position of a cursor.
+ *
+ * \warning This function does no runtime check for valid alignment, as it is
+ * only used internally. Errors are catched with assertions during development.
+ *
+ * \param[in] cursor Cursor
+ * \return           Current tag
+ */
+PB_INLINE pb_tag_t
+pb_cursor_tag(const pb_cursor_t *cursor) {
+  assert(cursor);
+  assert(!pb_cursor_valid(cursor) || pb_cursor_aligned(cursor));
+  return pb_cursor_valid(cursor)
+    ? pb_field_descriptor_tag(cursor->current.descriptor)
+    : 0;
+}
+
+/*!
  * Retrieve the offsets at the current position of a cursor.
  *
  * \param[in] cursor Cursor
@@ -149,6 +154,7 @@ pb_cursor_aligned(const pb_cursor_t *cursor) {
 PB_INLINE const pb_offset_t *
 pb_cursor_offset(const pb_cursor_t *cursor) {
   assert(cursor);
+  assert(pb_cursor_aligned(cursor));
   return &(cursor->current.offset);
 }
 

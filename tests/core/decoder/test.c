@@ -75,7 +75,7 @@ descriptor = { {
     {  3, "F03", SINT32,  OPTIONAL },
     {  4, "F04", SINT64,  OPTIONAL },
     {  5, "F05", BOOL,    OPTIONAL },
-    {  6, "F06", FLOAT,   OPTIONAL, NULL, NULL, PACKED },
+    {  6, "F06", FLOAT,   REPEATED, NULL, NULL, PACKED },
     {  7, "F07", DOUBLE,  OPTIONAL },
     {  8, "F08", STRING,  OPTIONAL },
     {  9, "F09", BYTES,   OPTIONAL },
@@ -263,7 +263,7 @@ START_TEST(test_decode_invalid_tag) {
 } END_TEST
 
 /*
- * Decode a buffer with an invalid length prefix using a handler.
+ * Decode a buffer with invalid length using a handler.
  */
 START_TEST(test_decode_invalid_length) {
   const uint8_t data[] = { 26, 5 };

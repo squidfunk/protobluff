@@ -68,7 +68,7 @@ encode_varint(
   /* Assert valid value for enum field */
   if (type == PB_TYPE_ENUM)
     assert(pb_enum_descriptor_value_by_number(
-      pb_field_descriptor_reference(descriptor),
+      pb_field_descriptor_enum(descriptor),
         *(const pb_enum_t *)value));
 
 #endif /* NDEBUG */
@@ -239,7 +239,7 @@ encode_packed(
         /* Assert valid value for enum field */
         if (type == PB_TYPE_ENUM)
           assert(pb_enum_descriptor_value_by_number(
-            pb_field_descriptor_reference(descriptor),
+            pb_field_descriptor_enum(descriptor),
               *(const pb_enum_t *)temp));
 
 #endif /* NDEBUG */

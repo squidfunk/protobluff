@@ -138,7 +138,7 @@ pb_decoder_decode(
 
         /* Create decoder for nested message and invoke handler */
         pb_decoder_t subdecoder = pb_decoder_create(
-          pb_field_descriptor_reference(descriptor), &buffer);
+          pb_field_descriptor_nested(descriptor), &buffer);
         error = handler(descriptor, &subdecoder, user);
 
         /* Free all allocated memory */

@@ -34,8 +34,12 @@
  * System-default allocator callback overrides
  * ------------------------------------------------------------------------- */
 
-/*
+/*!
  * Allocator with failing allocation.
+ *
+ * \param[in,out] data Internal allocator data
+ * \param[in]     size Bytes to be allocated
+ * \return             Memory block
  */
 static void *
 allocator_allocate_fail(void *data, size_t size) {
@@ -43,8 +47,13 @@ allocator_allocate_fail(void *data, size_t size) {
   return NULL;
 }
 
-/*
+/*!
  * Allocator with failing reallocation.
+ *
+ * \param[in,out] data  Internal allocator data
+ * \param[in,out] block Memory block to be resized
+ * \param[in]     size  Bytes to be allocated
+ * \return              Memory block
  */
 static void *
 allocator_resize_fail(void *data, void *block, size_t size) {
@@ -261,7 +270,7 @@ START_TEST(test_grow_zero_copy) {
 } END_TEST
 
 /*
- * Grow an invalid buffer and return a pointer to the newly allocated space.
+ * Grow an invalid buffer and expect a NULL pointer.
  */
 START_TEST(test_grow_invalid) {
   pb_buffer_t buffer = pb_buffer_create_invalid();
@@ -283,7 +292,7 @@ START_TEST(test_grow_invalid) {
 } END_TEST
 
 /*
- * Grow a buffer for which allocation fails.
+ * Grow a buffer for which allocation fails and expect a NULL pointer.
  */
 START_TEST(test_grow_invalid_allocate) {
   const uint8_t data[] = "SOME DATA";
@@ -319,7 +328,7 @@ START_TEST(test_grow_invalid_allocate) {
 } END_TEST
 
 /*
- * Grow a buffer for which reallocation fails.
+ * Grow a buffer for which reallocation fails and expect a NULL pointer.
  */
 START_TEST(test_grow_invalid_resize) {
   const uint8_t data[] = "SOME DATA";

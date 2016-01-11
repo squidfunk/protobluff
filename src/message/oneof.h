@@ -20,27 +20,31 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef PB_INCLUDE_UTIL_DESCRIPTOR_H
-#define PB_INCLUDE_UTIL_DESCRIPTOR_H
+#ifndef PB_MESSAGE_ONEOF_H
+#define PB_MESSAGE_ONEOF_H
 
-#include <protobluff/core/common.h>
-#include <protobluff/core/descriptor.h>
+#include <protobluff/message/oneof.h>
+
+#include "message/common.h"
+#include "message/cursor.h"
 
 /* ----------------------------------------------------------------------------
- * Interface
+ * Inline functions
  * ------------------------------------------------------------------------- */
 
-PB_EXPORT const pb_field_descriptor_t *
-pb_descriptor_field_by_name(
-  const pb_descriptor_t *descriptor,   /* Descriptor */
-  const char name[]);                  /* Name */
+/*!
+ * Create an invalid oneof.
+ *
+ * \return Oneof
+ */
+PB_WARN_UNUSED_RESULT
+PB_INLINE pb_oneof_t
+pb_oneof_create_invalid(void) {
+  pb_oneof_t oneof = {
+    .descriptor = NULL,
+    .cursor     = pb_cursor_create_invalid()
+  };
+  return oneof;
+}
 
-/* ------------------------------------------------------------------------- */
-
-PB_EXPORT const pb_enum_descriptor_value_t *
-pb_enum_descriptor_value_by_name(
-  const pb_enum_descriptor_t
-    *descriptor,                       /* Enum descriptor */
-  const char name[]);                  /* Name */
-
-#endif /* PB_INCLUDE_UTIL_DESCRIPTOR_H */
+#endif /* PB_MESSAGE_ONEOF_H */

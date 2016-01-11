@@ -148,7 +148,8 @@ typedef enum pb_label_t {
   PB_LABEL_UNDEFINED,                  /*!< Undefined (default) */
   PB_LABEL_REQUIRED,                   /*!< Required field */
   PB_LABEL_OPTIONAL,                   /*!< Optional field */
-  PB_LABEL_REPEATED                    /*!< Repeated field */
+  PB_LABEL_REPEATED,                   /*!< Repeated field */
+  PB_LABEL_ONEOF                       /*!< Oneof member */
 } pb_label_t;
 
 /* ----------------------------------------------------------------------------

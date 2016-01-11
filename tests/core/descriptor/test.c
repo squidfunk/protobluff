@@ -21,6 +21,7 @@
  */
 
 #include <check.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include <protobluff/descriptor.h>
@@ -122,6 +123,76 @@ teardown() {
 /* ----------------------------------------------------------------------------
  * Tests
  * ------------------------------------------------------------------------- */
+
+/*
+ * Create a const-iterator over a descriptor.
+ */
+START_TEST(test_iterator) {
+  pb_descriptor_iter_t it = pb_descriptor_iter_create(&descriptor);
+
+  /* Assert descriptor size */
+  fail_if(pb_descriptor_empty(&descriptor));
+  ck_assert_uint_eq(12, pb_descriptor_size(&descriptor));
+
+  /* Walk through descriptor fields forwards */
+  fail_unless(pb_descriptor_iter_begin(&it));
+  for (size_t f = 1; f <= 12; f++, !!pb_descriptor_iter_next(&it)) {
+    const pb_field_descriptor_t *descriptor =
+      pb_descriptor_iter_current(&it);
+    ck_assert_uint_eq(f - 1, pb_descriptor_iter_pos(&it));
+
+    /* Assemble field name */
+    char name[5];
+    snprintf(name, 5, "F%02d", pb_field_descriptor_tag(descriptor));
+
+    /* Assert field name and tag */
+    ck_assert_uint_eq(f, pb_field_descriptor_tag(descriptor));
+    fail_if(strcmp(name, pb_field_descriptor_name(descriptor)));
+  }
+
+  /* Assert descriptor iterator validity */
+  fail_if(pb_descriptor_iter_next(&it));
+
+  /* Walk through descriptor fields backwards */
+  fail_unless(pb_descriptor_iter_end(&it));
+  for (size_t f = 12; f >= 1; f--, !!pb_descriptor_iter_prev(&it)) {
+    const pb_field_descriptor_t *descriptor =
+      pb_descriptor_iter_current(&it);
+    ck_assert_uint_eq(f - 1, pb_descriptor_iter_pos(&it));
+
+    /* Assemble field name */
+    char name[5];
+    snprintf(name, 5, "F%02d", pb_field_descriptor_tag(descriptor));
+
+    /* Assert field name and tag */
+    ck_assert_uint_eq(f, pb_field_descriptor_tag(descriptor));
+    fail_if(strcmp(name, pb_field_descriptor_name(descriptor)));
+  }
+
+  /* Assert descriptor iterator validity again */
+  fail_if(pb_descriptor_iter_prev(&it));
+
+  /* Free all allocated memory */
+  pb_descriptor_iter_destroy(&it);
+} END_TEST
+
+/*
+ * Create a const-iterator over an empty descriptor.
+ */
+START_TEST(test_iterator_empty) {
+  pb_descriptor_iter_t it = pb_descriptor_iter_create(&descriptor_empty);
+
+  /* Assert descriptor size */
+  fail_unless(pb_descriptor_empty(&descriptor_empty));
+  ck_assert_uint_eq(0, pb_descriptor_size(&descriptor_empty));
+
+  /* Assert failing forward- and backward iteration */
+  fail_if(pb_descriptor_iter_begin(&it));
+  fail_if(pb_descriptor_iter_end(&it));
+
+  /* Free all allocated memory */
+  pb_descriptor_iter_destroy(&it);
+} END_TEST
 
 /*
  * Retrieve the field descriptor for a given tag from a descriptor.
@@ -227,6 +298,79 @@ START_TEST(test_extend) {
 /* ------------------------------------------------------------------------- */
 
 /*
+ * Create a const-iterator over an enum descriptor.
+ */
+START_TEST(test_enum_iterator) {
+  pb_enum_descriptor_iter_t it =
+    pb_enum_descriptor_iter_create(&enum_descriptor);
+
+  /* Assert enum descriptor size */
+  fail_if(pb_enum_descriptor_empty(&enum_descriptor));
+  ck_assert_uint_eq(3, pb_enum_descriptor_size(&enum_descriptor));
+
+  /* Walk through enum descriptor values forwards */
+  fail_unless(pb_enum_descriptor_iter_begin(&it));
+  for (size_t v = 0; v < 3; v++, !!pb_enum_descriptor_iter_next(&it)) {
+    const pb_enum_descriptor_value_t *descriptor =
+      pb_enum_descriptor_iter_current(&it);
+    ck_assert_uint_eq(v, pb_enum_descriptor_iter_pos(&it));
+
+    /* Assemble value name */
+    char name[5];
+    snprintf(name, 5, "V%02d", pb_enum_descriptor_value_number(descriptor));
+
+    /* Assert value number and name */
+    ck_assert_uint_eq(v, pb_enum_descriptor_value_number(descriptor));
+    fail_if(strcmp(name, pb_enum_descriptor_value_name(descriptor)));
+  }
+
+  /* Assert enum descriptor iterator validity */
+  fail_if(pb_enum_descriptor_iter_next(&it));
+
+  /* Walk through enum descriptor values backwards */
+  fail_unless(pb_enum_descriptor_iter_end(&it));
+  size_t v = 2;
+  do {
+    const pb_enum_descriptor_value_t *descriptor =
+      pb_enum_descriptor_iter_current(&it);
+    ck_assert_uint_eq(v, pb_enum_descriptor_iter_pos(&it));
+
+    /* Assemble value name */
+    char name[5];
+    snprintf(name, 5, "V%02d", pb_enum_descriptor_value_number(descriptor));
+
+    /* Assert value number and name */
+    ck_assert_uint_eq(v, pb_enum_descriptor_value_number(descriptor));
+    fail_if(strcmp(name, pb_enum_descriptor_value_name(descriptor)));
+  } while (v--, pb_enum_descriptor_iter_prev(&it));
+
+  /* Assert enum descriptor iterator validity again */
+  fail_if(pb_enum_descriptor_iter_prev(&it));
+
+  /* Free all allocated memory */
+  pb_enum_descriptor_iter_destroy(&it);
+} END_TEST
+
+/*
+ * Create a const-iterator over an empty enum descriptor.
+ */
+START_TEST(test_enum_iterator_empty) {
+  pb_enum_descriptor_iter_t it =
+    pb_enum_descriptor_iter_create(&enum_descriptor_empty);
+
+  /* Assert enum descriptor size */
+  fail_unless(pb_enum_descriptor_empty(&enum_descriptor_empty));
+  ck_assert_uint_eq(0, pb_enum_descriptor_size(&enum_descriptor_empty));
+
+  /* Assert failing forward- and backward iteration */
+  fail_if(pb_enum_descriptor_iter_begin(&it));
+  fail_if(pb_enum_descriptor_iter_end(&it));
+
+  /* Free all allocated memory */
+  pb_enum_descriptor_iter_destroy(&it);
+} END_TEST
+
+/*
  * Retrieve the value for a given number from an enum descriptor.
  */
 START_TEST(test_enum_value_by_number) {
@@ -290,6 +434,12 @@ main(void) {
   void *suite = suite_create("protobluff/core/descriptor"),
        *tcase = NULL;
 
+  /* Add tests to test case "iterator" */
+  tcase = tcase_create("iterator");
+  tcase_add_test(tcase, test_iterator);
+  tcase_add_test(tcase, test_iterator_empty);
+  suite_add_tcase(suite, tcase);
+
   /* Add tests to test case "field_by_tag" */
   tcase = tcase_create("field_by_tag");
   tcase_add_checked_fixture(tcase, setup, teardown);
@@ -305,6 +455,12 @@ main(void) {
   tcase = tcase_create("extend");
   tcase_add_checked_fixture(tcase, setup, teardown);
   tcase_add_test(tcase, test_extend);
+  suite_add_tcase(suite, tcase);
+
+  /* Add tests to test case "enum/iterator" */
+  tcase = tcase_create("enum/iterator");
+  tcase_add_test(tcase, test_enum_iterator);
+  tcase_add_test(tcase, test_enum_iterator_empty);
   suite_add_tcase(suite, tcase);
 
   /* Add tests to test case "enum/value_by_number" */

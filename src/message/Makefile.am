@@ -32,6 +32,7 @@ libprotobluff_message_la_SOURCES = \
 	journal.c \
 	message.c \
 	nested.c \
+	oneof.c \
 	part.c
 libprotobluff_message_la_CPPFLAGS = \
 	-I@top_builddir@/src \

@@ -240,11 +240,11 @@ namespace protobluff {
     if (HasEnums()) {
       PrintBanner(printer, "Enum descriptors");
 
-      /* Generate descriptor for enums */
+      /* Generate descriptors for enums */
       for (size_t e = 0; e < descriptor_->enum_type_count(); e++)
         enums_[e]->GenerateDeclaration(printer);
 
-      /* Generate descriptor for nested enums */
+      /* Generate descriptors for nested enums */
       for (size_t m = 0; m < descriptor_->message_type_count(); m++) {
         const vector<const Enum *> enums = messages_[m]->GetEnums();
         for (size_t e = 0; e < enums.size(); e++)
@@ -252,25 +252,25 @@ namespace protobluff {
       }
     }
 
-    /* Generate descriptor for messages, if any */
+    /* Generate descriptors for messages, if any */
     if (descriptor_->message_type_count()) {
       PrintBanner(printer, "Descriptors");
 
-      /* Generate descriptor for messages and nested messages */
+      /* Generate descriptors for messages and nested messages */
       for (size_t m = 0; m < descriptor_->message_type_count(); m++)
         messages_[m]->GenerateDeclaration(printer);
 
       /* Generate decoder banner */
       PrintBanner(printer, "Decoders");
 
-      /* Generate decoder for messages and nested messages */
+      /* Generate decoders for messages and nested messages */
       for (size_t m = 0; m < descriptor_->message_type_count(); m++)
         messages_[m]->GenerateDecoder(printer);
 
       /* Generate encoder banner */
       PrintBanner(printer, "Encoders");
 
-      /* Generate encoder for messages and nested messages */
+      /* Generate encoders for messages and nested messages */
       for (size_t m = 0; m < descriptor_->message_type_count(); m++)
         messages_[m]->GenerateEncoder(printer);
     }
@@ -357,7 +357,7 @@ namespace protobluff {
     if (HasEnums()) {
       PrintBanner(printer, "Enum descriptors");
 
-      /* Generate descriptor for enums */
+      /* Generate descriptors for enums */
       for (size_t e = 0; e < descriptor_->enum_type_count(); e++)
         enums_[e]->GenerateDescriptor(printer);
 

@@ -938,8 +938,6 @@ main(void) {
   void *suite = suite_create("protobluff/core/stream"),
        *tcase = NULL;
 
-  // create! validity must not be checked, as the buffer is assumed to be checked in advance
-
   /* Add tests to test case "create" */
   tcase = tcase_create("create");
   tcase_add_test(tcase, test_create);

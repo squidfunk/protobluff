@@ -55,7 +55,7 @@ handler_phonenumber(
     case 2:
       printf(" (%s)", pb_enum_descriptor_value_name(
         pb_enum_descriptor_value_by_number(
-          pb_field_descriptor_reference(descriptor),
+          pb_field_descriptor_enum(descriptor),
           *(const pb_enum_t *)value)));
       break;
   }

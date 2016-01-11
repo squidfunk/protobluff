@@ -95,7 +95,7 @@ pb_part_create_invalid(void) {
 }
 
 /*!
- * Create a copy of a part.
+ * Create a shallow copy of a part.
  *
  * \param[in] part Part
  * \return         Part copy

@@ -30,6 +30,7 @@
 #include <protobluff/message/journal.h>
 #include <protobluff/message/message.h>
 #include <protobluff/message/nested.h>
+#include <protobluff/message/oneof.h>
 #include <protobluff/message/part.h>
 
 #endif /* PB_INCLUDE_MESSAGE_H */

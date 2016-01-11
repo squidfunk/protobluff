@@ -31,6 +31,7 @@
 #include "message/field.h"
 #include "message/journal.h"
 #include "message/message.h"
+#include "message/oneof.h"
 #include "message/part.h"
 
 /* ----------------------------------------------------------------------------
@@ -69,9 +70,9 @@ pb_message_create_within(pb_message_t *message, pb_tag_t tag) {
       pb_descriptor_field_by_tag(message->descriptor, tag);
     assert(descriptor &&
       pb_field_descriptor_type(descriptor) == PB_TYPE_MESSAGE &&
-      pb_field_descriptor_reference(descriptor));
+      pb_field_descriptor_nested(descriptor));
     pb_message_t submessage = {
-      .descriptor = pb_field_descriptor_reference(descriptor),
+      .descriptor = pb_field_descriptor_nested(descriptor),
       .part       = pb_part_create(message, tag)
     };
     return submessage;
@@ -131,9 +132,9 @@ pb_message_create_from_cursor(pb_cursor_t *cursor) {
     const pb_field_descriptor_t *descriptor = pb_cursor_descriptor(cursor);
     if (descriptor &&
         pb_field_descriptor_type(descriptor) == PB_TYPE_MESSAGE) {
-      assert(pb_field_descriptor_reference(descriptor));
+      assert(pb_field_descriptor_nested(descriptor));
       pb_message_t submessage = {
-        .descriptor = pb_field_descriptor_reference(descriptor),
+        .descriptor = pb_field_descriptor_nested(descriptor),
         .part       = pb_part_create_from_cursor(cursor)
       };
       return submessage;
@@ -177,7 +178,7 @@ pb_message_destroy(pb_message_t *message) {
 }
 
 /*!
- * Test whether a message contains at least one occurrence for a given tag.
+ * Test whether a message contains a given tag.
  *
  * Whether the message is valid or not is checked by the cursor, so there is
  * no need to perform this check before creating the cursor.
@@ -189,14 +190,14 @@ pb_message_destroy(pb_message_t *message) {
 extern int
 pb_message_has(pb_message_t *message, pb_tag_t tag) {
   assert(message && tag);
-  pb_cursor_t cursor = pb_cursor_create_internal(message, tag);
+  pb_cursor_t cursor = pb_cursor_create(message, tag);
   int result = pb_cursor_valid(&cursor);
   pb_cursor_destroy(&cursor);
   return result;
 }
 
 /*!
- * Compare the value for a given tag from a message with the given value.
+ * Compare values for a given tag of a message.
  *
  * Whether the message is valid or not is checked by the cursor, so there is
  * no need to perform this check before creating the cursor.
@@ -212,6 +213,10 @@ pb_message_has(pb_message_t *message, pb_tag_t tag) {
 extern int
 pb_message_match(pb_message_t *message, pb_tag_t tag, const void *value) {
   assert(message && tag && value);
+
+#ifndef NDEBUG
+
+  /* Check is only necessary in debug mode */
   if (unlikely_(!pb_message_valid(message)))
     return 0;
 
@@ -221,11 +226,12 @@ pb_message_match(pb_message_t *message, pb_tag_t tag, const void *value) {
   assert(descriptor &&
     pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE);
 
+#endif /* NDEBUG */
+
   /* Use cursor to seek for matching value */
-  pb_cursor_t cursor = pb_cursor_create_internal(message, tag);
-  int result = pb_field_descriptor_label(descriptor) == PB_LABEL_REPEATED
-    ? pb_cursor_match(&cursor, value) || pb_cursor_seek(&cursor, value)
-    : pb_cursor_last(&cursor) && pb_cursor_match(&cursor, value);
+  pb_cursor_t cursor = pb_cursor_create(message, tag);
+  int result = pb_cursor_match(&cursor, value) ||
+               pb_cursor_seek(&cursor, value);
   pb_cursor_destroy(&cursor);
   return result;
 }
@@ -258,10 +264,14 @@ pb_message_get(pb_message_t *message, pb_tag_t tag, void *value) {
     pb_field_descriptor_label(descriptor) != PB_LABEL_REPEATED);
 
   /* Use cursor to omit field creation */
-  pb_cursor_t cursor = pb_cursor_create_internal(message, tag);
+  pb_cursor_t cursor = pb_cursor_create(message, tag);
+  if (pb_cursor_valid(&cursor)) {
+    error = pb_cursor_get(&cursor, value);
 
   /* Cursor didn't find field, try default value */
-  if ((error = pb_cursor_error(&cursor)) == PB_ERROR_EOM) {
+  } else if ((error = pb_cursor_error(&cursor)) == PB_ERROR_EOM) {
+
+    /* Extract default value, if present */
     if (unlikely_(!pb_field_descriptor_default(descriptor))) {
       error = PB_ERROR_ABSENT;
     } else {
@@ -269,10 +279,6 @@ pb_message_get(pb_message_t *message, pb_tag_t tag, void *value) {
         pb_field_descriptor_type_size(descriptor));
       error = PB_ERROR_NONE;
     }
-
-  /* Cursor found field, retrieve value */
-  } else if (pb_cursor_last(&cursor)) {
-    error = pb_cursor_get(&cursor, value);
   }
   pb_cursor_destroy(&cursor);
   return error;
@@ -338,7 +344,10 @@ pb_message_put(pb_message_t *message, pb_tag_t tag, const void *value) {
 /*!
  * Erase a field or submessage for a given tag from a message.
  *
- * Erasing a repeated field or submessage will always erase all occurrences.
+ * Erasing a field or submessage will always erase all occurrences. Therefore
+ * an unsafe cursor needs to be used. This is necessary, because in case of a
+ * merged message, not only the last occurrence needs to be erased, but all
+ * occurrences, so former occurrence don't magically reappear.
  *
  * The cursor may either be invalid or at an invalid offset after trying to
  * erase all instances of a field or submessage inside a message. These errors
@@ -359,17 +368,32 @@ pb_message_erase(pb_message_t *message, pb_tag_t tag) {
     return PB_ERROR_INVALID;
   pb_error_t error = PB_ERROR_NONE;
 
-  /* Use cursor to omit field/message creation */
-  pb_cursor_t cursor = pb_cursor_create_internal(message, tag);
-  if (pb_cursor_valid(&cursor))
-    do {
-      if ((error = pb_cursor_erase(&cursor)))
-        break;                                             /* LCOV_EXCL_LINE */
-    } while (pb_cursor_next(&cursor));
-  if (!error && (error = pb_cursor_error(&cursor)))
-    if (error == PB_ERROR_INVALID || error == PB_ERROR_EOM)
-      error = PB_ERROR_NONE;
-  pb_cursor_destroy(&cursor);
+  /* Assert descriptor */
+  const pb_field_descriptor_t *descriptor =
+    pb_descriptor_field_by_tag(message->descriptor, tag);
+  assert(descriptor);
+
+  /* Clear non-oneof field or submessage */
+  if (likely_(pb_field_descriptor_label(descriptor) != PB_LABEL_ONEOF)) {
+
+    /* Use cursor to omit field/message creation */
+    pb_cursor_t cursor = pb_cursor_create_unsafe(message, tag);
+    if (pb_cursor_valid(&cursor))
+      do {
+        error = pb_cursor_erase(&cursor);
+      } while (!error && pb_cursor_next(&cursor));
+    if (!error && (error = pb_cursor_error(&cursor)))
+      if (error == PB_ERROR_INVALID || error == PB_ERROR_EOM)
+        error = PB_ERROR_NONE;
+    pb_cursor_destroy(&cursor);
+
+  /* Clear oneof */
+  } else {
+    pb_oneof_t oneof = pb_oneof_create(
+      pb_field_descriptor_oneof(descriptor), message);
+    error = pb_oneof_clear(&oneof);
+    pb_oneof_destroy(&oneof);
+  }
   return error;
 }
 
@@ -426,7 +450,7 @@ pb_message_raw(pb_message_t *message, pb_tag_t tag) {
 #endif /* NDEBUG */
 
   /* Use cursor to omit field creation */
-  pb_cursor_t cursor = pb_cursor_create_internal(message, tag);
+  pb_cursor_t cursor = pb_cursor_create(message, tag);
   if (pb_cursor_valid(&cursor))
     value = pb_cursor_raw(&cursor);
   pb_cursor_destroy(&cursor);

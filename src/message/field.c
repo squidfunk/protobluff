@@ -285,7 +285,7 @@ pb_field_put(pb_field_t *field, const void *value) {
       /* Assert valid value for enum field */
       if (type == PB_TYPE_ENUM)
         assert(pb_enum_descriptor_value_by_number(
-          pb_field_descriptor_reference(field->descriptor),
+          pb_field_descriptor_enum(field->descriptor),
             *(const pb_enum_t *)value));
 
 #endif /* NDEBUG */
@@ -318,6 +318,13 @@ pb_field_put(pb_field_t *field, const void *value) {
 
 /*!
  * Clear a field entirely.
+ *
+ * When a field is cleared and the underlying message was previously merged
+ * with another message, the tag/field of the former message may re-appear,
+ * as the current field masked the former. In order to clear all occurrences
+ * of a tag/field, use pb_message_erase() on the underlying message. This is
+ * coherent with the way merged messages are handled by the default Protocol
+ * Buffers implementations.
  *
  * \warning Clearing a field will also invalidate it, as the underlying part
  * cannot restore the associated header (tag and length prefix).

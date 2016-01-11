@@ -27,45 +27,65 @@
 
 #include <protobluff/descriptor.h>
 
+#include "core/descriptor.h"
 #include "core/varint.h"
 #include "message/common.h"
 #include "message/cursor.h"
 #include "message/field.h"
 #include "message/journal.h"
 #include "message/message.h"
-#include "util/descriptor.h"
 
 /* ----------------------------------------------------------------------------
  * Defaults
  * ------------------------------------------------------------------------- */
 
+/* Unsigned 32-bit integer default */
 static const uint32_t
 default_uint32 = 1000000000U;
 
+/* Unsigned 64-bit integer default */
 static const uint64_t
 default_uint64 = 1000000000000000000ULL;
 
+/* Signed 32-bit integer default */
 static const int32_t
 default_int32 = -1000000000;
 
+/* Signed 64-bit integer default */
 static const int64_t
 default_int64 = -1000000000000000000LL;
 
+/* Bool default */
 static const uint8_t
-default_bool =  0;
+default_bool = 0;
 
+/* Float default */
 static const float
 default_float = 0.0001;
 
+/* Double default */
 static const double
 default_double = 0.00000001;
 
+/* String default */
 static const pb_string_t
 default_string = pb_string_const("DEFAULT");
 
 /* ----------------------------------------------------------------------------
  * Descriptors
  * ------------------------------------------------------------------------- */
+
+/* Descriptor (forward declaration) */
+static pb_descriptor_t
+descriptor;
+
+/* Oneof descriptor */
+static const pb_oneof_descriptor_t
+oneof_descriptor = {
+  &descriptor, {
+  (const size_t []){
+    12, 13, 14
+  }, 3 } };
 
 /* Descriptor */
 static pb_descriptor_t
@@ -82,8 +102,11 @@ descriptor = { {
     {  9, "F09", BYTES,   OPTIONAL },
     { 10, "F10", UINT32,  OPTIONAL },
     { 11, "F11", MESSAGE, OPTIONAL, &descriptor },
-    { 12, "F12", MESSAGE, REPEATED, &descriptor }
-  }, 12 } };
+    { 12, "F12", MESSAGE, REPEATED, &descriptor },
+    { 13, "F13", UINT32,  ONEOF, NULL, &oneof_descriptor },
+    { 14, "F14", UINT32,  ONEOF, NULL, &oneof_descriptor },
+    { 15, "F15", MESSAGE, ONEOF, &descriptor, &oneof_descriptor },
+  }, 15 } };
 
 /* ----------------------------------------------------------------------------
  * Tests
@@ -1124,7 +1147,7 @@ START_TEST(test_copy) {
 } END_TEST
 
 /*
- * Test whether a message contains at least one occurrence for a given tag.
+ * Test whether a message contains a given tag.
  */
 START_TEST(test_has) {
   const uint8_t data[] = { 8, 127 };
@@ -1148,7 +1171,7 @@ START_TEST(test_has) {
 } END_TEST
 
 /*
- * Test whether an empty message contains at least one occurrence.
+ * Test whether an empty message contains a given tag.
  */
 START_TEST(test_has_empty) {
   pb_journal_t journal = pb_journal_create_empty();
@@ -1168,7 +1191,7 @@ START_TEST(test_has_empty) {
 } END_TEST
 
 /*
- * Test whether a message contains at least one repeated occurrence.
+ * Test whether a message contains a given tag for a repeated field.
  */
 START_TEST(test_has_repeated) {
   const uint8_t data[] = { 98, 0, 98, 0 };
@@ -1191,7 +1214,57 @@ START_TEST(test_has_repeated) {
 } END_TEST
 
 /*
- * Test whether an unaligned message contains at least one occurrence.
+ * Test whether a message contains a given tag that is part of a oneof.
+ */
+START_TEST(test_has_oneof) {
+  const uint8_t data[] = { 112, 127 };
+  const size_t  size   = 2;
+
+  /* Create journal and message */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Assert message validity and error */
+  fail_unless(pb_message_valid(&message));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
+
+  /* Assert field (non-)existence */
+  fail_if(pb_message_has(&message, 13));
+  fail_unless(pb_message_has(&message, 14));
+  fail_if(pb_message_has(&message, 15));
+
+  /* Free all allocated memory */
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Test whether a merged message contains a given tag that is part of a oneof.
+ */
+START_TEST(test_has_oneof_merged) {
+  const uint8_t data[] = { 104, 1, 122, 0, 112, 3 };
+  const size_t  size   = 6;
+
+  /* Create journal and message */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Assert message validity and error */
+  fail_unless(pb_message_valid(&message));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
+
+  /* Assert field (non-)existence */
+  fail_if(pb_message_has(&message, 13));
+  fail_unless(pb_message_has(&message, 14));
+  fail_if(pb_message_has(&message, 15));
+
+  /* Free all allocated memory */
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Test whether an unaligned message contains a given tag.
  */
 START_TEST(test_has_unaligned) {
   pb_journal_t journal = pb_journal_create_empty();
@@ -1215,7 +1288,7 @@ START_TEST(test_has_unaligned) {
 } END_TEST
 
 /*
- * Test whether an invalid message contains at least one occurrence.
+ * Test whether an invalid message contains a given tag.
  */
 START_TEST(test_has_invalid) {
   pb_message_t message = pb_message_create_invalid();
@@ -1232,7 +1305,7 @@ START_TEST(test_has_invalid) {
 } END_TEST
 
 /*
- * Compare the value for a given tag from a message with the given value.
+ * Compare values for a given tag of a message.
  */
 START_TEST(test_match) {
   const uint8_t data[] = { 8, 127 };
@@ -1259,7 +1332,7 @@ START_TEST(test_match) {
 } END_TEST
 
 /*
- * Compare the value from an empty message with the given value.
+ * Compare values for a given tag of an empty message.
  */
 START_TEST(test_match_empty) {
   pb_journal_t journal = pb_journal_create_empty();
@@ -1280,7 +1353,7 @@ START_TEST(test_match_empty) {
 } END_TEST
 
 /*
- * Compare the value for a given tag from a message with the given value.
+ * Compare values for a given tag of a merged message.
  */
 START_TEST(test_match_merged) {
   const uint8_t data[] = { 8, 1, 8, 2, 8, 3, 8, 4 };
@@ -1305,7 +1378,61 @@ START_TEST(test_match_merged) {
 } END_TEST
 
 /*
- * Compare the value from an unaligned message with the given value.
+ * Compare values for a given tag that is part of a oneof of a message.
+ */
+START_TEST(test_match_oneof) {
+  const uint8_t data[] = { 112, 127 };
+  const size_t  size   = 2;
+
+  /* Create journal and message */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Assert message validity and error */
+  fail_unless(pb_message_valid(&message));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
+
+  /* Compare value with value from message */
+  uint32_t value1 = 127, value2 = 0;
+  fail_if(pb_message_match(&message, 13, &value1));
+  fail_unless(pb_message_match(&message, 14, &value1));
+  fail_if(pb_message_match(&message, 13, &value2));
+  fail_if(pb_message_match(&message, 14, &value2));
+
+  /* Free all allocated memory */
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Compare values for a given tag that is part of a oneof of a merged message.
+ */
+START_TEST(test_match_oneof_merged) {
+  const uint8_t data[] = { 104, 127, 112, 0, 112, 127 };
+  const size_t  size   = 6;
+
+  /* Create journal and message */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Assert message validity and error */
+  fail_unless(pb_message_valid(&message));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
+
+  /* Compare value with value from message */
+  uint32_t value1 = 127, value2 = 0;
+  fail_if(pb_message_match(&message, 13, &value1));
+  fail_unless(pb_message_match(&message, 14, &value1));
+  fail_if(pb_message_match(&message, 13, &value2));
+  fail_if(pb_message_match(&message, 14, &value2));
+
+  /* Free all allocated memory */
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Compare values for a given tag of an unaligned message.
  */
 START_TEST(test_match_unaligned) {
   pb_journal_t journal = pb_journal_create_empty();
@@ -1336,7 +1463,7 @@ START_TEST(test_match_unaligned) {
 } END_TEST
 
 /*
- * Compare the value from an invalid message with the given value.
+ * Compare values for a given tag of an invalid message.
  */
 START_TEST(test_match_invalid) {
   pb_message_t message = pb_message_create_invalid();
@@ -1377,6 +1504,32 @@ START_TEST(test_get) {
   /* Assert message size and version */
   fail_if(pb_message_empty(&message));
   ck_assert_uint_eq(2, pb_message_size(&message));
+  ck_assert_uint_eq(0, pb_message_version(&message));
+
+  /* Free all allocated memory */
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Read the value for a given tag from an empty message.
+ */
+START_TEST(test_get_empty) {
+  pb_journal_t journal = pb_journal_create_empty();
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Assert message validity and error */
+  fail_unless(pb_message_valid(&message));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
+
+  /* Read value from message */
+  uint32_t value = 0;
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_get(&message, 1, &value));
+  ck_assert_uint_eq(default_uint32, value);
+
+  /* Assert message size and version */
+  fail_unless(pb_message_empty(&message));
+  ck_assert_uint_eq(0, pb_message_size(&message));
   ck_assert_uint_eq(0, pb_message_version(&message));
 
   /* Free all allocated memory */
@@ -1616,6 +1769,67 @@ START_TEST(test_get_absent) {
 } END_TEST
 
 /*
+ * Read the value for a given tag that is part of a oneof from a message.
+ */
+START_TEST(test_get_oneof) {
+  const uint8_t data[] = { 112, 127 };
+  const size_t  size   = 2;
+
+  /* Create journal and message */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Assert message validity and error */
+  fail_unless(pb_message_valid(&message));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
+
+  /* Read value from message */
+  uint32_t value = 0;
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_get(&message, 14, &value));
+  ck_assert_uint_eq(127, value);
+
+  /* Assert message size and version */
+  fail_if(pb_message_empty(&message));
+  ck_assert_uint_eq(2, pb_message_size(&message));
+  ck_assert_uint_eq(0, pb_message_version(&message));
+
+  /* Free all allocated memory */
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Read the value for a given tag that is part of a oneof from a merged message.
+ */
+START_TEST(test_get_oneof_merged) {
+  const uint8_t data[] = { 122, 0, 104, 127, 112, 127 };
+  const size_t  size   = 6;
+
+  /* Create journal and message */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Assert message validity and error */
+  fail_unless(pb_message_valid(&message));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
+
+  /* Read value from message */
+  uint32_t value = 0;
+  ck_assert_uint_eq(PB_ERROR_ABSENT, pb_message_get(&message, 13, &value));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_get(&message, 14, &value));
+  ck_assert_uint_eq(127, value);
+
+  /* Assert message size and version */
+  fail_if(pb_message_empty(&message));
+  ck_assert_uint_eq(6, pb_message_size(&message));
+  ck_assert_uint_eq(0, pb_message_version(&message));
+
+  /* Free all allocated memory */
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
  * Read the value for a given tag from an unaligned message.
  */
 START_TEST(test_get_unaligned) {
@@ -1729,6 +1943,43 @@ START_TEST(test_put_existing) {
   ck_assert_uint_eq(3, pb_journal_size(&journal));
 
   /* Free all allocated memory */
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Write a value for a given tag to a merged message.
+ */
+START_TEST(test_put_merged) {
+  const uint8_t data[] = { 8, 1, 8, 2, 8, 3, 8, 4 };
+  const size_t  size   = 8;
+
+  /* Create journal and message */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Assert message validity and error */
+  fail_unless(pb_message_valid(&message));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
+
+  /* Write value to message */
+  uint32_t value = 255, check;
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_put(&message, 1, &value));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_get(&message, 1, &check));
+  ck_assert_uint_eq(value, check);
+
+  /* Create field and assert offsets */
+  pb_field_t field = pb_field_create(&message, 1);
+  ck_assert_uint_eq(7, pb_field_start(&field));
+  ck_assert_uint_eq(9, pb_field_end(&field));
+
+  /* Assert message size and version */
+  fail_if(pb_message_empty(&message));
+  ck_assert_uint_eq(9, pb_message_size(&message));
+  ck_assert_uint_eq(1, pb_message_version(&message));
+
+  /* Free all allocated memory */
+  pb_field_destroy(&field);
   pb_message_destroy(&message);
   pb_journal_destroy(&journal);
 } END_TEST
@@ -2035,6 +2286,113 @@ START_TEST(test_put_reverse_nested) {
 } END_TEST
 
 /*
+ * Write a value for a given tag that is part of a oneof to a message.
+ */
+START_TEST(test_put_oneof) {
+  pb_journal_t journal = pb_journal_create_empty();
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Assert message validity and error */
+  fail_unless(pb_message_valid(&message));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
+
+  /* Write value to message */
+  uint32_t value = 127, check;
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_put(&message, 13, &value));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_get(&message, 13, &check));
+  ck_assert_uint_eq(value, check);
+
+  /* Create field and assert offsets */
+  pb_field_t field = pb_field_create(&message, 13);
+  ck_assert_uint_eq(1, pb_field_start(&field));
+  ck_assert_uint_eq(2, pb_field_end(&field));
+
+  /* Assert message size and version */
+  fail_if(pb_message_empty(&message));
+  ck_assert_uint_eq(2, pb_message_size(&message));
+  ck_assert_uint_eq(2, pb_message_version(&message));
+
+  /* Free all allocated memory */
+  pb_field_destroy(&field);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Write a value for a given tag that is part of an existing oneof to a message.
+ */
+START_TEST(test_put_oneof_existing) {
+  const uint8_t data[] = { 112, 127, 122, 0 };
+  const size_t  size   = 4;
+
+  /* Create journal and message */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Assert message validity and error */
+  fail_unless(pb_message_valid(&message));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
+
+  /* Write value to message */
+  uint32_t value = 127, check;
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_put(&message, 13, &value));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_get(&message, 13, &check));
+  ck_assert_uint_eq(value, check);
+
+  /* Create field and assert offsets */
+  pb_field_t field = pb_field_create(&message, 13);
+  ck_assert_uint_eq(1, pb_field_start(&field));
+  ck_assert_uint_eq(2, pb_field_end(&field));
+
+  /* Assert message size and version */
+  fail_if(pb_message_empty(&message));
+  ck_assert_uint_eq(2, pb_message_size(&message));
+  ck_assert_uint_eq(4, pb_message_version(&message));
+
+  /* Free all allocated memory */
+  pb_field_destroy(&field);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Write a value for a given tag that is part of a oneof to a merged message.
+ */
+START_TEST(test_put_oneof_merged) {
+  const uint8_t data[] = { 104, 1, 104, 2, 104, 3, 104, 4 };
+  const size_t  size   = 8;
+
+  /* Create journal and message */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Assert message validity and error */
+  fail_unless(pb_message_valid(&message));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
+
+  /* Write value to message */
+  uint32_t value = 255, check;
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_put(&message, 13, &value));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_get(&message, 13, &check));
+  ck_assert_uint_eq(value, check);
+
+  /* Create field and assert offsets */
+  pb_field_t field = pb_field_create(&message, 13);
+  ck_assert_uint_eq(7, pb_field_start(&field));
+  ck_assert_uint_eq(9, pb_field_end(&field));
+
+  /* Assert message size and version */
+  fail_if(pb_message_empty(&message));
+  ck_assert_uint_eq(9, pb_message_size(&message));
+  ck_assert_uint_eq(1, pb_message_version(&message));
+
+  /* Free all allocated memory */
+  pb_field_destroy(&field);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
  * Write a value for a given tag to an unaligned message.
  */
 START_TEST(test_put_unaligned) {
@@ -2115,6 +2473,34 @@ START_TEST(test_erase) {
  */
 START_TEST(test_erase_empty) {
   pb_journal_t journal = pb_journal_create_empty();
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Clear field from message */
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_erase(&message, 1));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_erase(&message, 1));
+
+  /* Assert message validity and error */
+  fail_unless(pb_message_valid(&message));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
+
+  /* Assert journal size */
+  fail_unless(pb_journal_empty(&journal));
+  ck_assert_uint_eq(0, pb_journal_size(&journal));
+
+  /* Free all allocated memory */
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Erase a field for a given tag from a merged message.
+ */
+START_TEST(test_erase_merged) {
+  const uint8_t data[] = { 8, 1, 8, 2, 8, 3, 8, 4 };
+  const size_t  size   = 8;
+
+  /* Create journal and message */
+  pb_journal_t journal = pb_journal_create(data, size);
   pb_message_t message = pb_message_create(&descriptor, &journal);
 
   /* Clear field from message */
@@ -2331,6 +2717,62 @@ START_TEST(test_erase_message_nested) {
 
   /* Free all allocated memory */
   pb_message_destroy(&submessage);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Erase a field for a given tag that is part of a oneof from a message.
+ */
+START_TEST(test_erase_oneof) {
+  const uint8_t data[] = { 112, 127 };
+  const size_t  size   = 2;
+
+  /* Create journal and message */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Clear field from message */
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_erase(&message, 14));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_erase(&message, 14));
+
+  /* Assert message validity and error */
+  fail_unless(pb_message_valid(&message));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
+
+  /* Assert journal size */
+  fail_unless(pb_journal_empty(&journal));
+  ck_assert_uint_eq(0, pb_journal_size(&journal));
+
+  /* Free all allocated memory */
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Erase a field for a given tag that is part of a oneof from a merged message.
+ */
+START_TEST(test_erase_oneof_merged) {
+  const uint8_t data[] = { 104, 1, 122, 0, 112, 3 };
+  const size_t  size   = 6;
+
+  /* Create journal and message */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+
+  /* Clear field from message */
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_erase(&message, 14));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_erase(&message, 14));
+
+  /* Assert message validity and error */
+  fail_unless(pb_message_valid(&message));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
+
+  /* Assert journal size */
+  fail_unless(pb_journal_empty(&journal));
+  ck_assert_uint_eq(0, pb_journal_size(&journal));
+
+  /* Free all allocated memory */
   pb_message_destroy(&message);
   pb_journal_destroy(&journal);
 } END_TEST
@@ -2831,6 +3273,8 @@ main(void) {
   tcase_add_test(tcase, test_has);
   tcase_add_test(tcase, test_has_empty);
   tcase_add_test(tcase, test_has_repeated);
+  tcase_add_test(tcase, test_has_oneof);
+  tcase_add_test(tcase, test_has_oneof_merged);
   tcase_add_test(tcase, test_has_unaligned);
   tcase_add_test(tcase, test_has_invalid);
   suite_add_tcase(suite, tcase);
@@ -2840,6 +3284,8 @@ main(void) {
   tcase_add_test(tcase, test_match);
   tcase_add_test(tcase, test_match_empty);
   tcase_add_test(tcase, test_match_merged);
+  tcase_add_test(tcase, test_match_oneof);
+  tcase_add_test(tcase, test_match_oneof_merged);
   tcase_add_test(tcase, test_match_unaligned);
   tcase_add_test(tcase, test_match_invalid);
   suite_add_tcase(suite, tcase);
@@ -2847,6 +3293,7 @@ main(void) {
   /* Add tests to test case "get" */
   tcase = tcase_create("get");
   tcase_add_test(tcase, test_get);
+  tcase_add_test(tcase, test_get_empty);
   tcase_add_test(tcase, test_get_merged);
   tcase_add_test(tcase, test_get_default_uint32);
   tcase_add_test(tcase, test_get_default_uint64);
@@ -2857,6 +3304,8 @@ main(void) {
   tcase_add_test(tcase, test_get_default_double);
   tcase_add_test(tcase, test_get_default_string);
   tcase_add_test(tcase, test_get_absent);
+  tcase_add_test(tcase, test_get_oneof);
+  tcase_add_test(tcase, test_get_oneof_merged);
   tcase_add_test(tcase, test_get_unaligned);
   tcase_add_test(tcase, test_get_invalid);
   suite_add_tcase(suite, tcase);
@@ -2865,12 +3314,16 @@ main(void) {
   tcase = tcase_create("put");
   tcase_add_test(tcase, test_put);
   tcase_add_test(tcase, test_put_existing);
+  tcase_add_test(tcase, test_put_merged);
   tcase_add_test(tcase, test_put_message);
   tcase_add_test(tcase, test_put_message_existing);
   tcase_add_test(tcase, test_put_message_repeated);
   tcase_add_test(tcase, test_put_message_invalid);
   tcase_add_test(tcase, test_put_reverse);
   tcase_add_test(tcase, test_put_reverse_nested);
+  tcase_add_test(tcase, test_put_oneof);
+  tcase_add_test(tcase, test_put_oneof_existing);
+  tcase_add_test(tcase, test_put_oneof_merged);
   tcase_add_test(tcase, test_put_unaligned);
   tcase_add_test(tcase, test_put_invalid);
   suite_add_tcase(suite, tcase);
@@ -2879,10 +3332,13 @@ main(void) {
   tcase = tcase_create("erase");
   tcase_add_test(tcase, test_erase);
   tcase_add_test(tcase, test_erase_empty);
+  tcase_add_test(tcase, test_erase_merged);
   tcase_add_test(tcase, test_erase_message);
   tcase_add_test(tcase, test_erase_message_existing);
   tcase_add_test(tcase, test_erase_message_repeated);
   tcase_add_test(tcase, test_erase_message_nested);
+  tcase_add_test(tcase, test_erase_oneof);
+  tcase_add_test(tcase, test_erase_oneof_merged);
   tcase_add_test(tcase, test_erase_unaligned);
   tcase_add_test(tcase, test_erase_invalid);
   suite_add_tcase(suite, tcase);

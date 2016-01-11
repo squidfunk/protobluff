@@ -54,7 +54,7 @@ resolve(pb_message_t *message, const pb_tag_t tags[], size_t size) {
     return cursor;
 
   /* Resolve message recursively */
-  pb_message_t copy = pb_message_copy(message);
+  pb_message_t temp = pb_message_copy(message);
   for (size_t t = 0; t < size; ++t) {
     pb_cursor_destroy(&cursor);
 
@@ -70,15 +70,15 @@ resolve(pb_message_t *message, const pb_tag_t tags[], size_t size) {
 #endif /* NDEBUG */
 
     /* Use cursor to omit message creation */
-    cursor = pb_cursor_create(&copy, tags[t]);
+    cursor = pb_cursor_create(&temp, tags[t]);
     if (!pb_cursor_valid(&cursor))
       break;
 
     /* Extract next message from cursor */
-    pb_message_destroy(&copy);
-    copy = pb_message_create_from_cursor(&cursor);
+    pb_message_destroy(&temp);
+    temp = pb_message_create_from_cursor(&cursor);
   }
-  pb_message_destroy(&copy);
+  pb_message_destroy(&temp);
   return cursor;
 }
 

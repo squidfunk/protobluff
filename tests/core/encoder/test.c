@@ -38,8 +38,12 @@
  * System-default allocator callback overrides
  * ------------------------------------------------------------------------- */
 
-/*
+/*!
  * Allocator with failing allocation.
+ *
+ * \param[in,out] data Internal allocator data
+ * \param[in]     size Bytes to be allocated
+ * \return             Memory block
  */
 static void *
 allocator_allocate_fail(void *data, size_t size) {
@@ -47,8 +51,13 @@ allocator_allocate_fail(void *data, size_t size) {
   return NULL;
 }
 
-/*
+/*!
  * Allocator with failing reallocation.
+ *
+ * \param[in,out] data  Internal allocator data
+ * \param[in,out] block Memory block to be resized
+ * \param[in]     size  Bytes to be allocated
+ * \return              Memory block
  */
 static void *
 allocator_resize_fail(void *data, void *block, size_t size) {
@@ -85,7 +94,7 @@ descriptor = { {
     { 10, "F10", ENUM,    OPTIONAL, &enum_descriptor },
     { 11, "F11", MESSAGE, OPTIONAL, &descriptor },
     { 12, "F12", MESSAGE, REPEATED, &descriptor }
-  }, 14 } };
+  }, 12 } };
 
 /* Descriptor with packed fields */
 static pb_descriptor_t
@@ -233,7 +242,7 @@ START_TEST(test_encode_packed) {
 } END_TEST
 
 /*
- * Encode variable-sized integers with an invalid encoder.
+ * Encode values in packed encoding with an invalid encoder.
  */
 START_TEST(test_encode_packed_invalid) {
   pb_encoder_t encoder = pb_encoder_create_invalid();
@@ -257,7 +266,7 @@ START_TEST(test_encode_packed_invalid) {
 } END_TEST
 
 /*
- * Encode variable-sized integers for which reallocation fails.
+ * Encode values with an encoder for which reallocation fails.
  */
 START_TEST(test_encode_packed_invalid_resize) {
   pb_allocator_t allocator = {
@@ -339,7 +348,7 @@ START_TEST(test_encode_varint_packed) {
 } END_TEST
 
 /*
- * Encode variable-sized integers in packed encoding.
+ * Encode variable-sized integers in packed encoding in merged mode.
  */
 START_TEST(test_encode_varint_packed_merged) {
   pb_encoder_t encoder = pb_encoder_create(&descriptor_packed);
@@ -389,7 +398,7 @@ START_TEST(test_encode_varint_invalid) {
 } END_TEST
 
 /*
- * Encode a variable-sized integer for which reallocation fails.
+ * Encode a variable-sized integer with failing reallocation.
  */
 START_TEST(test_encode_varint_invalid_resize) {
   pb_allocator_t allocator = {
@@ -471,7 +480,7 @@ START_TEST(test_encode_64bit_packed) {
 } END_TEST
 
 /*
- * Encode fixed-sized 64-bit values in packed encoding.
+ * Encode fixed-sized 64-bit values in packed encoding in merged mode.
  */
 START_TEST(test_encode_64bit_packed_merged) {
   pb_encoder_t encoder = pb_encoder_create(&descriptor_packed);
@@ -521,7 +530,7 @@ START_TEST(test_encode_64bit_invalid) {
 } END_TEST
 
 /*
- * Encode a fixed-sized 64-bit value for which reallocation fails.
+ * Encode a fixed-sized 64-bit value with failing reallocation.
  */
 START_TEST(test_encode_64bit_invalid_resize) {
   pb_allocator_t allocator = {
@@ -631,7 +640,7 @@ START_TEST(test_encode_length_invalid) {
 } END_TEST
 
 /*
- * Encode a length-prefixed string for which reallocation fails.
+ * Encode a length-prefixed string with failing reallocation.
  */
 START_TEST(test_encode_length_invalid_resize) {
   pb_allocator_t allocator = {
@@ -713,7 +722,7 @@ START_TEST(test_encode_32bit_packed) {
 } END_TEST
 
 /*
- * Encode fixed-sized 32-bit values in packed encoding.
+ * Encode fixed-sized 32-bit values in packed encoding in merged mode.
  */
 START_TEST(test_encode_32bit_packed_merged) {
   pb_encoder_t encoder = pb_encoder_create(&descriptor_packed);
@@ -763,7 +772,7 @@ START_TEST(test_encode_32bit_invalid) {
 } END_TEST
 
 /*
- * Encode a fixed-sized 32-bit value for which reallocation fails.
+ * Encode a fixed-sized 32-bit value with failing reallocation.
  */
 START_TEST(test_encode_32bit_invalid_resize) {
   pb_allocator_t allocator = {

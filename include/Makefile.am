@@ -40,6 +40,7 @@ nobase_include_HEADERS = \
 	protobluff/message/journal.h \
 	protobluff/message/message.h \
 	protobluff/message/nested.h \
+	protobluff/message/oneof.h \
 	protobluff/message/part.h \
 	protobluff/message.h \
 	protobluff/util/chunk_allocator.h \

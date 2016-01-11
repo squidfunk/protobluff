@@ -53,7 +53,7 @@ pb_message_create_invalid(void) {
 }
 
 /*!
- * Create a copy of a message.
+ * Create a shallow copy of a message.
  *
  * \param[in] message Message
  * \return            Message copy

@@ -56,6 +56,7 @@ purge: clean
 	find . -name '.DS_Store' -type f -delete
 	find . -name '*.log' -type f -delete
 	find . -name '*.trs' -type f -delete
+	find . -name '*.pc' -type f -delete
 	rm -f  aclocal.m4
 	rm -rf autom4te.cache
 	rm -f  autoscan.log
