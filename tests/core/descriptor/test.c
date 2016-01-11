@@ -95,7 +95,7 @@ descriptor_extension_nested = { {
 /* Enum descriptor */
 static pb_enum_descriptor_t
 enum_descriptor = { {
-  (const pb_enum_descriptor_value_t []){
+  (const pb_enum_value_descriptor_t []){
     {  0, "V00" },
     {  1, "V01" },
     {  2, "V02" }
@@ -108,7 +108,7 @@ enum_descriptor_empty = {};
 /* Scattered enum descriptor */
 static pb_enum_descriptor_t
 enum_descriptor_scattered = { {
-  (const pb_enum_descriptor_value_t []){
+  (const pb_enum_value_descriptor_t []){
     {  2, "V02" },
     {  8, "V08" }
   }, 2 } };
@@ -320,40 +320,40 @@ START_TEST(test_enum_iterator) {
   fail_if(pb_enum_descriptor_empty(&enum_descriptor));
   ck_assert_uint_eq(3, pb_enum_descriptor_size(&enum_descriptor));
 
-  /* Walk through enum descriptor values forwards */
+  /* Walk through enum value descriptors forwards */
   fail_unless(pb_enum_descriptor_iter_begin(&it));
   for (size_t v = 0; v < 3; v++, !!pb_enum_descriptor_iter_next(&it)) {
-    const pb_enum_descriptor_value_t *descriptor =
+    const pb_enum_value_descriptor_t *descriptor =
       pb_enum_descriptor_iter_current(&it);
     ck_assert_uint_eq(v, pb_enum_descriptor_iter_pos(&it));
 
     /* Assemble value name */
     char name[5];
-    snprintf(name, 5, "V%02d", pb_enum_descriptor_value_number(descriptor));
+    snprintf(name, 5, "V%02d", pb_enum_value_descriptor_number(descriptor));
 
     /* Assert value number and name */
-    ck_assert_uint_eq(v, pb_enum_descriptor_value_number(descriptor));
-    fail_if(strcmp(name, pb_enum_descriptor_value_name(descriptor)));
+    ck_assert_uint_eq(v, pb_enum_value_descriptor_number(descriptor));
+    fail_if(strcmp(name, pb_enum_value_descriptor_name(descriptor)));
   }
 
   /* Assert enum descriptor iterator validity */
   fail_if(pb_enum_descriptor_iter_next(&it));
 
-  /* Walk through enum descriptor values backwards */
+  /* Walk through enum value descriptors backwards */
   fail_unless(pb_enum_descriptor_iter_end(&it));
   size_t v = 2;
   do {
-    const pb_enum_descriptor_value_t *descriptor =
+    const pb_enum_value_descriptor_t *descriptor =
       pb_enum_descriptor_iter_current(&it);
     ck_assert_uint_eq(v, pb_enum_descriptor_iter_pos(&it));
 
     /* Assemble value name */
     char name[5];
-    snprintf(name, 5, "V%02d", pb_enum_descriptor_value_number(descriptor));
+    snprintf(name, 5, "V%02d", pb_enum_value_descriptor_number(descriptor));
 
     /* Assert value number and name */
-    ck_assert_uint_eq(v, pb_enum_descriptor_value_number(descriptor));
-    fail_if(strcmp(name, pb_enum_descriptor_value_name(descriptor)));
+    ck_assert_uint_eq(v, pb_enum_value_descriptor_number(descriptor));
+    fail_if(strcmp(name, pb_enum_value_descriptor_name(descriptor)));
   } while (v--, pb_enum_descriptor_iter_prev(&it));
 
   /* Assert enum descriptor iterator validity again */

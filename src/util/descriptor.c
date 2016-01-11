@@ -58,21 +58,21 @@ pb_descriptor_field_by_name(
 /* ------------------------------------------------------------------------- */
 
 /*!
- * Retrieve the value for a given name from an enum descriptor.
+ * Retrieve the value descriptor for a given name from an enum descriptor.
  *
  * \warning Querying an enum descriptor by name is far less efficient than
  * querying by number, as a lot more comparisons are involved.
  *
  * \param[in] descriptor Enum descriptor
  * \param[in] name       Name
- * \return               Enum descriptor value
+ * \return               Enum value descriptor
  */
-extern const struct pb_enum_descriptor_value_t *
+extern const struct pb_enum_value_descriptor_t *
 pb_enum_descriptor_value_by_name(
     const pb_enum_descriptor_t *descriptor, const char name[]) {
   assert(descriptor && name);
   for (size_t v = 0; v < descriptor->value.size; ++v) {
-    if (strcmp(pb_enum_descriptor_value_name(
+    if (strcmp(pb_enum_value_descriptor_name(
         &(descriptor->value.data[v])), name))
       continue;
     return &(descriptor->value.data[v]);

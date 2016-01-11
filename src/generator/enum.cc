@@ -111,7 +111,7 @@ namespace protobluff {
         "/* `signature` : descriptor */\n"
         "const pb_enum_descriptor_t\n"
         "`enum`_descriptor = { {\n"
-        "  (const pb_enum_descriptor_value_t []){\n");
+        "  (const pb_enum_value_descriptor_t []){\n");
 
       /* Generate enum value descriptors */
       for (size_t i = 0; i < 2; i++)

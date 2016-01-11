@@ -63,16 +63,16 @@ typedef struct pb_descriptor_iter_t {
 
 /* ------------------------------------------------------------------------- */
 
-typedef struct pb_enum_descriptor_value_t {
+typedef struct pb_enum_value_descriptor_t {
   const pb_enum_t number;              /*!< Number */
   const char *const name;              /*!< Name */
-} pb_enum_descriptor_value_t;
+} pb_enum_value_descriptor_t;
 
 typedef struct pb_enum_descriptor_t {
   struct {
-    const pb_enum_descriptor_value_t
-      *const data;                     /*!< Enum descriptor values */
-    const size_t size;                 /*!< Enum descriptor value count */
+    const pb_enum_value_descriptor_t
+      *const data;                     /*!< Enum value descriptors */
+    const size_t size;                 /*!< Enum value descriptor count */
   } value;
 } pb_enum_descriptor_t;
 
@@ -115,7 +115,7 @@ pb_descriptor_extend(
 
 /* ------------------------------------------------------------------------- */
 
-PB_EXPORT const pb_enum_descriptor_value_t *
+PB_EXPORT const pb_enum_value_descriptor_t *
 pb_enum_descriptor_value_by_number(
   const pb_enum_descriptor_t
     *descriptor,                       /* Enum descriptor */
@@ -439,25 +439,25 @@ pb_descriptor_iter_current(const pb_descriptor_iter_t *it) {
 /* ------------------------------------------------------------------------- */
 
 /*!
- * Retrieve the value of an enum descriptor value.
+ * Retrieve the value of an enum value descriptor.
  *
- * \param[in] value Enum descriptor value
+ * \param[in] value Enum value descriptor
  * \return          Value
  */
 PB_INLINE pb_enum_t
-pb_enum_descriptor_value_number(const pb_enum_descriptor_value_t *value) {
+pb_enum_value_descriptor_number(const pb_enum_value_descriptor_t *value) {
   assert(value);
   return value->number;
 }
 
 /*!
- * Retrieve the name of an enum descriptor value.
+ * Retrieve the name of an enum value descriptor.
  *
- * \param[in] value Enum descriptor value
+ * \param[in] value Enum value descriptor
  * \return          Name
  */
 PB_INLINE const char *
-pb_enum_descriptor_value_name(const pb_enum_descriptor_value_t *value) {
+pb_enum_value_descriptor_name(const pb_enum_value_descriptor_t *value) {
   assert(value);
   return value->name;
 }
@@ -592,12 +592,12 @@ pb_enum_descriptor_iter_pos(const pb_enum_descriptor_iter_t *it) {
 }
 
 /*!
- * Retrieve the enum descriptor value at the current position.
+ * Retrieve the enum value descriptor at the current position.
  *
  * \param[in] it Enum descriptor iterator
- * \return       Enum descriptor value
+ * \return       Enum value descriptor
  */
-PB_INLINE const pb_enum_descriptor_value_t *
+PB_INLINE const pb_enum_value_descriptor_t *
 pb_enum_descriptor_iter_current(const pb_enum_descriptor_iter_t *it) {
   assert(it && it->pos != SIZE_MAX);
   return &(it->descriptor->value.data[it->pos]);

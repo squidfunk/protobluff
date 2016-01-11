@@ -9,6 +9,7 @@ protobluff-0.5.0 (2016-01-xx)
   * Added support and tests for oneofs
   * Moved descriptor iterators from util into core (won't affect core size)
   * Changed field descriptor accessors for clarity ("nested", "enum", "oneof")
+  * Renamed enum descriptor value into enum value descriptor (consistency)
 
   Generator:
 

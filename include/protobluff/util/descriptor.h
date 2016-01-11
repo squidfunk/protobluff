@@ -37,7 +37,7 @@ pb_descriptor_field_by_name(
 
 /* ------------------------------------------------------------------------- */
 
-PB_EXPORT const pb_enum_descriptor_value_t *
+PB_EXPORT const pb_enum_value_descriptor_t *
 pb_enum_descriptor_value_by_name(
   const pb_enum_descriptor_t
     *descriptor,                       /* Enum descriptor */

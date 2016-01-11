@@ -158,26 +158,26 @@ pb_descriptor_extend(
 /* ------------------------------------------------------------------------- */
 
 /*!
- * Retrieve the value for a given number from an enum descriptor.
+ * Retrieve the value descriptor for a given number from an enum descriptor.
  *
- * \warning To find the matching enum descriptor value quickly if any, the same
+ * \warning To find the matching enum value descriptor quickly if any, the same
  * approach like in pb_descriptor_field_by_tag() is used.
  *
  * \param[in] descriptor Enum descriptor
  * \param[in] number     Number
- * \return               Enum descriptor value
+ * \return               Enum value descriptor
  */
-extern const struct pb_enum_descriptor_value_t *
+extern const struct pb_enum_value_descriptor_t *
 pb_enum_descriptor_value_by_number(
     const pb_enum_descriptor_t *descriptor, pb_enum_t number) {
   assert(descriptor);
   if (descriptor->value.size) {
     size_t v = min(number, descriptor->value.size - 1);
     do {
-      if (pb_enum_descriptor_value_number(
+      if (pb_enum_value_descriptor_number(
           &(descriptor->value.data[v])) == number) {
         return &(descriptor->value.data[v]);
-      } else if (pb_enum_descriptor_value_number(
+      } else if (pb_enum_value_descriptor_number(
           &(descriptor->value.data[v])) < number) {
         break;
       }

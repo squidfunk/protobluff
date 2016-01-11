@@ -80,7 +80,7 @@ default_enum = 1;
 /* Enum descriptor */
 static const pb_enum_descriptor_t
 descriptor_enum = { {
-  (const pb_enum_descriptor_value_t []){
+  (const pb_enum_value_descriptor_t []){
     {  1, "V01" },
     {  2, "V02" },
     {  3, "V03" }

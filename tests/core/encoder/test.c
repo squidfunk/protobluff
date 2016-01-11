@@ -72,7 +72,7 @@ allocator_resize_fail(void *data, void *block, size_t size) {
 /* Enum descriptor */
 static pb_enum_descriptor_t
 enum_descriptor = { {
-  (const pb_enum_descriptor_value_t []){
+  (const pb_enum_value_descriptor_t []){
     {  0, "V00" },
     {  1, "V01" },
     {  2, "V02" }

@@ -53,7 +53,7 @@ handler_phonenumber(
 
     /* Print type */
     case 2:
-      printf(" (%s)", pb_enum_descriptor_value_name(
+      printf(" (%s)", pb_enum_value_descriptor_name(
         pb_enum_descriptor_value_by_number(
           pb_field_descriptor_enum(descriptor),
           *(const pb_enum_t *)value)));
