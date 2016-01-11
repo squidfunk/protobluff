@@ -192,13 +192,13 @@ PKG_CHECK_MODULES([protobluff], [protobluff])
 9. Extensions and nested extensions
 10. Deprecations for messages, fields, enums and enum values
 11. Packed fields
+12. Oneofs
 
 ### Not yet supported
 
-1. Oneofs
-2. proto3 support
-3. Services (using gRPC and/or ZMQ)
-4. Groups (unsure)
+1. proto3 support
+2. Services (using gRPC and/or ZMQ)
+3. Groups (unsure)
 
 These features will be implemented in the order presented. protobluff is
 basically compatible with proto3, as proto2 is binary compatible, but some

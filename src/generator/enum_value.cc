@@ -21,8 +21,6 @@
  */
 
 #include <cassert>
-#include <map>
-#include <string>
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/io/printer.h>
@@ -35,9 +33,6 @@
  * ------------------------------------------------------------------------- */
 
 namespace protobluff {
-
-  using ::std::map;
-  using ::std::string;
 
   using ::google::protobuf::EnumValueDescriptor;
   using ::google::protobuf::io::Printer;
@@ -58,18 +53,14 @@ namespace protobluff {
     /* Extract full name for signature */
     variables_["signature"] = descriptor_->full_name();
 
-    /* Extract number */
+    /* Extract name and number */
+    variables_["name"]   = descriptor_->name();
     variables_["number"] = SimpleItoa(descriptor_->number());
 
-    /* Prepare descriptor variables */
-    variables_["descriptor.number"] = variables_["number"];
-    variables_["descriptor.name"]   = descriptor_->name();
-
-    /* Prepare value variables */
-    variables_["value.number"] = variables_["number"];
-    variables_["value.name"]   = StringReplace(
+    /* Prepare constant value */
+    variables_["constant"]   = StringReplace(
       variables_["signature"], ".", "_", true);
-    UpperString(&(variables_["value.name"]));
+    UpperString(&(variables_["constant"]));
   }
 
   /*!
@@ -83,8 +74,8 @@ namespace protobluff {
     printer->Print(variables_,
       "\n"
       "/* `signature` = `number` */\n"
-      "{ .number = `descriptor.number`,\n"
-      "  .name   = \"`descriptor.name`\" }");
+      "{ .number = `number`,\n"
+      "  .name   = \"`name`\" }");
   }
 
   /*!
@@ -96,7 +87,7 @@ namespace protobluff {
   GenerateValue(Printer *printer) const {
     assert(printer);
     printer->Print(variables_,
-      "#define `value.name` `value.number`\n");
+      "#define `constant` `number`\n");
   }
 
   /*!

@@ -388,14 +388,14 @@ pb_part_create(pb_message_t *message, pb_tag_t tag) {
               pb_field_descriptor_oneof(pb_cursor_descriptor(&temp));
             if (member && tag != pb_cursor_tag(&temp))
               if (pb_cursor_erase(&temp))
-                break;
+                break;                                     /* LCOV_EXCL_LINE */
           } while (pb_cursor_next(&temp));
           pb_cursor_destroy(&temp);
 
           /* Ensure alignment of cursor and message */
           pb_cursor_align(&cursor);
           if (pb_message_align(message))
-            break;
+            break;                                         /* LCOV_EXCL_LINE */
         }
 
         /* If the tag matches and the field is non-repeated, we're done */

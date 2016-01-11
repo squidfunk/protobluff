@@ -22,4 +22,4 @@
 # Subdirectories
 # -----------------------------------------------------------------------------
 
-SUBDIRS = buffer cursor field journal message nested part
+SUBDIRS = buffer cursor field journal message nested oneof part

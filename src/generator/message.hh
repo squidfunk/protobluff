@@ -34,6 +34,7 @@
 #include "generator/enum.hh"
 #include "generator/extension.hh"
 #include "generator/field.hh"
+#include "generator/oneof.hh"
 
 /* ----------------------------------------------------------------------------
  * Interface
@@ -57,26 +58,6 @@ namespace protobluff {
     explicit
     Message(
       const Descriptor *descriptor);   /* Descriptor */
-
-    bool
-    HasEnums()
-    const;
-
-    const vector<const Enum *>
-    GetEnums()
-    const;
-
-    bool
-    HasExtensions()
-    const;
-
-    const vector<const Extension *>
-    GetExtensions()
-    const;
-
-    bool
-    HasDefaults()
-    const;
 
     void
     GenerateDeclaration(
@@ -116,17 +97,48 @@ namespace protobluff {
       > &trace)                        /* Trace */
     const;
 
+    bool
+    HasDefaults()
+    const;
+
+    bool
+    HasEnums()
+    const;
+
+    bool
+    HasOneofs()
+    const;
+
+    bool
+    HasExtensions()
+    const;
+
+    const vector<const Enum *>
+    GetEnums()
+    const;
+
+    const vector<const Oneof *>
+    GetOneofs()
+    const;
+
+    const vector<const Extension *>
+    GetExtensions()
+    const;
+
   private:
     const Descriptor *descriptor_;     /* Descriptor */
     scoped_array<
       scoped_ptr<Field>
     > fields_;                         /* Field generators */
     scoped_array<
-      scoped_ptr<Message>
-    > nested_;                         /* Nested message generators */
-    scoped_array<
       scoped_ptr<Enum>
     > enums_;                          /* Enum generators */
+    scoped_array<
+      scoped_ptr<Oneof>
+    > oneofs_;                         /* Oneof generators */
+    scoped_array<
+      scoped_ptr<Message>
+    > nested_;                         /* Nested message generators */
     vector<Extension *> extensions_;   /* Extension generators */
     map<string, string> variables_;    /* Variables */
   };

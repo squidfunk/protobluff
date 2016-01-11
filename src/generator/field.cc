@@ -151,8 +151,23 @@ namespace protobluff {
         break;
     }
 
-    /* Extract defaults */
-    if (HasDefault()) {
+    /* Prepare descriptor variables */
+    variables_["TYPE"]  = variables_["type"];
+    variables_["LABEL"] = variables_["label"];
+    UpperString(&(variables_["TYPE"]));
+    UpperString(&(variables_["LABEL"]));
+
+    /* Prepare oneof member */
+    if (descriptor_->containing_oneof()) {
+      variables_["LABEL"] = "ONEOF";
+
+      /* Prepare oneof symbol */
+      variables_["oneof"] = StringReplace(
+        descriptor_->containing_oneof()->full_name(), ".", "_", true);
+      LowerString(&(variables_["oneof"]));
+
+    /* Extract default value */
+    } else if (HasDefault()) {
       vector<string> parts;
 
       /* Push name of containing type and variable to parts */
@@ -162,117 +177,95 @@ namespace protobluff {
       for (size_t f = 0; f < parts.size(); f++)
         LowerString(&(parts.at(f)));
 
-      /* Prepare default type and symbol */
-      variables_["default.type"]   = variables_["cpp_type"];
-      variables_["default.symbol"] = JoinStrings(parts,
+      /* Prepare default variable name */
+      variables_["variable"] = JoinStrings(parts,
         descriptor_->is_extension() ? "_X_" : "_");
 
-      /* Extract default values */
+      /* Extract default value */
       switch (descriptor_->cpp_type()) {
         case FieldDescriptor::CPPTYPE_INT32:
-          variables_["default.value"] = SimpleItoa(
+          variables_["default"] = SimpleItoa(
             descriptor_->default_value_int32());
           break;
         case FieldDescriptor::CPPTYPE_INT64:
-          variables_["default.value"] = SimpleItoa(
+          variables_["default"] = SimpleItoa(
             descriptor_->default_value_int64()) + "LL";
           break;
         case FieldDescriptor::CPPTYPE_UINT32:
-          variables_["default.value"] = SimpleItoa(
+          variables_["default"] = SimpleItoa(
             descriptor_->default_value_uint32()) + "U";
           break;
         case FieldDescriptor::CPPTYPE_UINT64:
-          variables_["default.value"] = SimpleItoa(
+          variables_["default"] = SimpleItoa(
             descriptor_->default_value_uint64()) + "ULL";
           break;
         case FieldDescriptor::CPPTYPE_FLOAT:
-          variables_["default.value"] = SimpleFtoa(
+          variables_["default"] = SimpleFtoa(
             descriptor_->default_value_float());
           break;
         case FieldDescriptor::CPPTYPE_DOUBLE:
-          variables_["default.value"] = SimpleDtoa(
+          variables_["default"] = SimpleDtoa(
             descriptor_->default_value_double());
           break;
         case FieldDescriptor::CPPTYPE_BOOL:
-          variables_["default.value"] =
+          variables_["default"] =
             descriptor_->default_value_bool() ? "1" : "0";
           break;
         case FieldDescriptor::CPPTYPE_ENUM:
-          variables_["default.value"] = SimpleItoa(
+          variables_["default"] = SimpleItoa(
             descriptor_->default_value_enum()->number());
           break;
         case FieldDescriptor::CPPTYPE_STRING:
-          variables_["default.value"] = "pb_string_const(\""
+          variables_["default"] = "pb_string_const(\""
             + descriptor_->default_value_string() + "\"";
           if (descriptor_->type() == FieldDescriptor::TYPE_BYTES)
-            variables_["default.value"] += ", " + SimpleItoa(
+            variables_["default"] += ", " + SimpleItoa(
               descriptor_->default_value_string().length());
-          variables_["default.value"] += ")";
+          variables_["default"] += ")";
           break;
         default:
           return;
       }
     }
 
-    /* Prepare descriptor variables */
-    variables_["descriptor.tag"]   = variables_["tag"];
-    variables_["descriptor.name"]  = variables_["name"];
-    variables_["descriptor.type"]  = variables_["type"];
-    variables_["descriptor.label"] = variables_["label"];
-    UpperString(&(variables_["descriptor.type"]));
-    UpperString(&(variables_["descriptor.label"]));
-
-    /* Extract enum type name */
+    /* Extract enum type name and symbol */
     if (descriptor_->enum_type()) {
       variables_["type"] = descriptor_->enum_type()->full_name();
 
-      /* Prepare descriptor symbol */
-      variables_["descriptor.symbol"] = StringReplace(
+      /* Prepare enum symbol */
+      variables_["enum"] = StringReplace(
         variables_["type"], ".", "_", true);
-      LowerString(&(variables_["descriptor.symbol"]));
+      LowerString(&(variables_["enum"]));
     }
 
-    /* Extract nested message type name */
+    /* Extract nested message type name and symbol */
     if (descriptor_->message_type()) {
       variables_["type"] = descriptor_->message_type()->full_name();
 
-      /* Prepare descriptor symbol */
-      variables_["descriptor.symbol"] = StringReplace(
+      /* Prepare nested message symbol */
+      variables_["nested"] = StringReplace(
         variables_["type"], ".", "_", true);
-      LowerString(&(variables_["descriptor.symbol"]));
+      LowerString(&(variables_["nested"]));
     }
 
-    /* Prepare accessor variables */
-    variables_["define.tag"]  = variables_["tag"];
-    variables_["define.type"] = variables_["cpp_type"];
-    variables_["define.name"] = StringReplace(
-      variables_["name"], ".", "_", true);
-    LowerString(&(variables_["define.name"]));
-
-    /* Prepare accessor symbol */
-    variables_["define.symbol"] = StringReplace(
+    /* Prepare message symbol */
+    variables_["message"] = StringReplace(
       descriptor_->containing_type()->full_name(), ".", "_", true);
-    LowerString(&(variables_["define.symbol"]));
+    LowerString(&(variables_["message"]));
+
+    /* Prepare field symbol */
+    variables_["field"] = StringReplace(
+      variables_["name"], ".", "_", true);
+    LowerString(&(variables_["field"]));
 
     /* Prepend extension marker to name */
     if (descriptor_->is_extension())
-      variables_["define.name"] = "X_" + variables_["define.name"];
+      variables_["field"] = "X_" + variables_["field"];
 
     /* Emit warning if field is deprecated */
-    variables_["define.deprecated"] =
+    variables_["deprecated"] =
       descriptor_->options().deprecated()
         ? "PB_DEPRECATED\n" : "";
-  }
-
-  /*!
-   * Check whether a field has a default value.
-   *
-   * \return Test result
-   */
-  bool Field::
-  HasDefault() const {
-    return descriptor_->has_default_value() ||
-      (descriptor_->enum_type() && descriptor_->is_optional());
   }
 
   /*!
@@ -286,8 +279,8 @@ namespace protobluff {
     if (HasDefault()) {
       printer->Print(variables_,
         "/* `signature` : default */\n"
-        "static const `default.type`\n"
-        "`default.symbol`_default = `default.value`;\n"
+        "static const `cpp_type`\n"
+        "`variable`_default = `default`;\n"
         "\n");
     }
   }
@@ -301,66 +294,38 @@ namespace protobluff {
   GenerateDescriptor(Printer *printer) const {
     assert(printer);
 
-    /* Generate field descriptor for nested message */
-    if (descriptor_->message_type()) {
-      printer->Print(variables_,
-        "\n"
-        "/* `label` `type` `name` = `tag` */\n"
-        "{ .tag   = `descriptor.tag`,\n"
-        "  .name  = \"`descriptor.name`\",\n"
-        "  .type  = `descriptor.type`,\n"
-        "  .label = `descriptor.label`,\n"
-        "  .refer = &`descriptor.symbol`_descriptor");
+    /* Generate common part of descriptor */
+    printer->Print(variables_,
+      "\n"
+      "/* `label` `type` `name` = `tag` */\n"
+      "{ .tag   = `tag`,\n"
+      "  .name  = \"`name`\",\n"
+      "  .type  = `TYPE`,\n"
+      "  .label = `LABEL`");
 
-    /* Generate field descriptor for enum */
-    } else if (descriptor_->enum_type()) {
-      if (descriptor_->is_optional()) {
-        printer->Print(variables_,
-          "\n"
-          "/* `label` `type` `name` = `tag` */\n"
-          "{ .tag   = `descriptor.tag`,\n"
-          "  .name  = \"`descriptor.name`\",\n"
-          "  .type  = `descriptor.type`,\n"
-          "  .label = `descriptor.label`,\n"
-          "  .refer = &`descriptor.symbol`_descriptor,\n"
-          "  .value = &`default.symbol`_default");
-      } else {
-        printer->Print(variables_,
-          "\n"
-          "/* `label` `type` `name` = `tag` */\n"
-          "{ .tag   = `descriptor.tag`,\n"
-          "  .name  = \"`descriptor.name`\",\n"
-          "  .type  = `descriptor.type`,\n"
-          "  .label = `descriptor.label`,\n"
-          "  .refer = &`descriptor.symbol`_descriptor");
-      }
+    /* Generate nested message descriptor reference */
+    if (descriptor_->message_type())
+      printer->Print(variables_, ",\n"
+        "  .refer = &`nested`_descriptor");
 
-    /* Generate field descriptor with default value */
-    } else if (descriptor_->has_default_value()) {
-      printer->Print(variables_,
-        "\n"
-        "/* `label` `type` `name` = `tag` */\n"
-        "{ .tag   = `descriptor.tag`,\n"
-        "  .name  = \"`descriptor.name`\",\n"
-        "  .type  = `descriptor.type`,\n"
-        "  .label = `descriptor.label`,\n"
-        "  .value = &`default.symbol`_default");
+    /* Generate enum descriptor */
+    if (descriptor_->enum_type())
+      printer->Print(variables_, ",\n"
+        "  .refer = &`enum`_descriptor");
 
-    /* Generate field descriptor */
-    } else {
-      printer->Print(variables_,
-        "\n"
-        "/* `label` `type` `name` = `tag` */\n"
-        "{ .tag   = `descriptor.tag`,\n"
-        "  .name  = \"`descriptor.name`\",\n"
-        "  .type  = `descriptor.type`,\n"
-        "  .label = `descriptor.label`");
-    }
+    /* Generate oneof descriptor */
+    if (descriptor_->containing_oneof())
+      printer->Print(variables_, ",\n"
+        "  .value = &`oneof`_descriptor");
+
+    /* Generate default value */
+    if (descriptor_->has_default_value())
+      printer->Print(variables_, ",\n"
+        "  .value = &`variable`_default");
 
     /* Add flag for packed fields */
     if (descriptor_->is_packed())
-      printer->Print(
-        ",\n"
+      printer->Print(",\n"
         "  .flags = PACKED");
 
     /* Terminate initializer */
@@ -380,28 +345,27 @@ namespace protobluff {
     if (descriptor_->is_repeated())
       printer->Print(variables_,
         "/* `signature` : encode */\n"
-        "`define.deprecated`"
+        "`deprecated`"
         "PB_WARN_UNUSED_RESULT\n"
         "PB_INLINE pb_error_t\n"
-        "`define.symbol`_encode_`define.name`(\n"
-        "    pb_encoder_t *encoder, const `define.type` *value, "
-             "size_t size) {\n"
+        "`message`_encode_`field`(\n"
+        "    pb_encoder_t *encoder, const `cpp_type` *value, size_t size) {\n"
         "  assert(pb_encoder_descriptor(encoder) == \n"
-        "    &`define.symbol`_descriptor);\n"
-        "  return pb_encoder_encode(encoder, `define.tag`, value, size);\n"
+        "    &`message`_descriptor);\n"
+        "  return pb_encoder_encode(encoder, `tag`, value, size);\n"
         "}\n"
         "\n");
     else
       printer->Print(variables_,
         "/* `signature` : encode */\n"
-        "`define.deprecated`"
+        "`deprecated`"
         "PB_WARN_UNUSED_RESULT\n"
         "PB_INLINE pb_error_t\n"
-        "`define.symbol`_encode_`define.name`(\n"
-        "    pb_encoder_t *encoder, const `define.type` *value) {\n"
+        "`message`_encode_`field`(\n"
+        "    pb_encoder_t *encoder, const `cpp_type` *value) {\n"
         "  assert(pb_encoder_descriptor(encoder) == \n"
-        "    &`define.symbol`_descriptor);\n"
-        "  return pb_encoder_encode(encoder, `define.tag`, value, 1);\n"
+        "    &`message`_descriptor);\n"
+        "  return pb_encoder_encode(encoder, `tag`, value, 1);\n"
         "}\n"
         "\n");
 
@@ -417,8 +381,8 @@ namespace protobluff {
         LowerString(&name);
 
         /* Prepare encoder variables */
-        variables["define.name"] += "_" + name;
-        variables["define.value"] = "(const pb_enum_t []){ "
+        variables["field"] += "_" + name;
+        variables["value"] = "(const pb_enum_t []){ "
           + SimpleItoa(value->number()) +
         " }";
 
@@ -428,20 +392,20 @@ namespace protobluff {
         /* Emit warning if enum value is deprecated */
         if (descriptor->options().deprecated() ||
             value->options().deprecated())
-          variables["define.deprecated"] = "PB_DEPRECATED\n";
+          variables["deprecated"] = "PB_DEPRECATED\n";
 
         /* Generate accessors for enum value */
         printer->Print(variables,
           "/* `signature` : encode(`enum.signature`) */\n"
-          "`define.deprecated`"
+          "`deprecated`"
           "PB_WARN_UNUSED_RESULT\n"
           "PB_INLINE pb_error_t\n"
-          "`define.symbol`_encode_`define.name`(\n"
+          "`message`_encode_`field`(\n"
           "    pb_encoder_t *encoder) {\n"
           "  assert(pb_encoder_descriptor(encoder) == \n"
-          "    &`define.symbol`_descriptor);\n"
-          "  return pb_encoder_encode(encoder, `define.tag`,\n"
-          "    `define.value`, 1);\n"
+          "    &`message`_descriptor);\n"
+          "  return pb_encoder_encode(encoder, `tag`,\n"
+          "    `value`, 1);\n"
           "}\n"
           "\n");
       }
@@ -457,17 +421,17 @@ namespace protobluff {
   GenerateAccessors(Printer *printer) const {
     assert(printer);
 
-    /* Generate accessors for required fields */
+    /* Generate accessors for non-required fields */
     if (!descriptor_->is_required())
       printer->Print(variables_,
         "/* `signature` : has */\n"
-        "`define.deprecated`"
+        "`deprecated`"
         "PB_INLINE int\n"
-        "`define.symbol`_has_`define.name`(\n"
+        "`message`_has_`field`(\n"
         "    pb_message_t *message) {\n"
         "  assert(pb_message_descriptor(message) == \n"
-        "    &`define.symbol`_descriptor);\n"
-        "  return pb_message_has(message, `define.tag`);\n"
+        "    &`message`_descriptor);\n"
+        "  return pb_message_has(message, `tag`);\n"
         "}\n"
         "\n");
 
@@ -475,14 +439,14 @@ namespace protobluff {
     if (descriptor_->message_type()) {
       printer->Print(variables_,
         "/* `signature` : create */\n"
-        "`define.deprecated`"
+        "`deprecated`"
         "PB_WARN_UNUSED_RESULT\n"
         "PB_INLINE pb_message_t\n"
-        "`define.symbol`_create_`define.name`(\n"
+        "`message`_create_`field`(\n"
         "    pb_message_t *message) {\n"
         "  assert(pb_message_descriptor(message) == \n"
-        "    &`define.symbol`_descriptor);\n"
-        "  return pb_message_create_within(message, `define.tag`);\n"
+        "    &`message`_descriptor);\n"
+        "  return pb_message_create_within(message, `tag`);\n"
         "}\n"
         "\n");
 
@@ -490,14 +454,14 @@ namespace protobluff {
       if (descriptor_->is_repeated())
         printer->Print(variables_,
           "/* `signature` : cursor.create */\n"
-          "`define.deprecated`"
+          "`deprecated`"
           "PB_WARN_UNUSED_RESULT\n"
           "PB_INLINE pb_cursor_t\n"
-          "`define.symbol`_create_`define.name`_cursor(\n"
+          "`message`_create_`field`_cursor(\n"
           "    pb_message_t *message) {\n"
           "  assert(pb_message_descriptor(message) == \n"
-          "    &`define.symbol`_descriptor);\n"
-          "  return pb_cursor_create(message, `define.tag`);\n"
+          "    &`message`_descriptor);\n"
+          "  return pb_cursor_create(message, `tag`);\n"
           "}\n"
           "\n");
 
@@ -516,26 +480,26 @@ namespace protobluff {
       if (!descriptor_->is_repeated())
         printer->Print(variables_,
           "/* `signature` : get */\n"
-          "`define.deprecated`"
+          "`deprecated`"
           "PB_WARN_UNUSED_RESULT\n"
           "PB_INLINE pb_error_t\n"
-          "`define.symbol`_get_`define.name`(\n"
-          "    pb_message_t *message, `define.type` *value) {\n"
+          "`message`_get_`field`(\n"
+          "    pb_message_t *message, `cpp_type` *value) {\n"
           "  assert(pb_message_descriptor(message) == \n"
-          "    &`define.symbol`_descriptor);\n"
-          "  return pb_message_get(message, `define.tag`, value);\n"
+          "    &`message`_descriptor);\n"
+          "  return pb_message_get(message, `tag`, value);\n"
           "}\n"
           "\n");
       printer->Print(variables_,
         "/* `signature` : put */\n"
-        "`define.deprecated`"
+        "`deprecated`"
         "PB_WARN_UNUSED_RESULT\n"
         "PB_INLINE pb_error_t\n"
-        "`define.symbol`_put_`define.name`(\n"
-        "    pb_message_t *message, const `define.type` *value) {\n"
+        "`message`_put_`field`(\n"
+        "    pb_message_t *message, const `cpp_type` *value) {\n"
         "  assert(pb_message_descriptor(message) == \n"
-        "    &`define.symbol`_descriptor);\n"
-        "  return pb_message_put(message, `define.tag`, value);\n"
+        "    &`message`_descriptor);\n"
+        "  return pb_message_put(message, `tag`, value);\n"
         "}\n"
         "\n");
 
@@ -551,8 +515,8 @@ namespace protobluff {
           LowerString(&name);
 
           /* Prepare accessor variables */
-          variables["define.name"] += "_" + name;
-          variables["define.value"] = "(const pb_enum_t []){ "
+          variables["field"] += "_" + name;
+          variables["value"] = "(const pb_enum_t []){ "
             + SimpleItoa(value->number()) +
           " }";
 
@@ -562,31 +526,31 @@ namespace protobluff {
           /* Emit warning if enum value is deprecated */
           if (descriptor->options().deprecated() ||
               value->options().deprecated())
-            variables["define.deprecated"] = "PB_DEPRECATED\n";
+            variables["deprecated"] = "PB_DEPRECATED\n";
 
           /* Generate accessors for enum value */
           printer->Print(variables,
             "/* `signature` : has(`enum.signature`) */\n"
-            "`define.deprecated`"
+            "`deprecated`"
             "PB_INLINE int\n"
-            "`define.symbol`_has_`define.name`(\n"
+            "`message`_has_`field`(\n"
             "    pb_message_t *message) {\n"
             "  assert(pb_message_descriptor(message) == \n"
-            "    &`define.symbol`_descriptor);\n"
-            "  return pb_message_match(message, `define.tag`,\n"
-            "    `define.value`);\n"
+            "    &`message`_descriptor);\n"
+            "  return pb_message_match(message, `tag`,\n"
+            "    `value`);\n"
             "}\n"
             "\n"
             "/* `signature` : put(`enum.signature`) */\n"
-            "`define.deprecated`"
+            "`deprecated`"
             "PB_WARN_UNUSED_RESULT\n"
             "PB_INLINE pb_error_t\n"
-            "`define.symbol`_put_`define.name`(\n"
+            "`message`_put_`field`(\n"
             "    pb_message_t *message) {\n"
             "  assert(pb_message_descriptor(message) == \n"
-            "    &`define.symbol`_descriptor);\n"
-            "  return pb_message_put(message, `define.tag`,\n"
-            "    `define.value`);\n"
+            "    &`message`_descriptor);\n"
+            "  return pb_message_put(message, `tag`,\n"
+            "    `value`);\n"
             "}\n"
             "\n");
         }
@@ -597,14 +561,14 @@ namespace protobluff {
     if (descriptor_->is_optional())
       printer->Print(variables_,
         "/* `signature` : erase */\n"
-        "`define.deprecated`"
+        "`deprecated`"
         "PB_WARN_UNUSED_RESULT\n"
         "PB_INLINE pb_error_t\n"
-        "`define.symbol`_erase_`define.name`(\n"
+        "`message`_erase_`field`(\n"
         "    pb_message_t *message) {\n"
         "  assert(pb_message_descriptor(message) == \n"
-        "    &`define.symbol`_descriptor);\n"
-        "  return pb_message_erase(message, `define.tag`);\n"
+        "    &`message`_descriptor);\n"
+        "  return pb_message_erase(message, `tag`);\n"
         "}\n"
         "\n");
 
@@ -619,12 +583,12 @@ namespace protobluff {
         printer->Print(variables_,
           "/* `signature` : raw */\n"
           "PB_DEPRECATED\n"
-          "PB_INLINE `define.type` *\n"
-          "`define.symbol`_raw_`define.name`(\n"
+          "PB_INLINE `cpp_type` *\n"
+          "`message`_raw_`field`(\n"
           "    pb_message_t *message) {\n"
           "  assert(pb_message_descriptor(message) == \n"
-          "    &`define.symbol`_descriptor);\n"
-          "  return pb_message_raw(message, `define.tag`);\n"
+          "    &`message`_descriptor);\n"
+          "  return pb_message_raw(message, `tag`);\n"
           "}\n"
           "\n");
         break;
@@ -664,29 +628,29 @@ namespace protobluff {
     name.push_back(descriptor_->lowercase_name());
 
     /* Prepare accessor variables */
-    variables["define.name"] = JoinStrings(name, "_");
-    variables["define.tag"]  = "(const pb_tag_t []){ "
+    variables["field"] = JoinStrings(name, "_");
+    variables["tag"]  = "(const pb_tag_t []){ "
       + JoinStrings(tags, ", ") +
     " }, " + SimpleItoa(tags.size());
 
     /* Prepare accessor symbol */
-    variables["define.symbol"] = StringReplace(
+    variables["message"] = StringReplace(
       StripSuffixString(trace.front()->full_name(),
         "." + trace.front()->name()), ".", "_", true);
-    LowerString(&(variables["define.symbol"]));
+    LowerString(&(variables["message"]));
 
-    /* Generate accessors for required fields */
+    /* Generate accessors for non-required fields */
     if (!descriptor_->is_required())
       printer->Print(variables,
         "/* `signature` : has */\n"
-        "`define.deprecated`"
+        "`deprecated`"
         "PB_INLINE int\n"
-        "`define.symbol`_has_`define.name`(\n"
+        "`message`_has_`field`(\n"
         "    pb_message_t *message) {\n"
         "  assert(pb_message_descriptor(message) == \n"
-        "    &`define.symbol`_descriptor);\n"
+        "    &`message`_descriptor);\n"
         "  return pb_message_nested_has(message,\n"
-        "    `define.tag`);\n"
+        "    `tag`);\n"
         "}\n"
         "\n");
 
@@ -694,15 +658,15 @@ namespace protobluff {
     if (descriptor_->message_type()) {
       printer->Print(variables,
         "/* `signature` : create */\n"
-        "`define.deprecated`"
+        "`deprecated`"
         "PB_WARN_UNUSED_RESULT\n"
         "PB_INLINE pb_message_t\n"
-        "`define.symbol`_create_`define.name`(\n"
+        "`message`_create_`field`(\n"
         "    pb_message_t *message) {\n"
         "  assert(pb_message_descriptor(message) == \n"
-        "    &`define.symbol`_descriptor);\n"
+        "    &`message`_descriptor);\n"
         "  return pb_message_create_nested(message,\n"
-        "    `define.tag`);\n"
+        "    `tag`);\n"
         "}\n"
         "\n");
 
@@ -710,15 +674,15 @@ namespace protobluff {
       if (descriptor_->is_repeated())
         printer->Print(variables,
           "/* `signature` : cursor.create */\n"
-          "`define.deprecated`"
+          "`deprecated`"
           "PB_WARN_UNUSED_RESULT\n"
           "PB_INLINE pb_cursor_t\n"
-          "`define.symbol`_create_`define.name`_cursor(\n"
+          "`message`_create_`field`_cursor(\n"
           "    pb_message_t *message) {\n"
           "  assert(pb_message_descriptor(message) == \n"
-          "    &`define.symbol`_descriptor);\n"
+          "    &`message`_descriptor);\n"
           "  return pb_cursor_create_nested(message,\n"
-          "    `define.tag`);\n"
+          "    `tag`);\n"
           "}\n"
           "\n");
 
@@ -738,28 +702,28 @@ namespace protobluff {
       if (!descriptor_->is_repeated())
         printer->Print(variables,
           "/* `signature` : get */\n"
-          "`define.deprecated`"
+          "`deprecated`"
           "PB_WARN_UNUSED_RESULT\n"
           "PB_INLINE pb_error_t\n"
-          "`define.symbol`_get_`define.name`(\n"
-          "    pb_message_t *message, `define.type` *value) {\n"
+          "`message`_get_`field`(\n"
+          "    pb_message_t *message, `cpp_type` *value) {\n"
           "  assert(pb_message_descriptor(message) == \n"
-          "    &`define.symbol`_descriptor);\n"
+          "    &`message`_descriptor);\n"
           "  return pb_message_nested_get(message,\n"
-          "    `define.tag`, value);\n"
+          "    `tag`, value);\n"
           "}\n"
           "\n");
       printer->Print(variables,
         "/* `signature` : put */\n"
-        "`define.deprecated`"
+        "`deprecated`"
         "PB_WARN_UNUSED_RESULT\n"
         "PB_INLINE pb_error_t\n"
-        "`define.symbol`_put_`define.name`(\n"
-        "    pb_message_t *message, const `define.type` *value) {\n"
+        "`message`_put_`field`(\n"
+        "    pb_message_t *message, const `cpp_type` *value) {\n"
         "  assert(pb_message_descriptor(message) == \n"
-        "    &`define.symbol`_descriptor);\n"
+        "    &`message`_descriptor);\n"
         "  return pb_message_nested_put(message,\n"
-        "    `define.tag`, value);\n"
+        "    `tag`, value);\n"
         "}\n"
         "\n");
 
@@ -775,8 +739,8 @@ namespace protobluff {
           LowerString(&name);
 
           /* Prepare accessor variables */
-          variables["define.name"] += "_" + name;
-          variables["define.value"] = "(const pb_enum_t []){ "
+          variables["field"] += "_" + name;
+          variables["value"] = "(const pb_enum_t []){ "
             + SimpleItoa(value->number()) +
           " }";
 
@@ -786,26 +750,26 @@ namespace protobluff {
           /* Generate accessors for enum value */
           printer->Print(variables,
             "/* `signature` : has(`enum.signature`) */\n"
-            "`define.deprecated`"
+            "`deprecated`"
             "PB_INLINE int\n"
-            "`define.symbol`_has_`define.name`(\n"
+            "`message`_has_`field`(\n"
             "    pb_message_t *message) {\n"
             "  assert(pb_message_descriptor(message) == \n"
-            "    &`define.symbol`_descriptor);\n"
+            "    &`message`_descriptor);\n"
             "  return pb_message_nested_match(message,\n"
-            "    `define.tag`, `define.value`);\n"
+            "    `tag`, `value`);\n"
             "}\n"
             "\n"
             "/* `signature` : put(`enum.signature`) */\n"
-            "`define.deprecated`"
+            "`deprecated`"
             "PB_WARN_UNUSED_RESULT\n"
             "PB_INLINE pb_error_t\n"
-            "`define.symbol`_put_`define.name`(\n"
+            "`message`_put_`field`(\n"
             "    pb_message_t *message) {\n"
             "  assert(pb_message_descriptor(message) == \n"
-            "    &`define.symbol`_descriptor);\n"
+            "    &`message`_descriptor);\n"
             "  return pb_message_nested_put(message,\n"
-            "    `define.tag`, `define.value`);\n"
+            "    `tag`, `value`);\n"
             "}\n"
             "\n");
 
@@ -817,15 +781,15 @@ namespace protobluff {
     if (descriptor_->is_optional())
       printer->Print(variables,
         "/* `signature` : erase */\n"
-        "`define.deprecated`"
+        "`deprecated`"
         "PB_WARN_UNUSED_RESULT\n"
         "PB_INLINE pb_error_t\n"
-        "`define.symbol`_erase_`define.name`(\n"
+        "`message`_erase_`field`(\n"
         "    pb_message_t *message) {\n"
         "  assert(pb_message_descriptor(message) == \n"
-        "    &`define.symbol`_descriptor);\n"
+        "    &`message`_descriptor);\n"
         "  return pb_message_nested_erase(message,\n"
-        "    `define.tag`);\n"
+        "    `tag`);\n"
         "}\n"
         "\n");
 
@@ -840,13 +804,13 @@ namespace protobluff {
         printer->Print(variables,
           "/* `signature` : raw */\n"
           "PB_DEPRECATED\n"
-          "PB_INLINE `define.type` *\n"
-          "`define.symbol`_raw_`define.name`(\n"
+          "PB_INLINE `cpp_type` *\n"
+          "`message`_raw_`field`(\n"
           "    pb_message_t *message) {\n"
           "  assert(pb_message_descriptor(message) == \n"
-          "    &`define.symbol`_descriptor);\n"
+          "    &`message`_descriptor);\n"
           "  return pb_message_nested_raw(message,\n"
-          "    `define.tag`);\n"
+          "    `tag`);\n"
           "}\n"
           "\n");
         break;
@@ -889,6 +853,17 @@ namespace protobluff {
     return HasPrefixString(
       descriptor_->message_type()->full_name(),
       descriptor_->containing_type()->full_name());
+  }
+
+  /*!
+   * Check whether a field defines a default value.
+   *
+   * \return Test result
+   */
+  bool Field::
+  HasDefault() const {
+    return descriptor_->has_default_value() ||
+      (descriptor_->enum_type() && descriptor_->is_optional());
   }
 
   /*!

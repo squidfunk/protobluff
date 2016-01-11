@@ -34,6 +34,7 @@ protoc_gen_protobluff_SOURCES = \
 	file.cc \
 	generator.cc \
 	message.cc \
+	oneof.cc \
 	protoc-gen-protobluff.cc \
 	strutil.cc
 protoc_gen_protobluff_CXXFLAGS = \

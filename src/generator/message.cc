@@ -22,9 +22,7 @@
 
 #include <algorithm>
 #include <cassert>
-#include <map>
 #include <set>
-#include <string>
 #include <vector>
 
 #include <google/protobuf/descriptor.h>
@@ -35,6 +33,7 @@
 #include "generator/enum.hh"
 #include "generator/field.hh"
 #include "generator/message.hh"
+#include "generator/oneof.hh"
 #include "generator/strutil.hh"
 
 /* ----------------------------------------------------------------------------
@@ -43,10 +42,8 @@
 
 namespace protobluff {
 
-  using ::std::map;
   using ::std::set;
   using ::std::sort;
-  using ::std::string;
   using ::std::vector;
 
   using ::google::protobuf::Descriptor;
@@ -61,14 +58,15 @@ namespace protobluff {
   /*!
    * Create a message generator.
    *
-   * \param[in] descriptor descriptor
+   * \param[in] descriptor Descriptor
    */
   Message::
   Message(const Descriptor *descriptor) :
       descriptor_(descriptor),
       fields_(new scoped_ptr<Field>[descriptor_->field_count()]),
-      nested_(new scoped_ptr<Message>[descriptor_->nested_type_count()]),
-      enums_(new scoped_ptr<Enum>[descriptor_->enum_type_count()]) {
+      enums_(new scoped_ptr<Enum>[descriptor_->enum_type_count()]),
+      oneofs_(new scoped_ptr<Oneof>[descriptor_->oneof_decl_count()]),
+      nested_(new scoped_ptr<Message>[descriptor_->nested_type_count()]) {
 
     /* Sort field generators by tag */
     vector<Field *> sorted;
@@ -80,13 +78,17 @@ namespace protobluff {
     for (size_t f = 0; f < descriptor_->field_count(); f++)
       fields_[f].reset(sorted[f]);
 
-    /* Initialize nested message generators */
-    for (size_t n = 0; n < descriptor_->nested_type_count(); n++)
-      nested_[n].reset(new Message(descriptor_->nested_type(n)));
-
     /* Initialize enum generators */
     for (size_t e = 0; e < descriptor_->enum_type_count(); e++)
     enums_[e].reset(new Enum(descriptor_->enum_type(e)));
+
+    /* Initialize oneof generators */
+    for (size_t o = 0; o < descriptor_->oneof_decl_count(); o++)
+    oneofs_[o].reset(new Oneof(descriptor_->oneof_decl(o)));
+
+    /* Initialize nested message generators */
+    for (size_t n = 0; n < descriptor_->nested_type_count(); n++)
+      nested_[n].reset(new Message(descriptor_->nested_type(n)));
 
     /* Build set of unique extended descriptors */
     set<const Descriptor *> unique;
@@ -108,111 +110,15 @@ namespace protobluff {
     /* Extract full name for signature */
     variables_["signature"] = descriptor_->full_name();
 
-    /* Prepare descriptor symbol */
-    variables_["descriptor.symbol"] = StringReplace(
+    /* Prepare message symbol */
+    variables_["message"] = StringReplace(
       variables_["signature"], ".", "_", true);
-    LowerString(&(variables_["descriptor.symbol"]));
+    LowerString(&(variables_["message"]));
 
     /* Emit warning if message is deprecated */
-    variables_["descriptor.deprecated"] =
+    variables_["deprecated"] =
       descriptor_->options().deprecated()
         ? "PB_DEPRECATED\n" : "";
-  }
-
-  /*!
-   * Check whether a message or its nested messages have enums.
-   *
-   * \return Test result
-   */
-  bool Message::
-  HasEnums() const {
-    if (descriptor_->enum_type_count())
-      return true;
-
-    /* Check enums for nested messages */
-    for (size_t n = 0; n < descriptor_->nested_type_count(); n++)
-      if (nested_[n]->HasEnums())
-        return true;
-
-    /* No enums */
-    return false;
-  }
-
-  /*!
-   * Retrieve nested enum generators.
-   *
-   * \return Nested enum generators
-   */
-  const vector<const Enum *> Message::
-  GetEnums() const {
-    vector<const Enum *> enums;
-    for (size_t e = 0; e < descriptor_->enum_type_count(); e++)
-      enums.push_back(enums_[e].get());
-
-    /* Retrieve extensions for nested messages */
-    for (size_t n = 0; n < descriptor_->nested_type_count(); n++) {
-      vector<const Enum *> nested = nested_[n]->GetEnums();
-      enums.insert(enums.end(), nested.begin(), nested.end());
-    }
-    return enums;
-  }
-
-  /*!
-   * Check whether a message or its nested messages have extensions.
-   *
-   * \return Test result
-   */
-  bool Message::
-  HasExtensions() const {
-    if (descriptor_->extension_count())
-      return true;
-
-    /* Check extensions for nested messages */
-    for (size_t n = 0; n < descriptor_->nested_type_count(); n++)
-      if (nested_[n]->HasExtensions())
-        return true;
-
-    /* No extensions */
-    return false;
-  }
-
-  /*!
-   * Retrieve nested extension generators.
-   *
-   * \return Nested extension generators
-   */
-  const vector<const Extension *> Message::
-  GetExtensions() const {
-    vector<const Extension *> extensions;
-    extensions.insert(extensions.end(),
-      extensions_.begin(), extensions_.end());
-
-    /* Retrieve extensions for nested messages */
-    for (size_t n = 0; n < descriptor_->nested_type_count(); n++) {
-      vector<const Extension *> nested = nested_[n]->GetExtensions();
-      extensions.insert(extensions.end(), nested.begin(), nested.end());
-    }
-    return extensions;
-  }
-
-  /*!
-   * Check whether a message or its nested messages have default values.
-   *
-   * \return Test result
-   */
-  bool Message::
-  HasDefaults() const {
-    for (size_t f = 0; f < descriptor_->field_count(); f++)
-      if (fields_[f]->HasDefault())
-        return true;
-
-    /* Check default values for nested messages */
-    for (size_t n = 0; n < descriptor_->nested_type_count(); n++)
-      if (nested_[n]->HasDefaults())
-        return true;
-
-    /* No default values */
-    return false;
   }
 
   /*!
@@ -228,7 +134,7 @@ namespace protobluff {
     printer->Print(variables_,
       "/* `signature` : descriptor */\n"
       "extern pb_descriptor_t\n"
-      "`descriptor.symbol`_descriptor;\n"
+      "`message`_descriptor;\n"
       "\n");
 
     /* Generate forward declarations for nested messages */
@@ -267,7 +173,7 @@ namespace protobluff {
       printer->Print(variables_,
         "/* `signature` : descriptor */\n"
         "pb_descriptor_t\n"
-        "`descriptor.symbol`_descriptor = { {\n"
+        "`message`_descriptor = { {\n"
         "  (const pb_field_descriptor_t []){\n");
 
       /* Generate field descriptors */
@@ -293,7 +199,7 @@ namespace protobluff {
       printer->Print(variables_,
         "/* `signature` : descriptor */\n"
         "pb_descriptor_t\n"
-        "`descriptor.symbol`_descriptor = {};\n"
+        "`message`_descriptor = {};\n"
         "\n");
     }
 
@@ -314,26 +220,26 @@ namespace protobluff {
     /* Generate constructor */
     printer->Print(variables_,
       "/* `signature` : create */\n"
-      "`descriptor.deprecated`"
+      "`deprecated`"
       "PB_WARN_UNUSED_RESULT\n"
       "PB_INLINE pb_decoder_t\n"
-      "`descriptor.symbol`_decoder_create(\n"
+      "`message`_decoder_create(\n"
       "    const pb_buffer_t *buffer) {\n"
       "  return pb_decoder_create(\n"
-      "    &`descriptor.symbol`_descriptor, buffer);\n"
+      "    &`message`_descriptor, buffer);\n"
       "}\n"
       "\n");
 
     /* Generate decoder */
     printer->Print(variables_,
       "/* `signature` : decode */\n"
-      "`descriptor.deprecated`"
+      "`deprecated`"
       "PB_WARN_UNUSED_RESULT\n"
       "PB_INLINE pb_error_t\n"
-      "`descriptor.symbol`_decode(\n"
+      "`message`_decode(\n"
       "    pb_decoder_t *decoder, pb_decoder_handler_f handler, void *user) {\n"
       "  assert(pb_decoder_descriptor(decoder) == \n"
-      "    &`descriptor.symbol`_descriptor);\n"
+      "    &`message`_descriptor);\n"
       "  return pb_decoder_decode(decoder, handler, user);\n"
       "}\n"
       "\n");
@@ -341,12 +247,12 @@ namespace protobluff {
     /* Generate destructor */
     printer->Print(variables_,
       "/* `signature` : destroy */\n"
-      "`descriptor.deprecated`"
+      "`deprecated`"
       "PB_INLINE void\n"
-      "`descriptor.symbol`_decoder_destroy(\n"
+      "`message`_decoder_destroy(\n"
       "    pb_decoder_t *decoder) {\n"
       "  assert(pb_decoder_descriptor(decoder) == \n"
-      "    &`descriptor.symbol`_descriptor);\n"
+      "    &`message`_descriptor);\n"
       "  return pb_decoder_destroy(decoder);\n"
       "}\n"
       "\n");
@@ -368,37 +274,37 @@ namespace protobluff {
     /* Generate constructor */
     printer->Print(variables_,
       "/* `signature` : create */\n"
-      "`descriptor.deprecated`"
+      "`deprecated`"
       "PB_WARN_UNUSED_RESULT\n"
       "PB_INLINE pb_encoder_t\n"
-      "`descriptor.symbol`_encoder_create(void) {\n"
+      "`message`_encoder_create(void) {\n"
       "  return pb_encoder_create(\n"
-      "    &`descriptor.symbol`_descriptor);\n"
+      "    &`message`_descriptor);\n"
       "}\n"
       "\n");
 
     /* Generate constructor with allocator */
     printer->Print(variables_,
       "/* `signature` : create with allocator */\n"
-      "`descriptor.deprecated`"
+      "`deprecated`"
       "PB_WARN_UNUSED_RESULT\n"
       "PB_INLINE pb_encoder_t\n"
-      "`descriptor.symbol`_encoder_create_with_allocator(\n"
+      "`message`_encoder_create_with_allocator(\n"
       "    pb_allocator_t *allocator) {\n"
       "  return pb_encoder_create_with_allocator(\n"
-      "    allocator, &`descriptor.symbol`_descriptor);\n"
+      "    allocator, &`message`_descriptor);\n"
       "}\n"
       "\n");
 
     /* Generate destructor */
     printer->Print(variables_,
       "/* `signature` : destroy */\n"
-      "`descriptor.deprecated`"
+      "`deprecated`"
       "PB_INLINE void\n"
-      "`descriptor.symbol`_encoder_destroy(\n"
+      "`message`_encoder_destroy(\n"
       "    pb_encoder_t *encoder) {\n"
       "  assert(pb_encoder_descriptor(encoder) == \n"
-      "    &`descriptor.symbol`_descriptor);\n"
+      "    &`message`_descriptor);\n"
       "  return pb_encoder_destroy(encoder);\n"
       "}\n"
       "\n");
@@ -424,25 +330,25 @@ namespace protobluff {
     /* Generate constructor */
     printer->Print(variables_,
       "/* `signature` : create */\n"
-      "`descriptor.deprecated`"
+      "`deprecated`"
       "PB_WARN_UNUSED_RESULT\n"
       "PB_INLINE pb_message_t\n"
-      "`descriptor.symbol`_create(\n"
+      "`message`_create(\n"
       "    pb_journal_t *journal) {\n"
       "  return pb_message_create(\n"
-      "    &`descriptor.symbol`_descriptor, journal);\n"
+      "    &`message`_descriptor, journal);\n"
       "}\n"
       "\n");
 
     /* Generate destructor */
     printer->Print(variables_,
       "/* `signature` : destroy */\n"
-      "`descriptor.deprecated`"
+      "`deprecated`"
       "PB_INLINE void\n"
-      "`descriptor.symbol`_destroy(\n"
+      "`message`_destroy(\n"
       "    pb_message_t *message) {\n"
       "  assert(pb_message_descriptor(message) == \n"
-      "    &`descriptor.symbol`_descriptor);\n"
+      "    &`message`_descriptor);\n"
       "  return pb_message_destroy(message);\n"
       "}\n"
       "\n");
@@ -471,5 +377,139 @@ namespace protobluff {
     assert(printer);
     for (size_t f = 0; f < descriptor_->field_count(); f++)
       fields_[f]->GenerateAccessors(printer, trace);
+  }
+
+  /*!
+   * Check whether a message or its nested messages define default values.
+   *
+   * \return Test result
+   */
+  bool Message::
+  HasDefaults() const {
+    for (size_t f = 0; f < descriptor_->field_count(); f++)
+      if (fields_[f]->HasDefault())
+        return true;
+
+    /* Check nested messages for default values */
+    for (size_t n = 0; n < descriptor_->nested_type_count(); n++)
+      if (nested_[n]->HasDefaults())
+        return true;
+
+    /* No default values */
+    return false;
+  }
+
+  /*!
+   * Check whether a message or its nested messages define enums.
+   *
+   * \return Test result
+   */
+  bool Message::
+  HasEnums() const {
+    if (descriptor_->enum_type_count())
+      return true;
+
+    /* Check nested messages for enums */
+    for (size_t n = 0; n < descriptor_->nested_type_count(); n++)
+      if (nested_[n]->HasEnums())
+        return true;
+
+    /* No enums */
+    return false;
+  }
+
+  /*!
+   * Check whether a message or its nested messages define oneofs.
+   *
+   * \return Test result
+   */
+  bool Message::
+  HasOneofs() const {
+    if (descriptor_->oneof_decl_count())
+      return true;
+
+    /* Check nested messages for oneofs */
+    for (size_t n = 0; n < descriptor_->nested_type_count(); n++)
+      if (nested_[n]->HasOneofs())
+        return true;
+
+    /* No oneofs */
+    return false;
+  }
+
+  /*!
+   * Check whether a message or its nested messages define extensions.
+   *
+   * \return Test result
+   */
+  bool Message::
+  HasExtensions() const {
+    if (descriptor_->extension_count())
+      return true;
+
+    /* Check nested messages for extensions */
+    for (size_t n = 0; n < descriptor_->nested_type_count(); n++)
+      if (nested_[n]->HasExtensions())
+        return true;
+
+    /* No extensions */
+    return false;
+  }
+
+  /*!
+   * Retrieve enum generators.
+   *
+   * \return Enum generators
+   */
+  const vector<const Enum *> Message::
+  GetEnums() const {
+    vector<const Enum *> enums;
+    for (size_t e = 0; e < descriptor_->enum_type_count(); e++)
+      enums.push_back(enums_[e].get());
+
+    /* Retrieve extensions from nested messages */
+    for (size_t n = 0; n < descriptor_->nested_type_count(); n++) {
+      vector<const Enum *> nested = nested_[n]->GetEnums();
+      enums.insert(enums.end(), nested.begin(), nested.end());
+    }
+    return enums;
+  }
+
+  /*!
+   * Retrieve oneof generators.
+   *
+   * \return Oneof generators
+   */
+  const vector<const Oneof *> Message::
+  GetOneofs() const {
+    vector<const Oneof *> oneofs;
+    for (size_t o = 0; o < descriptor_->oneof_decl_count(); o++)
+      oneofs.push_back(oneofs_[o].get());
+
+    /* Retrieve oneofs from nested messages */
+    for (size_t n = 0; n < descriptor_->nested_type_count(); n++) {
+      vector<const Oneof *> nested = nested_[n]->GetOneofs();
+      oneofs.insert(oneofs.end(), nested.begin(), nested.end());
+    }
+    return oneofs;
+  }
+
+  /*!
+   * Retrieve extension generators.
+   *
+   * \return Extension generators
+   */
+  const vector<const Extension *> Message::
+  GetExtensions() const {
+    vector<const Extension *> extensions;
+    extensions.insert(extensions.end(),
+      extensions_.begin(), extensions_.end());
+
+    /* Retrieve extensions from nested messages */
+    for (size_t n = 0; n < descriptor_->nested_type_count(); n++) {
+      vector<const Extension *> nested = nested_[n]->GetExtensions();
+      extensions.insert(extensions.end(), nested.begin(), nested.end());
+    }
+    return extensions;
   }
 }

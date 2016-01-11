@@ -19,51 +19,21 @@
 # IN THE SOFTWARE.
 
 # -----------------------------------------------------------------------------
-# Subdirectories
+# Test suite: protobluff/message/oneof
 # -----------------------------------------------------------------------------
 
-SUBDIRS = core message util
-
-# -----------------------------------------------------------------------------
-# Tests
-# -----------------------------------------------------------------------------
-
-# Add core tests
-TESTS = \
-	core/buffer/test \
-	core/decoder/test \
-	core/descriptor/test \
-	core/encoder/test \
-	core/stream/test \
-	core/varint/test
-
-# Add message tests
-TESTS += \
-	message/buffer/test \
-	message/cursor/test \
-	message/field/test \
-	message/journal/test \
-	message/message/test \
-	message/nested/test \
-	message/oneof/test \
-	message/part/test
-
-# Add util tests
-TESTS += \
-	util/chunk_allocator/test \
-	util/descriptor/test \
-	util/validator/test
-
-# -----------------------------------------------------------------------------
-# Coverage report
-# -----------------------------------------------------------------------------
-
-if HAVE_COVERAGE
-
-# Reset execution counts
-clean-local:
-	@LCOV@ -z -d @top_builddir@/src
-	rm -rf coverage
-	rm -f  coverage.info
-
-endif # HAVE_COVERAGE
+# Build protobluff/message/oneof test suite
+check_PROGRAMS = test
+test_SOURCES = \
+	test.c
+test_CFLAGS = \
+	@check_CFLAGS@
+test_CPPFLAGS = \
+	-I@top_builddir@/src \
+	-I@top_builddir@/include
+test_LDADD = \
+	@top_builddir@/src/message/libprotobluff-message.la \
+	@top_builddir@/src/core/libprotobluff-core.la \
+	@check_LIBS@
+test_LDFLAGS = \
+	@coverage_LDFLAGS@

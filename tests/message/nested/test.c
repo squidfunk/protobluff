@@ -36,9 +36,11 @@
  * Defaults
  * ------------------------------------------------------------------------- */
 
+/* Unsigned 32-bit integer default */
 static const uint32_t
 default_uint32 = 1000000000U;
 
+/* Unsigned 64-bit integer default */
 static const uint64_t
 default_uint64 = 1000000000000000000ULL;
 

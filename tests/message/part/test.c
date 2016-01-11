@@ -38,8 +38,13 @@
  * System-default allocator callback overrides
  * ------------------------------------------------------------------------- */
 
-/*
+/*!
  * Allocator with failing reallocation.
+ *
+ * \param[in,out] data  Internal allocator data
+ * \param[in,out] block Memory block to be resized
+ * \param[in]     size  Bytes to be allocated
+ * \return              Memory block
  */
 static void *
 allocator_resize_fail(void *data, void *block, size_t size) {
@@ -51,7 +56,7 @@ allocator_resize_fail(void *data, void *block, size_t size) {
  * Descriptors
  * ------------------------------------------------------------------------- */
 
-/* Descriptor */
+/* Descriptor (forward declaration) */
 static pb_descriptor_t
 descriptor;
 
@@ -59,9 +64,9 @@ descriptor;
 static const pb_oneof_descriptor_t
 oneof_descriptor = {
   &descriptor, {
-  (const size_t []){
-    2, 3, 5, 11
-  }, 4 } };
+    (const size_t []){
+      2, 3, 5, 11
+    }, 4 } };
 
 /* Descriptor */
 static pb_descriptor_t

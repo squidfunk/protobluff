@@ -33,13 +33,25 @@
  * Descriptors
  * ------------------------------------------------------------------------- */
 
+/* Descriptor (forward declaration) */
+static pb_descriptor_t
+descriptor;
+
+/* Oneof descriptor */
+static const pb_oneof_descriptor_t
+oneof_descriptor = {
+  &descriptor, {
+    (const size_t []){
+      0, 1, 2
+    }, 3 } };
+
 /* Descriptor */
 static pb_descriptor_t
 descriptor = { {
   (const pb_field_descriptor_t []){
-    {  1, "F01", UINT32,  OPTIONAL },
-    {  2, "F02", UINT64,  OPTIONAL },
-    {  3, "F03", SINT32,  OPTIONAL },
+    {  1, "F01", UINT32,  ONEOF, NULL, &oneof_descriptor },
+    {  2, "F02", UINT64,  ONEOF, NULL, &oneof_descriptor },
+    {  3, "F03", SINT32,  ONEOF, NULL, &oneof_descriptor },
     {  4, "F04", SINT64,  OPTIONAL },
     {  5, "F05", BOOL,    OPTIONAL },
     {  6, "F06", FLOAT,   OPTIONAL },
@@ -419,6 +431,59 @@ START_TEST(test_enum_value_by_number_scattered_absent) {
     pb_enum_descriptor_value_by_number(&enum_descriptor_scattered, 9));
 } END_TEST
 
+/*
+ * Create a const-iterator over a oneof descriptor.
+ */
+START_TEST(test_oneof_iterator) {
+  pb_oneof_descriptor_iter_t it =
+    pb_oneof_descriptor_iter_create(&oneof_descriptor);
+
+  /* Assert descriptor size */
+  fail_if(pb_oneof_descriptor_empty(&oneof_descriptor));
+  ck_assert_uint_eq(3, pb_oneof_descriptor_size(&oneof_descriptor));
+
+  /* Walk through descriptor fields forwards */
+  fail_unless(pb_oneof_descriptor_iter_begin(&it));
+  for (size_t f = 1; f <= 3; f++, !!pb_oneof_descriptor_iter_next(&it)) {
+    const pb_field_descriptor_t *descriptor =
+      pb_oneof_descriptor_iter_current(&it);
+    ck_assert_uint_eq(f - 1, pb_oneof_descriptor_iter_pos(&it));
+
+    /* Assemble field name */
+    char name[5];
+    snprintf(name, 5, "F%02d", pb_field_descriptor_tag(descriptor));
+
+    /* Assert field name and tag */
+    ck_assert_uint_eq(f, pb_field_descriptor_tag(descriptor));
+    fail_if(strcmp(name, pb_field_descriptor_name(descriptor)));
+  }
+
+  /* Assert descriptor iterator validity */
+  fail_if(pb_oneof_descriptor_iter_next(&it));
+
+  /* Walk through descriptor fields backwards */
+  fail_unless(pb_oneof_descriptor_iter_end(&it));
+  for (size_t f = 3; f >= 1; f--, !!pb_oneof_descriptor_iter_prev(&it)) {
+    const pb_field_descriptor_t *descriptor =
+      pb_oneof_descriptor_iter_current(&it);
+    ck_assert_uint_eq(f - 1, pb_oneof_descriptor_iter_pos(&it));
+
+    /* Assemble field name */
+    char name[5];
+    snprintf(name, 5, "F%02d", pb_field_descriptor_tag(descriptor));
+
+    /* Assert field name and tag */
+    ck_assert_uint_eq(f, pb_field_descriptor_tag(descriptor));
+    fail_if(strcmp(name, pb_field_descriptor_name(descriptor)));
+  }
+
+  /* Assert descriptor iterator validity again */
+  fail_if(pb_oneof_descriptor_iter_prev(&it));
+
+  /* Free all allocated memory */
+  pb_oneof_descriptor_iter_destroy(&it);
+} END_TEST
+
 /* ----------------------------------------------------------------------------
  * Program
  * ------------------------------------------------------------------------- */
@@ -457,19 +522,24 @@ main(void) {
   tcase_add_test(tcase, test_extend);
   suite_add_tcase(suite, tcase);
 
-  /* Add tests to test case "enum/iterator" */
-  tcase = tcase_create("enum/iterator");
+  /* Add tests to test case "enum_iterator" */
+  tcase = tcase_create("enum_iterator");
   tcase_add_test(tcase, test_enum_iterator);
   tcase_add_test(tcase, test_enum_iterator_empty);
   suite_add_tcase(suite, tcase);
 
-  /* Add tests to test case "enum/value_by_number" */
-  tcase = tcase_create("enum/value_by_number");
+  /* Add tests to test case "enum_value_by_number" */
+  tcase = tcase_create("enum_value_by_number");
   tcase_add_test(tcase, test_enum_value_by_number);
   tcase_add_test(tcase, test_enum_value_by_number_absent);
   tcase_add_test(tcase, test_enum_value_by_number_empty);
   tcase_add_test(tcase, test_enum_value_by_number_scattered);
   tcase_add_test(tcase, test_enum_value_by_number_scattered_absent);
+  suite_add_tcase(suite, tcase);
+
+  /* Add tests to test case "oneof_iterator" */
+  tcase = tcase_create("oneof_iterator");
+  tcase_add_test(tcase, test_oneof_iterator);
   suite_add_tcase(suite, tcase);
 
   /* Create a test suite runner in no-fork mode */

@@ -60,18 +60,6 @@ namespace protobluff {
       const FileDescriptor
         *descriptor);                  /* File descriptor */
 
-    bool
-    HasEnums()
-    const;
-
-    bool
-    HasExtensions()
-    const;
-
-    bool
-    HasDefaults()
-    const;
-
     void
     GenerateHeader(
       Printer *printer)                /* Printer */
@@ -82,28 +70,44 @@ namespace protobluff {
       Printer *printer)                /* Printer */
     const;
 
+    bool
+    HasDefaults()
+    const;
+
+    bool
+    HasEnums()
+    const;
+
+    bool
+    HasOneofs()
+    const;
+
+    bool
+    HasExtensions()
+    const;
+
   private:
     const FileDescriptor *descriptor_; /* File descriptor */
     const FileOptions::OptimizeMode
       mode_;                           /* Optimization mode */
     scoped_array<
-      scoped_ptr<Message>
-    > messages_;                       /* Message generators */
-    scoped_array<
       scoped_ptr<Enum>
     > enums_;                          /* Enum generators */
+    scoped_array<
+      scoped_ptr<Message>
+    > messages_;                       /* Message generators */
     vector<Extension *> extensions_;   /* Extension generators */
     map<string, string> variables_;    /* Variables */
-
-    void
-    PrintDisclaimer(
-      Printer *printer)                /* Printer */
-    const;
 
     void
     PrintBanner(
       Printer *printer,                /* Printer */
       const char title[])              /* Title */
+    const;
+
+    void
+    PrintDisclaimer(
+      Printer *printer)                /* Printer */
     const;
   };
 }

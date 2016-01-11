@@ -211,6 +211,7 @@ AC_CONFIG_FILES([
 	tests/message/journal/Makefile
 	tests/message/message/Makefile
 	tests/message/nested/Makefile
+	tests/message/oneof/Makefile
 	tests/message/part/Makefile
 	tests/message/Makefile
 	tests/util/chunk_allocator/Makefile

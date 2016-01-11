@@ -22,7 +22,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <map>
 #include <string>
 #include <vector>
 
@@ -39,18 +38,18 @@
 
 namespace protobluff {
 
-  using ::std::map;
   using ::std::sort;
   using ::std::string;
   using ::std::vector;
 
   using ::google::protobuf::Descriptor;
   using ::google::protobuf::FieldDescriptor;
+  using ::google::protobuf::io::Printer;
+
   using ::google::protobuf::LowerString;
   using ::google::protobuf::SimpleItoa;
   using ::google::protobuf::StringReplace;
   using ::google::protobuf::StripPrefixString;
-  using ::google::protobuf::io::Printer;
 
   /*!
    * Create an extension generator.
@@ -69,10 +68,10 @@ namespace protobluff {
     /* Extract full name for signature */
     variables_["signature"] = descriptor_->full_name();
 
-    /* Prepare descriptor symbol */
-    variables_["descriptor.symbol"] = StringReplace(
+    /* Prepare message symbol */
+    variables_["message"] = StringReplace(
       variables_["signature"], ".", "_", true);
-    LowerString(&(variables_["descriptor.symbol"]));
+    LowerString(&(variables_["message"]));
 
     /* Suffix scope to identifiers, if given */
     string suffix ("");
@@ -89,25 +88,10 @@ namespace protobluff {
       suffix = "_" + suffix;
     }
 
-    /* Prepare descriptor symbol extension */
-    variables_["descriptor.extension"] = StringReplace(
+    /* Prepare extension symbol */
+    variables_["extension"] = StringReplace(
       suffix, ".", "_", true);
-    LowerString(&(variables_["descriptor.extension"]));
-  }
-
-  /*!
-   * Check whether an extension has default values.
-   *
-   * \return Test result
-   */
-  bool Extension::
-  HasDefaults() const {
-    for (size_t f = 0; f < fields_.size(); f++)
-      if (fields_[f]->HasDefault())
-        return true;
-
-    /* No default values */
-    return false;
+    LowerString(&(variables_["extension"]));
   }
 
   /*
@@ -150,7 +134,7 @@ namespace protobluff {
     printer->Print(variables_,
       "/* `signature` : extension descriptor */\n"
       "static pb_descriptor_t\n"
-      "`descriptor.symbol`_X`descriptor.extension`_descriptor = { {\n"
+      "`message`_X`extension`_descriptor = { {\n"
       "  (const pb_field_descriptor_t []){\n");
 
     /* Generate field descriptors */
@@ -184,10 +168,10 @@ namespace protobluff {
       "/* `signature` : extension initializer */\n"
       "PB_CONSTRUCTOR\n"
       "static void\n"
-      "`descriptor.symbol`_descriptor_extend`descriptor.extension`() {\n"
+      "`message`_descriptor_extend`extension`() {\n"
       "  pb_descriptor_extend(\n"
-      "    &`descriptor.symbol`_descriptor,\n"
-      "    &`descriptor.symbol`_X`descriptor.extension`_descriptor);\n"
+      "    &`message`_descriptor,\n"
+      "    &`message`_X`extension`_descriptor);\n"
       "}\n"
       "\n");
   }
@@ -202,5 +186,20 @@ namespace protobluff {
     assert(printer);
     for (size_t f = 0; f < fields_.size(); f++)
       fields_[f]->GenerateAccessors(printer);
+  }
+
+  /*!
+   * Check whether an extension defines default values.
+   *
+   * \return Test result
+   */
+  bool Extension::
+  HasDefaults() const {
+    for (size_t f = 0; f < fields_.size(); f++)
+      if (fields_[f]->HasDefault())
+        return true;
+
+    /* No default values */
+    return false;
   }
 }

@@ -227,7 +227,7 @@ pb_cursor_create(pb_message_t *message, pb_tag_t tag) {
             pb_field_descriptor_oneof(cursor.current.descriptor);
           if (member && (cursor.error = PB_ERROR_EOM))
             break;
-        }
+        }                                                  /* LCOV_EXCL_LINE */
         pb_cursor_destroy(&temp);
       }
     }
@@ -280,7 +280,7 @@ pb_cursor_create_unsafe(pb_message_t *message, pb_tag_t tag) {
 }
 
 /*!
- * Create a cursor over a nested message for a set of tags.
+ * Create a cursor over a nested message for a branch of tags.
  *
  * Whether the message is valid or not is checked by the cursor, so there is
  * no need to perform this check before creating the cursor.

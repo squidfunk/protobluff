@@ -51,10 +51,6 @@ namespace protobluff {
       const FieldDescriptor
         *descriptor);                  /* Field descriptor */
 
-    bool
-    HasDefault()
-    const;
-
     void
     GenerateDefault(
       Printer *printer)                /* Printer */
@@ -81,6 +77,10 @@ namespace protobluff {
       vector<
         const FieldDescriptor *
       > &trace)                        /* Trace */
+    const;
+
+    bool
+    HasDefault()
     const;
 
     friend bool

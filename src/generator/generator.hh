@@ -23,7 +23,7 @@
 #ifndef PB_GENERATOR_GENERATOR_HH
 #define PB_GENERATOR_GENERATOR_HH
 
-#include <string.h>
+#include <string>
 
 #include <google/protobuf/compiler/code_generator.h>
 #include <google/protobuf/descriptor.h>

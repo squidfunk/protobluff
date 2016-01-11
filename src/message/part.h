@@ -31,8 +31,13 @@
 
 #include "core/stream.h"
 #include "message/common.h"
-#include "message/cursor.h"
 #include "message/journal.h"
+
+/* ----------------------------------------------------------------------------
+ * Forward declarations
+ * ------------------------------------------------------------------------- */
+
+struct pb_cursor_t;
 
 /* ----------------------------------------------------------------------------
  * Interface
@@ -52,7 +57,7 @@ pb_part_create_from_journal(
 PB_WARN_UNUSED_RESULT
 extern pb_part_t
 pb_part_create_from_cursor(
-  pb_cursor_t *cursor);                /* Cursor */
+  struct pb_cursor_t *cursor);         /* Cursor */
 
 extern void
 pb_part_destroy(

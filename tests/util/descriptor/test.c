@@ -282,8 +282,8 @@ main(void) {
   tcase_add_test(tcase, test_field_by_name_extended);
   suite_add_tcase(suite, tcase);
 
-  /* Add tests to test case "enum/value_by_name" */
-  tcase = tcase_create("enum/value_by_name");
+  /* Add tests to test case "enum_value_by_name" */
+  tcase = tcase_create("enum_value_by_name");
   tcase_add_test(tcase, test_enum_value_by_name);
   tcase_add_test(tcase, test_enum_value_by_name_absent);
   tcase_add_test(tcase, test_enum_value_by_name_empty);

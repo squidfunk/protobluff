@@ -22,8 +22,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <map>
-#include <string>
 #include <vector>
 
 #include <google/protobuf/descriptor.h>
@@ -40,9 +38,7 @@
 
 namespace protobluff {
 
-  using ::std::map;
   using ::std::sort;
-  using ::std::string;
   using ::std::vector;
 
   using ::google::protobuf::EnumDescriptor;
@@ -77,10 +73,10 @@ namespace protobluff {
     /* Extract full name for signature */
     variables_["signature"] = descriptor_->full_name();
 
-    /* Prepare descriptor symbol */
-    variables_["descriptor.symbol"] = StringReplace(
+    /* Prepare enum symbol */
+    variables_["enum"] = StringReplace(
       variables_["signature"], ".", "_", true);
-    LowerString(&(variables_["descriptor.symbol"]));
+    LowerString(&(variables_["enum"]));
   }
 
   /*!
@@ -96,7 +92,7 @@ namespace protobluff {
     printer->Print(variables_,
       "/* `signature` : descriptor */\n"
       "extern const pb_enum_descriptor_t\n"
-      "`descriptor.symbol`_descriptor;\n"
+      "`enum`_descriptor;\n"
       "\n");
   }
 
@@ -114,7 +110,7 @@ namespace protobluff {
       printer->Print(variables_,
         "/* `signature` : descriptor */\n"
         "const pb_enum_descriptor_t\n"
-        "`descriptor.symbol`_descriptor = { {\n"
+        "`enum`_descriptor = { {\n"
         "  (const pb_enum_descriptor_value_t []){\n");
 
       /* Generate enum value descriptors */
@@ -140,7 +136,7 @@ namespace protobluff {
       printer->Print(variables_,
         "/* `signature` : descriptor */\n"
         "pb_enum_descriptor_t\n"
-        "`descriptor.symbol`_descriptor = {};\n"
+        "`enum`_descriptor = {};\n"
         "\n");
     }
   }

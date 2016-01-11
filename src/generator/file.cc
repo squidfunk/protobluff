@@ -22,7 +22,6 @@
 
 #include <cassert>
 #include <ctime>
-#include <map>
 #include <set>
 #include <string>
 #include <vector>
@@ -46,7 +45,6 @@
 
 namespace protobluff {
 
-  using ::std::map;
   using ::std::set;
   using ::std::string;
   using ::std::vector;
@@ -72,16 +70,16 @@ namespace protobluff {
       mode_(descriptor_->options().has_optimize_for()
         ? descriptor_->options().optimize_for()
         : FileOptions::SPEED),
-      messages_(new scoped_ptr<Message>[descriptor_->message_type_count()]),
-      enums_(new scoped_ptr<Enum>[descriptor_->enum_type_count()]) {
-
-    /* Initialize message generators */
-    for (size_t m = 0; m < descriptor_->message_type_count(); m++)
-      messages_[m].reset(new Message(descriptor_->message_type(m)));
+      enums_(new scoped_ptr<Enum>[descriptor_->enum_type_count()]),
+      messages_(new scoped_ptr<Message>[descriptor_->message_type_count()]) {
 
     /* Initialize enum generators */
     for (size_t e = 0; e < descriptor_->enum_type_count(); e++)
       enums_[e].reset(new Enum(descriptor_->enum_type(e)));
+
+    /* Initialize message generators */
+    for (size_t m = 0; m < descriptor_->message_type_count(); m++)
+      messages_[m].reset(new Message(descriptor_->message_type(m)));
 
     /* Build set of unique extended descriptors */
     set<const Descriptor *> unique;
@@ -126,64 +124,6 @@ namespace protobluff {
   }
 
   /*!
-   * Check whether a file or its messages have enums.
-   *
-   * \return Test result
-   */
-  bool File::
-  HasEnums() const {
-    if (descriptor_->enum_type_count())
-      return true;
-
-    /* Check enums for messages */
-    for (size_t m = 0; m < descriptor_->message_type_count(); m++)
-      if (messages_[m]->HasEnums())
-        return true;
-
-    /* No enums */
-    return false;
-  }
-
-  /*!
-   * Check whether a file or its messages have extensions.
-   *
-   * \return Test result
-   */
-  bool File::
-  HasExtensions() const {
-    if (descriptor_->extension_count())
-      return true;
-
-    /* Check extensions for nested messages */
-    for (size_t m = 0; m < descriptor_->message_type_count(); m++)
-      if (messages_[m]->HasExtensions())
-        return true;
-
-    /* No extensions */
-    return false;
-  }
-
-  /*!
-   * Check whether a file's messages have default values.
-   *
-   * \return Test result
-   */
-  bool File::
-  HasDefaults() const {
-    for (size_t m = 0; m < descriptor_->message_type_count(); m++)
-      if (messages_[m]->HasDefaults())
-        return true;
-
-    /* Check extensions for default values */
-    for (size_t e = 0; e < extensions_.size(); e++)
-      if (extensions_[e]->HasDefaults())
-        return true;
-
-    /* No default values */
-    return false;
-  }
-
-  /*!
    * Generate header file.
    *
    * \param[in,out] printer Printer
@@ -220,7 +160,7 @@ namespace protobluff {
         printer->Print("\n");
     }
 
-    /* Generate values for enums, if any */
+    /* Generate values and descriptors for enums */
     if (HasEnums()) {
       PrintBanner(printer, "Enum values");
 
@@ -236,7 +176,7 @@ namespace protobluff {
       }
     }
 
-    /* Generate descriptors for enums, if any */
+    /* Generate descriptors for enums */
     if (HasEnums()) {
       PrintBanner(printer, "Enum descriptors");
 
@@ -252,7 +192,19 @@ namespace protobluff {
       }
     }
 
-    /* Generate descriptors for messages, if any */
+    /* Generate descriptors for oneofs */
+    if (HasOneofs()) {
+      PrintBanner(printer, "Oneof descriptors");
+
+      /* Generate descriptors for oneofs */
+      for (size_t m = 0; m < descriptor_->message_type_count(); m++) {
+        const vector<const Oneof *> oneofs = messages_[m]->GetOneofs();
+        for (size_t o = 0; o < oneofs.size(); o++)
+          oneofs[o]->GenerateDeclaration(printer);
+      }
+    }
+
+    /* Generate descriptors for messages */
     if (descriptor_->message_type_count()) {
       PrintBanner(printer, "Descriptors");
 
@@ -278,7 +230,7 @@ namespace protobluff {
     /* Don't generate accessor code for lite runtime */
     if (mode_ != FileOptions::LITE_RUNTIME) {
 
-      /* Generate accessors for messages, if any */
+      /* Generate accessors for messages */
       if (descriptor_->message_type_count()) {
         PrintBanner(printer, "Accessors");
 
@@ -287,7 +239,19 @@ namespace protobluff {
           messages_[m]->GenerateAccessors(printer);
       }
 
-      /* Generate accessors for extensions, if any */
+      /* Generate accessors for oneofs */
+      if (HasOneofs()) {
+        PrintBanner(printer, "Oneof accessors");
+
+        /* Generate accessors for oneofs */
+        for (size_t m = 0; m < descriptor_->message_type_count(); m++) {
+          const vector<const Oneof *> oneofs = messages_[m]->GetOneofs();
+          for (size_t o = 0; o < oneofs.size(); o++)
+            oneofs[o]->GenerateAccessors(printer);
+        }
+      }
+
+      /* Generate accessors for extensions */
       if (HasExtensions()) {
         PrintBanner(printer, "Extension accessors");
 
@@ -332,7 +296,7 @@ namespace protobluff {
       "#include \"`include`.pb.h\"\n"
       "\n");
 
-    /* Generate default values, if any */
+    /* Generate default values */
     if (HasDefaults()) {
       PrintBanner(printer, "Defaults");
 
@@ -353,7 +317,7 @@ namespace protobluff {
       }
     }
 
-    /* Generate descriptors for enums, if any */
+    /* Generate descriptors for enums */
     if (HasEnums()) {
       PrintBanner(printer, "Enum descriptors");
 
@@ -369,7 +333,19 @@ namespace protobluff {
       }
     }
 
-    /* Generate descriptors for messages, if any */
+    /* Generate descriptors for oneofs */
+    if (HasOneofs()) {
+      PrintBanner(printer, "Oneof descriptors");
+
+      /* Generate descriptors for oneofs */
+      for (size_t m = 0; m < descriptor_->message_type_count(); m++) {
+        const vector<const Oneof *> oneofs = messages_[m]->GetOneofs();
+        for (size_t o = 0; o < oneofs.size(); o++)
+          oneofs[o]->GenerateDescriptor(printer);
+      }
+    }
+
+    /* Generate descriptors for messages */
     if (descriptor_->message_type_count()) {
       PrintBanner(printer, "Descriptors");
 
@@ -378,7 +354,7 @@ namespace protobluff {
         messages_[m]->GenerateDescriptor(printer);
     }
 
-    /* Generate descriptors and initializers for extensions, if any */
+    /* Generate descriptors and initializers for extensions */
     if (HasExtensions()) {
       PrintBanner(printer, "Extension descriptors");
 
@@ -409,6 +385,79 @@ namespace protobluff {
           extensions[e]->GenerateInitializer(printer);
       }
     }
+  }
+
+  /*!
+   * Check whether a file's messages define default values.
+   *
+   * \return Test result
+   */
+  bool File::
+  HasDefaults() const {
+    for (size_t m = 0; m < descriptor_->message_type_count(); m++)
+      if (messages_[m]->HasDefaults())
+        return true;
+
+    /* Check extensions for default values */
+    for (size_t e = 0; e < extensions_.size(); e++)
+      if (extensions_[e]->HasDefaults())
+        return true;
+
+    /* No default values */
+    return false;
+  }
+
+  /*!
+   * Check whether a file or its messages define enums.
+   *
+   * \return Test result
+   */
+  bool File::
+  HasEnums() const {
+    if (descriptor_->enum_type_count())
+      return true;
+
+    /* Check messages for enums */
+    for (size_t m = 0; m < descriptor_->message_type_count(); m++)
+      if (messages_[m]->HasEnums())
+        return true;
+
+    /* No enums */
+    return false;
+  }
+
+  /*!
+   * Check whether a file's messages define oneofs.
+   *
+   * \return Test result
+   */
+  bool File::
+  HasOneofs() const {
+    for (size_t m = 0; m < descriptor_->message_type_count(); m++)
+      if (messages_[m]->HasOneofs())
+        return true;
+
+    /* No oneofs */
+    return false;
+  }
+
+  /*!
+   * Check whether a file or its messages define extensions.
+   *
+   * \return Test result
+   */
+  bool File::
+  HasExtensions() const {
+    if (descriptor_->extension_count())
+      return true;
+
+    /* Check messages for extensions */
+    for (size_t m = 0; m < descriptor_->message_type_count(); m++)
+      if (messages_[m]->HasExtensions())
+        return true;
+
+    /* No extensions */
+    return false;
   }
 
   /*!

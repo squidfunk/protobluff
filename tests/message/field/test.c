@@ -37,30 +37,39 @@
  * Defaults
  * ------------------------------------------------------------------------- */
 
+/* Unsigned 32-bit integer default */
 static const uint32_t
 default_uint32 = 1000000000U;
 
+/* Unsigned 64-bit integer default */
 static const uint64_t
 default_uint64 = 1000000000000000000ULL;
 
+/* Signed 32-bit integer default */
 static const int32_t
 default_int32 = -1000000000;
 
+/* Signed 64-bit integer default */
 static const int64_t
 default_int64 = -1000000000000000000LL;
 
+/* Bool default */
 static const uint8_t
 default_bool = 0;
 
+/* Float default */
 static const float
 default_float = 0.0001;
 
+/* Double default */
 static const double
 default_double = 0.00000001;
 
+/* String default */
 static const pb_string_t
 default_string = pb_string_const("DEFAULT");
 
+/* Enum default */
 static const pb_enum_t
 default_enum = 1;
 

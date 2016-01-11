@@ -37,12 +37,25 @@
  * Defaults
  * ------------------------------------------------------------------------- */
 
+/* Float default */
 static const float
 default_float = 0.0001;
 
 /* ----------------------------------------------------------------------------
  * Descriptors
  * ------------------------------------------------------------------------- */
+
+/* Descriptor (forward declaration) */
+static pb_descriptor_t
+descriptor;
+
+/* Oneof descriptor */
+static const pb_oneof_descriptor_t
+oneof_descriptor = {
+  &descriptor, {
+    (const size_t []){
+      10, 11, 12
+    }, 3 } };
 
 /* Descriptor */
 static pb_descriptor_t
@@ -57,8 +70,11 @@ descriptor = { {
     {  7, "F07", DOUBLE,  REPEATED },
     {  8, "F08", STRING,  REPEATED },
     {  9, "F09", MESSAGE, REPEATED, &descriptor },
-    { 10, "F10", MESSAGE, OPTIONAL, &descriptor }
-  }, 10 } };
+    { 10, "F10", MESSAGE, OPTIONAL, &descriptor },
+    { 11, "F11", UINT32,  ONEOF, NULL, &oneof_descriptor },
+    { 12, "F12", UINT32,  ONEOF, NULL, &oneof_descriptor },
+    { 13, "F13", MESSAGE, ONEOF, &descriptor, &oneof_descriptor }
+  }, 13 } };
 
 /* ----------------------------------------------------------------------------
  * Tests
@@ -132,6 +148,10 @@ START_TEST(test_create_packed) {
   pb_message_t message = pb_message_create(&descriptor, &journal);
   pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
 
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
   /* Assert cursor tag and position */
   ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
   ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
@@ -153,6 +173,10 @@ START_TEST(test_create_packed_merged) {
   pb_journal_t journal = pb_journal_create(data, size);
   pb_message_t message = pb_message_create(&descriptor, &journal);
   pb_cursor_t  cursor  = pb_cursor_create(&message, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
   /* Assert cursor tag and position */
   ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
@@ -178,6 +202,10 @@ START_TEST(test_create_packed_nested) {
 
   /* Create cursor */
   pb_cursor_t cursor = pb_cursor_create(&submessage, 3);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
   /* Assert cursor tag and position */
   ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
@@ -230,6 +258,84 @@ START_TEST(test_create_message_invalid) {
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
   pb_message_destroy(&message);
+} END_TEST
+
+/*
+ * Create a cursor over a message for a specific tag that is part of a oneof.
+ */
+START_TEST(test_create_oneof) {
+  const uint8_t data[] = { 8, 1, 88, 1 };
+  const size_t  size   = 4;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 11);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Assert cursor tag and position */
+  ck_assert_uint_eq(11, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Create a cursor over a message for a specific tag that is part of a oneof.
+ */
+START_TEST(test_create_oneof_absent) {
+  const uint8_t data[] = { 8, 1 };
+  const size_t  size   = 2;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 11);
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Assert cursor tag and position */
+  ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Create a cursor over a message for a specific tag that is part of a oneof.
+ */
+START_TEST(test_create_oneof_merged) {
+  const uint8_t data[] = { 88, 1, 96, 2, 106, 0 };
+  const size_t  size   = 6;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 11);
+
+  /* Assert cursor validity and error */
+  fail_if(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
+
+  /* Assert cursor tag and position */
+  ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
+  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
 } END_TEST
 
 /*
@@ -529,7 +635,7 @@ START_TEST(test_next) {
 } END_TEST
 
 /*
- * Move a cursor to the next field.
+ * Move a cursor to the next packed field.
  */
 START_TEST(test_next_packed) {
   const uint8_t data[] = { 26, 4, 1, 2, 3, 4 };
@@ -587,7 +693,7 @@ START_TEST(test_next_packed) {
 } END_TEST
 
 /*
- * Move a cursor to the next field in a merged message.
+ * Move a cursor to the next packed field in a merged message.
  */
 START_TEST(test_next_packed_merged) {
   const uint8_t data[] = { 26, 2, 1, 2, 8, 1, 26, 2, 3, 4 };
@@ -641,7 +747,7 @@ START_TEST(test_next_packed_merged) {
 } END_TEST
 
 /*
- * Move a cursor to the next field.
+ * Move a cursor to the next packed field in a nested message.
  */
 START_TEST(test_next_packed_nested) {
   const uint8_t data[] = { 82, 6, 26, 4, 1, 2, 3, 4 };
@@ -703,7 +809,7 @@ START_TEST(test_next_packed_nested) {
 } END_TEST
 
 /*
- * Move a cursor to the next field.
+ * Move a cursor to the next field with wire-only packed encoding.
  */
 START_TEST(test_next_packed_wireonly) {
   const uint8_t data[] = { 10, 4, 1, 2, 3, 4 };
@@ -1076,7 +1182,7 @@ START_TEST(test_rewind) {
 } END_TEST
 
 /*
- * Move a cursor to the first occurrence of a field.
+ * Move a cursor to the first occurrence of a packed field.
  */
 START_TEST(test_rewind_packed) {
   const uint8_t data[] = { 26, 4, 1, 2, 3, 4 };
@@ -1125,7 +1231,7 @@ START_TEST(test_rewind_packed) {
 } END_TEST
 
 /*
- * Move a cursor to the first occurrence of a field.
+ * Move a cursor to the first occurrence of a packed field in a merged message.
  */
 START_TEST(test_rewind_packed_merged) {
   const uint8_t data[] = { 26, 4, 1, 2, 3, 4, 26, 2, 5, 6 };
@@ -1174,7 +1280,7 @@ START_TEST(test_rewind_packed_merged) {
 } END_TEST
 
 /*
- * Move a cursor to the first occurrence of a field.
+ * Move a cursor to the first occurrence of a packed field in a nested message.
  */
 START_TEST(test_rewind_packed_nested) {
   const uint8_t data[] = { 82, 6, 26, 4, 1, 2, 3, 4 };
@@ -1657,7 +1763,7 @@ START_TEST(test_seek_invalid_tag) {
   /* Create journal, message and cursor */
   pb_journal_t journal = pb_journal_create(data, size);
   pb_message_t message = pb_message_create(&descriptor, &journal);
-  pb_cursor_t  cursor  = pb_cursor_create(&message, 11);
+  pb_cursor_t  cursor  = pb_cursor_create(&message, 127);
 
   /* Assert cursor validity and error */
   fail_if(pb_cursor_valid(&cursor));
@@ -1716,7 +1822,7 @@ START_TEST(test_seek_invalid_type) {
 } END_TEST
 
 /*
- * Compare the value of the current field of a cursor with the given value.
+ * Compare the value of the current field of a cursor.
  */
 START_TEST(test_match) {
   const uint8_t data[] = { 16, 1, 16, 2, 16, 3, 16, 4 };
@@ -1760,7 +1866,7 @@ START_TEST(test_match) {
 } END_TEST
 
 /*
- * Compare the value of the current field of a cursor with the given value.
+ * Compare the value of the current packed field of a cursor.
  */
 START_TEST(test_match_packed) {
   const uint8_t data[] = { 26, 4, 1, 2, 3, 4 };
@@ -1804,7 +1910,7 @@ START_TEST(test_match_packed) {
 } END_TEST
 
 /*
- * Compare the value of the current field of a cursor with the given value.
+ * Compare the value of the current field of a cursor in a merged message.
  */
 START_TEST(test_match_packed_merged) {
   const uint8_t data[] = { 26, 2, 1, 2, 8, 1, 26, 2, 3, 4 };
@@ -1848,7 +1954,7 @@ START_TEST(test_match_packed_merged) {
 } END_TEST
 
 /*
- * Compare the value of the current field of a cursor with the given value.
+ * Compare the value of the current field of a cursor in a nested message.
  */
 START_TEST(test_match_packed_nested) {
   const uint8_t data[] = { 82, 6, 26, 4, 1, 2, 3, 4 };
@@ -1896,7 +2002,7 @@ START_TEST(test_match_packed_nested) {
 } END_TEST
 
 /*
- * Compare the value of the current field of a cursor with the given value.
+ * Compare the value of the current field of a cursor in an invalid message.
  */
 START_TEST(test_match_packed_invalid) {
   const uint8_t data[] = { 26, 1, 128 };
@@ -1922,7 +2028,7 @@ START_TEST(test_match_packed_invalid) {
 } END_TEST
 
 /*
- * Compare the value of a string field of a cursor with the given value.
+ * Compare the value of a string field of a cursor.
  */
 START_TEST(test_match_string) {
   const uint8_t data[] = { 66, 7, 68, 69, 70, 65, 85, 76, 84,
@@ -2025,11 +2131,11 @@ START_TEST(test_match_invalid) {
 } END_TEST
 
 /*
- * Compare the value of the current field with an invalid tag.
+ * Compare the value of the current field of a cursor with an invalid tag.
  */
 START_TEST(test_match_invalid_tag) {
-  const uint8_t data[] = { 88, 1 };
-  const size_t  size   = 2;
+  const uint8_t data[] = { 248, 7, 1 };
+  const size_t  size   = 3;
 
   /* Create journal, message and cursor */
   pb_journal_t journal = pb_journal_create(data, size);
@@ -2059,7 +2165,7 @@ START_TEST(test_match_invalid_tag) {
 } END_TEST
 
 /*
- * Compare the value of the current field with an invalid type.
+ * Compare the value of the current field of a cursor with an invalid type.
  */
 START_TEST(test_match_invalid_type) {
   const uint8_t data[] = { 74, 0 };
@@ -2277,7 +2383,7 @@ START_TEST(test_get_packed_nested) {
 } END_TEST
 
 /*
- * Read the value of the current field from a cursor.
+ * Read the value of the current packed field from an invalid cursor.
  */
 START_TEST(test_get_packed_invalid) {
   const uint8_t data[] = { 26, 1, 128 };
@@ -2411,8 +2517,8 @@ START_TEST(test_get_invalid) {
  * Read the value of the current field with an invalid tag from a cursor.
  */
 START_TEST(test_get_invalid_tag) {
-  const uint8_t data[] = { 88, 1 };
-  const size_t  size   = 2;
+  const uint8_t data[] = { 248, 7, 1 };
+  const size_t  size   = 3;
 
   /* Create journal, message and cursor */
   pb_journal_t journal = pb_journal_create(data, size);
@@ -2524,7 +2630,7 @@ START_TEST(test_put) {
 } END_TEST
 
 /*
- * Write a value to the current field of a cursor.
+ * Write a value to the current packed field of a cursor.
  */
 START_TEST(test_put_packed) {
   const uint8_t data[] = { 26, 4, 1, 2, 3, 4 };
@@ -2572,7 +2678,7 @@ START_TEST(test_put_packed) {
 } END_TEST
 
 /*
- * Write a value to the current field in a merged message of a cursor.
+ * Write a value to the current packed field in a merged message of a cursor.
  */
 START_TEST(test_put_packed_merged) {
   const uint8_t data[] = { 26, 2, 1, 2, 8, 1, 26, 2, 3, 4 };
@@ -2620,7 +2726,7 @@ START_TEST(test_put_packed_merged) {
 } END_TEST
 
 /*
- * Write a value to the current field in a nested message of a cursor.
+ * Write a value to the current packed field in a nested message of a cursor.
  */
 START_TEST(test_put_packed_nested) {
   const uint8_t data[] = { 82, 6, 26, 4, 1, 2, 3, 4 };
@@ -2672,7 +2778,7 @@ START_TEST(test_put_packed_nested) {
 } END_TEST
 
 /*
- * Write a value to the current field of a cursor.
+ * Write a value to the current packed field of an invalid cursor.
  */
 START_TEST(test_put_packed_invalid) {
   const uint8_t data[] = { 26, 1, 128 };
@@ -2690,47 +2796,6 @@ START_TEST(test_put_packed_invalid) {
   /* Read value from cursor */
   uint32_t value = 1000;
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_put(&cursor, &value));
-
-  /* Free all allocated memory */
-  pb_cursor_destroy(&cursor);
-  pb_message_destroy(&message);
-  pb_journal_destroy(&journal);
-} END_TEST
-
-/*
- * Write a value to the current field of an unaligned cursor.
- */
-START_TEST(test_put_unaligned) {
-  const uint8_t data[] = { 16, 1, 16, 2, 16, 3, 16, 4 };
-  const size_t  size   = 8;
-
-  /* Create journal, message and cursor */
-  pb_journal_t journal = pb_journal_create(data, size);
-  pb_message_t message = pb_message_create(&descriptor, &journal);
-  pb_cursor_t  cursor  = pb_cursor_create_unsafe(&message, 2);
-
-  /* Assert cursor validity and error */
-  fail_unless(pb_cursor_valid(&cursor));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
-
-  /* Create field at current cursor position */
-  pb_field_t field = pb_field_create_from_cursor(&cursor);
-
-  /* Assert field validity and error */
-  fail_unless(pb_field_valid(&field));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_field_error(&field));
-
-  /* Write value to field */
-  uint64_t value = 127, check = 0;
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_field_put(&field, &value));
-
-  /* Write value to cursor */
-  value = 65535;
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_put(&cursor, &value));
-
-  /* Read value from cursor */
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &check));
-  ck_assert_uint_eq(value, check);
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -2886,6 +2951,47 @@ START_TEST(test_put_message_invalid) {
 } END_TEST
 
 /*
+ * Write a value to the current field of an unaligned cursor.
+ */
+START_TEST(test_put_unaligned) {
+  const uint8_t data[] = { 16, 1, 16, 2, 16, 3, 16, 4 };
+  const size_t  size   = 8;
+
+  /* Create journal, message and cursor */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_cursor_t  cursor  = pb_cursor_create_unsafe(&message, 2);
+
+  /* Assert cursor validity and error */
+  fail_unless(pb_cursor_valid(&cursor));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
+
+  /* Create field at current cursor position */
+  pb_field_t field = pb_field_create_from_cursor(&cursor);
+
+  /* Assert field validity and error */
+  fail_unless(pb_field_valid(&field));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_field_error(&field));
+
+  /* Write value to field */
+  uint64_t value = 127, check = 0;
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_field_put(&field, &value));
+
+  /* Write value to cursor */
+  value = 65535;
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_put(&cursor, &value));
+
+  /* Read value from cursor */
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &check));
+  ck_assert_uint_eq(value, check);
+
+  /* Free all allocated memory */
+  pb_cursor_destroy(&cursor);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
  * Write a value to the current field of an invalid cursor.
  */
 START_TEST(test_put_invalid) {
@@ -2911,8 +3017,8 @@ START_TEST(test_put_invalid) {
  * Write a value to the current field with an invalid tag of a cursor.
  */
 START_TEST(test_put_invalid_tag) {
-  const uint8_t data[] = { 88, 1 };
-  const size_t  size   = 2;
+  const uint8_t data[] = { 248, 7, 1 };
+  const size_t  size   = 3;
 
   /* Create journal, message and cursor */
   pb_journal_t journal = pb_journal_create(data, size);
@@ -2990,7 +3096,7 @@ START_TEST(test_erase) {
 } END_TEST
 
 /*
- * Erase the current field from a cursor.
+ * Erase the current packed field from a cursor.
  */
 START_TEST(test_erase_packed) {
   const uint8_t data[] = { 8, 1, 26, 4, 1, 2, 3, 4 };
@@ -3039,7 +3145,7 @@ START_TEST(test_erase_packed) {
 } END_TEST
 
 /*
- * Erase the current field in a merged message from a cursor.
+ * Erase the current packed field in a merged message from a cursor.
  */
 START_TEST(test_erase_packed_merged) {
   const uint8_t data[] = { 26, 4, 1, 2, 3, 4, 8, 1, 26, 2, 5, 6 };
@@ -3088,7 +3194,7 @@ START_TEST(test_erase_packed_merged) {
 } END_TEST
 
 /*
- * Erase the current field in a nested message from a cursor.
+ * Erase the current packed field in a nested message from a cursor.
  */
 START_TEST(test_erase_packed_nested) {
   const uint8_t data[] = { 82, 8, 8, 1, 26, 4, 1, 2, 3, 4 };
@@ -3141,7 +3247,7 @@ START_TEST(test_erase_packed_nested) {
 } END_TEST
 
 /*
- * Erase the current field from a cursor.
+ * Erase the current packed field from an invalid cursor.
  */
 START_TEST(test_erase_packed_invalid) {
   const uint8_t data[] = { 26, 1, 128 };
@@ -3368,8 +3474,8 @@ START_TEST(test_erase_invalid) {
  * Erase the current field or submessage with an invalid tag from a cursor.
  */
 START_TEST(test_erase_invalid_tag) {
-  const uint8_t data[] = { 88, 1 };
-  const size_t  size   = 2;
+  const uint8_t data[] = { 248, 7, 1 };
+  const size_t  size   = 3;
 
   /* Create journal, message and cursor */
   pb_journal_t journal = pb_journal_create(data, size);
@@ -3604,8 +3710,8 @@ START_TEST(test_raw_invalid) {
  * Retrieve a pointer for a field with an invalid tag from a cursor.
  */
 START_TEST(test_raw_invalid_tag) {
-  const uint8_t data[] = { 88, 1 };
-  const size_t  size   = 2;
+  const uint8_t data[] = { 248, 7, 1 };
+  const size_t  size   = 3;
 
   /* Create journal, message and cursor */
   pb_journal_t journal = pb_journal_create(data, size);
@@ -3749,6 +3855,9 @@ main(void) {
   tcase_add_test(tcase, test_create_packed_nested);
   tcase_add_test(tcase, test_create_message_empty);
   tcase_add_test(tcase, test_create_message_invalid);
+  tcase_add_test(tcase, test_create_oneof);
+  tcase_add_test(tcase, test_create_oneof_absent);
+  tcase_add_test(tcase, test_create_oneof_merged);
   tcase_add_test(tcase, test_create_without_tag);
   tcase_add_test(tcase, test_create_without_tag_message_empty);
   tcase_add_test(tcase, test_create_without_tag_message_invalid);

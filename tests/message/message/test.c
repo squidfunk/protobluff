@@ -83,9 +83,9 @@ descriptor;
 static const pb_oneof_descriptor_t
 oneof_descriptor = {
   &descriptor, {
-  (const size_t []){
-    12, 13, 14
-  }, 3 } };
+    (const size_t []){
+      12, 13, 14
+    }, 3 } };
 
 /* Descriptor */
 static pb_descriptor_t
@@ -105,7 +105,7 @@ descriptor = { {
     { 12, "F12", MESSAGE, REPEATED, &descriptor },
     { 13, "F13", UINT32,  ONEOF, NULL, &oneof_descriptor },
     { 14, "F14", UINT32,  ONEOF, NULL, &oneof_descriptor },
-    { 15, "F15", MESSAGE, ONEOF, &descriptor, &oneof_descriptor },
+    { 15, "F15", MESSAGE, ONEOF, &descriptor, &oneof_descriptor }
   }, 15 } };
 
 /* ----------------------------------------------------------------------------
