@@ -1,6 +1,14 @@
-protobluff-0.5.0 (2016-01-xx)
+protobluff-0.5.0 (2016-01-11)
 
-  In progress
+  This release adds support for oneofs. protobluff now implements all features
+  of the Protocol Buffers 2 specification, except groups (which are deprecated)
+  and generic services which are highly implementation- and protocol-dependent.
+  However, there may be a GRPC-based service implementation in the future.
+
+  This is the last release before bumping the version to 1.0.0. proto3 support
+  is basically possible (and not that complicated to implement), and may also
+  be something that is added in the future. The libtool version has been
+  updated to 4.0.0, due to the renaming of some descriptor-related functions.
 
   Runtime:
 
