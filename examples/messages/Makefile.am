@@ -51,7 +51,7 @@ install:
 install-strip:
 
 # -----------------------------------------------------------------------------
-# Generate Protocol Buffer bindings
+# Generate Protocol Buffers bindings
 # -----------------------------------------------------------------------------
 
 # Invoke protoc compiler on *.proto files
