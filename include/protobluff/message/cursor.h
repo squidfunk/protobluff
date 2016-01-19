@@ -107,11 +107,6 @@ PB_EXPORT pb_error_t
 pb_cursor_erase(
   pb_cursor_t *cursor);                /* Cursor */
 
-PB_DEPRECATED
-PB_EXPORT void *
-pb_cursor_raw(
-  pb_cursor_t *cursor);                /* Cursor */
-
 /* ----------------------------------------------------------------------------
  * Macros
  * ------------------------------------------------------------------------- */

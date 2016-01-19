@@ -5,6 +5,7 @@ protobluff-1.0.0 (2016-xx-xx)
   Runtime:
 
   * Removed pb_cursor_pos() (deprecated in 0.4.0)
+  * Removed raw pointer access (deprecated in 0.4.0)
 
 protobluff-0.5.0 (2016-01-11)
 

@@ -3072,112 +3072,6 @@ START_TEST(test_clear_invalid) {
 } END_TEST
 
 /*
- * Retrieve a pointer to the raw data for a given tag from a message.
- */
-START_TEST(test_raw) {
-  pb_journal_t journal = pb_journal_create_empty();
-  pb_message_t message = pb_message_create(&descriptor, &journal);
-
-  /* Write value to message */
-  double value = 1000000.0;
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_put(&message, 7, &value));
-
-  /* Align message to perform checks */
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_align(&message));
-
-  /* Obtain and change raw data */
-  double *raw = pb_message_raw(&message, 7);
-  ck_assert_ptr_ne(NULL, raw);
-  fail_if(memcmp(raw, &value, sizeof(double)));
-  *raw = 0.123456789;
-
-  /* Read new value from message */
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_get(&message, 7, &value));
-  fail_if(memcmp(raw, &value, sizeof(double)));
-
-  /* Assert message validity and error */
-  fail_unless(pb_message_valid(&message));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
-
-  /* Free all allocated memory */
-  pb_message_destroy(&message);
-  pb_journal_destroy(&journal);
-} END_TEST
-
-/*
- * Retrieve a pointer to the raw data for a given tag from a message.
- */
-START_TEST(test_raw_default) {
-  pb_journal_t journal = pb_journal_create_empty();
-  pb_message_t message = pb_message_create(&descriptor, &journal);
-
-  /* Read default value from message */
-  double value = 0.0;
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_get(&message, 7, &value));
-  fail_if(memcmp(&default_double, &value, sizeof(double)));
-
-  /* Obtain raw data */
-  double *raw = pb_message_raw(&message, 7);
-  ck_assert_ptr_eq(NULL, raw);
-
-  /* Assert message validity and error */
-  fail_unless(pb_message_valid(&message));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
-
-  /* Free all allocated memory */
-  pb_message_destroy(&message);
-  pb_journal_destroy(&journal);
-} END_TEST
-
-/*
- * Retrieve a pointer to the raw data from an unaligned message.
- */
-START_TEST(test_raw_unaligned) {
-  pb_journal_t journal = pb_journal_create_empty();
-  pb_message_t message = pb_message_create(&descriptor, &journal);
-
-  /* Write value to message */
-  double value = 1000000.0;
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_put(&message, 7, &value));
-
-  /* Obtain and change raw data */
-  double *raw = pb_message_raw(&message, 7);
-  ck_assert_ptr_ne(NULL, raw);
-  fail_if(memcmp(raw, &value, sizeof(double)));
-  *raw = 0.123456789;
-
-  /* Read new value from message */
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_get(&message, 7, &value));
-  fail_if(memcmp(raw, &value, sizeof(double)));
-
-  /* Assert message validity and error */
-  fail_unless(pb_message_valid(&message));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
-
-  /* Free all allocated memory */
-  pb_message_destroy(&message);
-  pb_journal_destroy(&journal);
-} END_TEST
-
-/*
- * Retrieve a pointer to the raw data for a given tag from an invalid message.
- */
-START_TEST(test_raw_invalid) {
-  pb_message_t message = pb_message_create_invalid();
-
-  /* Assert message validity and error */
-  fail_if(pb_message_valid(&message));
-  ck_assert_uint_eq(PB_ERROR_INVALID, pb_message_error(&message));
-
-  /* Obtain raw data */
-  double *raw = pb_message_raw(&message, 7);
-  ck_assert_ptr_eq(NULL, raw);
-
-  /* Free all allocated memory */
-  pb_message_destroy(&message);
-} END_TEST
-
-/*
  * Ensure that a message is properly aligned.
  */
 START_TEST(test_align) {
@@ -3350,14 +3244,6 @@ main(void) {
   tcase_add_test(tcase, test_clear_message_nested_inside_out);
   tcase_add_test(tcase, test_clear_unaligned);
   tcase_add_test(tcase, test_clear_invalid);
-  suite_add_tcase(suite, tcase);
-
-  /* Add tests to test case "raw" */
-  tcase = tcase_create("raw");
-  tcase_add_test(tcase, test_raw);
-  tcase_add_test(tcase, test_raw_default);
-  tcase_add_test(tcase, test_raw_unaligned);
-  tcase_add_test(tcase, test_raw_invalid);
   suite_add_tcase(suite, tcase);
 
   /* Add tests to test case "align" */

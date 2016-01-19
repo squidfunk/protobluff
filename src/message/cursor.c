@@ -529,39 +529,6 @@ pb_cursor_erase(pb_cursor_t *cursor) {
 }
 
 /*!
- * Retrieve a pointer to the raw data of the current field from a cursor.
- *
- * \warning Operating on the raw data of a journal is insanely dangerous and
- * only recommended for 32- and 64-bit fixed-size fields on zero-copy journals.
- * If the underlying journal is altered, the pointer silently loses its
- * validity. All following operations will quietly corrupt the journal.
- *
- * \warning If a cursor is created without a tag, the caller is obliged to
- * check the current tag before reading or altering the value in any way.
- *
- * \param[in,out] cursor Cursor
- * \return               Raw data
- */
-extern void *
-pb_cursor_raw(pb_cursor_t *cursor) {
-  assert(cursor);
-  void *value = NULL;
-
-  /* Retrieve and check descriptor for current tag */
-  if (pb_cursor_valid(cursor)) {
-    const pb_field_descriptor_t *descriptor = cursor->current.descriptor;
-
-    /* Create field and return pointer to raw data */
-    if (pb_field_descriptor_type(descriptor) != PB_TYPE_MESSAGE) {
-      pb_field_t field = pb_field_create_from_cursor(cursor);
-      value = pb_field_raw(&field);
-      pb_field_destroy(&field);
-    }
-  }
-  return value;
-}
-
-/*!
  * Ensure that a cursor is properly aligned.
  *
  * This is less of a trivial issue than one might think at first, since the

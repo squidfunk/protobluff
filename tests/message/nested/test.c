@@ -1008,109 +1008,6 @@ START_TEST(test_erase_invalid) {
   pb_message_destroy(&message);
 } END_TEST
 
-/*
- * Retrieve a pointer to the raw data for a branch of tags from a message.
- */
-START_TEST(test_raw) {
-  pb_journal_t journal = pb_journal_create_empty();
-  pb_message_t message = pb_message_create(&descriptor, &journal);
-
-  /* Create tags */
-  pb_tag_t tags[102] = {};
-  for (size_t t = 0; t < 101; t++)
-    tags[t] = 11;
-  tags[101] = 7;
-
-  /* Write value to nested submessage */
-  double value = 1000000.0;
-  ck_assert_uint_eq(PB_ERROR_NONE,
-    pb_message_nested_put(&message, tags, 102, &value));
-
-  /* Align message to perform checks */
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_align(&message));
-
-  /* Obtain and change raw data */
-  double *raw = pb_message_nested_raw(&message, tags, 102);
-  ck_assert_ptr_ne(NULL, raw);
-  fail_if(memcmp(raw, &value, sizeof(double)));
-  *raw = 0.123456789;
-
-  /* Read new value from nested submessage */
-  ck_assert_uint_eq(PB_ERROR_NONE,
-    pb_message_nested_get(&message, tags, 102, &value));
-  fail_if(memcmp(raw, &value, sizeof(double)));
-
-  /* Assert message validity and error */
-  fail_unless(pb_message_valid(&message));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
-
-  /* Free all allocated memory */
-  pb_message_destroy(&message);
-  pb_journal_destroy(&journal);
-} END_TEST
-
-/*
- * Retrieve a pointer to the raw data from an unaligned nested message.
- */
-START_TEST(test_raw_unaligned) {
-  pb_journal_t journal = pb_journal_create_empty();
-  pb_message_t message = pb_message_create(&descriptor, &journal);
-
-  /* Create tags */
-  pb_tag_t tags[102] = {};
-  for (size_t t = 0; t < 101; t++)
-    tags[t] = 11;
-  tags[101] = 7;
-
-  /* Write value to nested submessage */
-  double value = 1000000.0;
-  ck_assert_uint_eq(PB_ERROR_NONE,
-    pb_message_nested_put(&message, tags, 102, &value));
-
-  /* Obtain and change raw data */
-  double *raw = pb_message_nested_raw(&message, tags, 102);
-  ck_assert_ptr_ne(NULL, raw);
-  fail_if(memcmp(raw, &value, sizeof(double)));
-  *raw = 0.123456789;
-
-  /* Read new value from nested submessage */
-  ck_assert_uint_eq(PB_ERROR_NONE,
-    pb_message_nested_get(&message, tags, 102, &value));
-  fail_if(memcmp(raw, &value, sizeof(double)));
-
-  /* Assert message validity and error */
-  fail_unless(pb_message_valid(&message));
-  ck_assert_uint_eq(PB_ERROR_NONE, pb_message_error(&message));
-
-  /* Free all allocated memory */
-  pb_message_destroy(&message);
-  pb_journal_destroy(&journal);
-} END_TEST
-
-/*
- * Retrieve a pointer to the raw data from an invalid nested message.
- */
-START_TEST(test_raw_invalid) {
-  pb_message_t message = pb_message_create_invalid();
-
-  /* Assert message validity and error */
-  fail_if(pb_message_valid(&message));
-  ck_assert_uint_eq(PB_ERROR_INVALID, pb_message_error(&message));
-
-  /* Create tags */
-  pb_tag_t tags[102] = {};
-  for (size_t t = 0; t < 101; t++)
-    tags[t] = 11;
-  tags[101] = 2;
-
-  /* Obtain and change raw data */
-  double *raw = pb_message_nested_raw(&message, tags, 102);
-  ck_assert_ptr_eq(NULL, raw);
-
-  /* Free all allocated memory */
-  pb_message_destroy(&message);
-} END_TEST
-
 /* ----------------------------------------------------------------------------
  * Program
  * ------------------------------------------------------------------------- */
@@ -1171,13 +1068,6 @@ main(void) {
   tcase_add_test(tcase, test_erase_message);
   tcase_add_test(tcase, test_erase_unaligned);
   tcase_add_test(tcase, test_erase_invalid);
-  suite_add_tcase(suite, tcase);
-
-  /* Add tests to test case "raw" */
-  tcase = tcase_create("raw");
-  tcase_add_test(tcase, test_raw);
-  tcase_add_test(tcase, test_raw_unaligned);
-  tcase_add_test(tcase, test_raw_invalid);
   suite_add_tcase(suite, tcase);
 
   /* Create a test suite runner in no-fork mode */

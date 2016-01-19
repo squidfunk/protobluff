@@ -125,12 +125,6 @@ PB_EXPORT pb_error_t
 pb_message_clear(
   pb_message_t *message);              /* Message */
 
-PB_DEPRECATED
-PB_EXPORT void *
-pb_message_raw(
-  pb_message_t *message,               /* Message */
-  pb_tag_t tag);                       /* Tag */
-
 /* ----------------------------------------------------------------------------
  * Inline functions
  * ------------------------------------------------------------------------- */

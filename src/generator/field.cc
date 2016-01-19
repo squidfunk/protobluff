@@ -571,30 +571,6 @@ namespace protobluff {
         "  return pb_message_erase(message, `tag`);\n"
         "}\n"
         "\n");
-
-    /* Generate accessors for fixed-sized fields */
-    switch (descriptor_->type()) {
-      case FieldDescriptor::TYPE_FIXED32:
-      case FieldDescriptor::TYPE_FIXED64:
-      case FieldDescriptor::TYPE_SFIXED32:
-      case FieldDescriptor::TYPE_SFIXED64:
-      case FieldDescriptor::TYPE_FLOAT:
-      case FieldDescriptor::TYPE_DOUBLE:
-        printer->Print(variables_,
-          "/* `signature` : raw */\n"
-          "PB_DEPRECATED\n"
-          "PB_INLINE `cpp_type` *\n"
-          "`message`_raw_`field`(\n"
-          "    pb_message_t *message) {\n"
-          "  assert(pb_message_descriptor(message) == \n"
-          "    &`message`_descriptor);\n"
-          "  return pb_message_raw(message, `tag`);\n"
-          "}\n"
-          "\n");
-        break;
-      default:
-        break;
-    }
   }
 
   /*!
@@ -792,31 +768,6 @@ namespace protobluff {
         "    `tag`);\n"
         "}\n"
         "\n");
-
-    /* Generate accessors for fixed-sized fields */
-    switch (descriptor_->type()) {
-      case FieldDescriptor::TYPE_FIXED32:
-      case FieldDescriptor::TYPE_FIXED64:
-      case FieldDescriptor::TYPE_SFIXED32:
-      case FieldDescriptor::TYPE_SFIXED64:
-      case FieldDescriptor::TYPE_FLOAT:
-      case FieldDescriptor::TYPE_DOUBLE:
-        printer->Print(variables,
-          "/* `signature` : raw */\n"
-          "PB_DEPRECATED\n"
-          "PB_INLINE `cpp_type` *\n"
-          "`message`_raw_`field`(\n"
-          "    pb_message_t *message) {\n"
-          "  assert(pb_message_descriptor(message) == \n"
-          "    &`message`_descriptor);\n"
-          "  return pb_message_nested_raw(message,\n"
-          "    `tag`);\n"
-          "}\n"
-          "\n");
-        break;
-      default:
-        break;
-    }
   }
 
   /*!

@@ -196,7 +196,7 @@ pb_field_destroy(pb_field_t *field) {
 /*!
  * Compare the value of a field with the given value.
  *
- * 32-bit and 64-bit fixed-size fields can be compared by raw pointer, all
+ * 32-bit and 64-bit fixed-size fields can be compared by raw pointer, all      // TODO: fix
  * other types must be read explicitly.
  *
  * \warning The caller has to ensure that the space pointed to by the value
@@ -214,8 +214,8 @@ pb_field_match(pb_field_t *field, const void *value) {
 
   /* Directly compare fixed-size fields */
   size_t size = pb_field_descriptor_type_size(field->descriptor);
-  if (pb_field_descriptor_wiretype(field->descriptor) & PB_WIRETYPE_64BIT)
-    return !memcmp(value, pb_field_raw(field), size);
+  // if (pb_field_descriptor_wiretype(field->descriptor) & PB_WIRETYPE_64BIT)   // TODO: fix
+  //   return !memcmp(value, pb_field_raw(field), size);
 
   /* Allocate temporary space for type-agnostic comparison */
   void *temp = alloca(size);
@@ -336,23 +336,4 @@ extern pb_error_t
 pb_field_clear(pb_field_t *field) {
   assert(field);
   return pb_part_clear(&(field->part));
-}
-
-/*!
- * Retrieve a pointer to the raw data of a field.
- *
- * \warning Operating on the raw data of a journal is insanely dangerous and
- * only recommended for 32- and 64-bit fixed-size fields on zero-copy journals.
- * If the underlying journal is altered, the pointer silently loses its
- * validity. All following operations will quietly corrupt the journal.
- *
- * \param[in,out] field Field
- * \return              Raw data
- */
-extern void *
-pb_field_raw(pb_field_t *field) {
-  assert(field);
-  return pb_field_valid(field) && !pb_field_align(field)
-    ? pb_journal_data_from(pb_field_journal(field), pb_field_start(field))
-    : NULL;
 }

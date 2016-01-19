@@ -68,11 +68,4 @@ pb_message_nested_erase(
   const pb_tag_t tags[],               /* Tags */
   size_t size);                        /* Tag count */
 
-PB_DEPRECATED
-PB_EXPORT void *
-pb_message_nested_raw(
-  pb_message_t *message,               /* Message */
-  const pb_tag_t tags[],               /* Tags */
-  size_t size);                        /* Tag count */
-
 #endif /* PB_INCLUDE_MESSAGE_NESTED_H */

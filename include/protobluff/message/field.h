@@ -95,11 +95,6 @@ PB_EXPORT pb_error_t
 pb_field_clear(
   pb_field_t *field);                  /* Field */
 
-PB_DEPRECATED
-PB_EXPORT void *
-pb_field_raw(
-  pb_field_t *field);                  /* Field */
-
 /* ----------------------------------------------------------------------------
  * Inline functions
  * ------------------------------------------------------------------------- */

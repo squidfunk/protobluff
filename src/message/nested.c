@@ -225,28 +225,3 @@ pb_message_nested_erase(
   pb_cursor_destroy(&cursor);
   return error;
 }
-
-/*!
- * Retrieve a pointer to the raw data for a branch of tags from a message.
- *
- * \param[in,out] message Message
- * \param[in]     tags[]  Tags
- * \param[in]     size    Tag count
- * \return                Error code
- */
-extern void *
-pb_message_nested_raw(
-    pb_message_t *message, const pb_tag_t tags[], size_t size) {
-  assert(message && tags && size > 1);
-  void *value = NULL;
-
-  /* Use cursor to omit field creation */
-  pb_cursor_t cursor = resolve(message, tags, --size);
-  if (pb_cursor_valid(&cursor)) {
-    pb_message_t submessage = pb_message_create_from_cursor(&cursor);
-    value = pb_message_raw(&submessage, tags[size]);
-    pb_message_destroy(&submessage);
-  }
-  pb_cursor_destroy(&cursor);
-  return value;
-}
