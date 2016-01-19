@@ -96,9 +96,8 @@ START_TEST(test_create) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(1, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Assert same contents but different location */
   fail_unless(pb_message_equals(&message, pb_cursor_message(&cursor)));
@@ -126,9 +125,8 @@ START_TEST(test_create_absent) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -152,9 +150,8 @@ START_TEST(test_create_packed) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -178,9 +175,8 @@ START_TEST(test_create_packed_merged) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -207,9 +203,8 @@ START_TEST(test_create_packed_nested) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -230,9 +225,8 @@ START_TEST(test_create_message_empty) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -251,9 +245,8 @@ START_TEST(test_create_message_invalid) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -276,9 +269,8 @@ START_TEST(test_create_oneof) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(11, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -302,9 +294,8 @@ START_TEST(test_create_oneof_absent) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -328,9 +319,8 @@ START_TEST(test_create_oneof_merged) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -354,9 +344,8 @@ START_TEST(test_create_without_tag) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(1, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Assert same contents but different location */
   fail_unless(pb_message_equals(&message, pb_cursor_message(&cursor)));
@@ -380,9 +369,8 @@ START_TEST(test_create_without_tag_message_empty) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -401,9 +389,8 @@ START_TEST(test_create_without_tag_message_invalid) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -453,9 +440,8 @@ START_TEST(test_create_nested) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(1, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f, pb_cursor_pos(&cursor));
   }
 
   /* Assert cursor validity and error */
@@ -491,9 +477,8 @@ START_TEST(test_create_nested_invalid) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -510,9 +495,8 @@ START_TEST(test_create_invalid) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -534,9 +518,8 @@ START_TEST(test_create_invalid_tag) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -561,9 +544,8 @@ START_TEST(test_copy) {
   fail_unless(pb_cursor_valid(&copy));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&copy));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(1, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&copy);
@@ -612,9 +594,8 @@ START_TEST(test_next) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(2, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -670,9 +651,8 @@ START_TEST(test_next_packed) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -724,9 +704,8 @@ START_TEST(test_next_packed_merged) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -785,9 +764,8 @@ START_TEST(test_next_packed_nested) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -844,9 +822,8 @@ START_TEST(test_next_packed_wireonly) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(1, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -908,7 +885,6 @@ START_TEST(test_next_length) {
 
     /* Assert cursor tag and position */
     ck_assert_uint_eq(9, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(m - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -972,9 +948,8 @@ START_TEST(test_next_unaligned) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(4, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Free all allocated memory */
     pb_field_destroy(&field);
@@ -1003,9 +978,8 @@ START_TEST(test_next_invalid) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -1027,9 +1001,8 @@ START_TEST(test_next_invalid_data) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_OFFSET, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -1053,9 +1026,8 @@ START_TEST(test_next_invalid_tag) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_VARINT, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -1079,9 +1051,8 @@ START_TEST(test_next_invalid_length) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_VARINT, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -1105,9 +1076,8 @@ START_TEST(test_next_invalid_length_data) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_VARINT, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -1159,9 +1129,8 @@ START_TEST(test_rewind) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(2, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -1211,9 +1180,8 @@ START_TEST(test_rewind_packed) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -1260,9 +1228,8 @@ START_TEST(test_rewind_packed_merged) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -1312,9 +1279,8 @@ START_TEST(test_rewind_packed_nested) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -1376,9 +1342,8 @@ START_TEST(test_rewind_without_tag) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(2, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -1426,9 +1391,8 @@ START_TEST(test_rewind_unaligned) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(2, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(2, pb_cursor_pos(&cursor));
 
   /* Seek value located before with cursor */
   value2 = 2;
@@ -1458,9 +1422,8 @@ START_TEST(test_rewind_invalid) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -1486,9 +1449,8 @@ START_TEST(test_seek) {
   uint64_t value = 3;
   fail_unless(pb_cursor_seek(&cursor, &value));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(2, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(2, pb_cursor_pos(&cursor));
 
   /* Seek value with cursor again */
   fail_if(pb_cursor_seek(&cursor, &value));
@@ -1523,9 +1485,8 @@ START_TEST(test_seek_packed) {
   uint32_t value = 3;
   fail_unless(pb_cursor_seek(&cursor, &value));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(2, pb_cursor_pos(&cursor));
 
   /* Seek value with cursor again */
   fail_if(pb_cursor_seek(&cursor, &value));
@@ -1560,9 +1521,8 @@ START_TEST(test_seek_packed_merged) {
   uint32_t value = 3;
   fail_unless(pb_cursor_seek(&cursor, &value));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(2, pb_cursor_pos(&cursor));
 
   /* Seek value with cursor again */
   fail_if(pb_cursor_seek(&cursor, &value));
@@ -1600,9 +1560,8 @@ START_TEST(test_seek_packed_nested) {
   uint32_t value = 3;
   fail_unless(pb_cursor_seek(&cursor, &value));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(2, pb_cursor_pos(&cursor));
 
   /* Seek value with cursor again */
   fail_if(pb_cursor_seek(&cursor, &value));
@@ -1638,9 +1597,8 @@ START_TEST(test_seek_packed_invalid) {
   uint32_t value = 4;
   fail_if(pb_cursor_seek(&cursor, &value));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(2, pb_cursor_pos(&cursor));
 
   /* Assert cursor validity and error */
   fail_if(pb_cursor_valid(&cursor));
@@ -1673,9 +1631,8 @@ START_TEST(test_seek_string) {
   pb_string_t value = pb_string_init_from_chars("DEFAULT");
   fail_unless(pb_cursor_seek(&cursor, &value));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(8, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(1, pb_cursor_pos(&cursor));
 
   /* Seek value with cursor again */
   fail_if(pb_cursor_seek(&cursor, &value));
@@ -1714,9 +1671,8 @@ START_TEST(test_seek_unaligned) {
   uint64_t value2 = 3;
   fail_unless(pb_cursor_seek(&cursor, &value2));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(2, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(2, pb_cursor_pos(&cursor));
 
   /* Seek value with cursor again */
   fail_if(pb_cursor_seek(&cursor, &value2));
@@ -1745,9 +1701,8 @@ START_TEST(test_seek_invalid) {
   uint32_t value = 1;
   fail_if(pb_cursor_seek(&cursor, &value));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -1777,9 +1732,8 @@ START_TEST(test_seek_invalid_tag) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -1811,9 +1765,8 @@ START_TEST(test_seek_invalid_type) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(9, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -1846,9 +1799,8 @@ START_TEST(test_match) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(2, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -1890,9 +1842,8 @@ START_TEST(test_match_packed) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -1934,9 +1885,8 @@ START_TEST(test_match_packed_merged) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -1981,9 +1931,8 @@ START_TEST(test_match_packed_nested) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -2053,9 +2002,8 @@ START_TEST(test_match_string) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(8, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -2122,9 +2070,8 @@ START_TEST(test_match_invalid) {
   uint32_t value = 1;
   fail_if(pb_cursor_match(&cursor, &value));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -2154,9 +2101,8 @@ START_TEST(test_match_invalid_tag) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -2188,9 +2134,8 @@ START_TEST(test_match_invalid_type) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(9, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -2224,9 +2169,8 @@ START_TEST(test_get) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(2, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -2269,9 +2213,8 @@ START_TEST(test_get_packed) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -2314,9 +2257,8 @@ START_TEST(test_get_packed_merged) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -2362,9 +2304,8 @@ START_TEST(test_get_packed_nested) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -2435,9 +2376,8 @@ START_TEST(test_get_string) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(8, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -2505,9 +2445,8 @@ START_TEST(test_get_invalid) {
   uint32_t value;
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_get(&cursor, &value));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -2537,9 +2476,8 @@ START_TEST(test_get_invalid_tag) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -2571,9 +2509,8 @@ START_TEST(test_get_invalid_type) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(9, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -2610,9 +2547,8 @@ START_TEST(test_put) {
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
     ck_assert_uint_eq(check, value);
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(2, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -2658,9 +2594,8 @@ START_TEST(test_put_packed) {
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
     ck_assert_uint_eq(f + 127, value);
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -2706,9 +2641,8 @@ START_TEST(test_put_packed_merged) {
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
     ck_assert_uint_eq(f + 127, value);
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -2757,9 +2691,8 @@ START_TEST(test_put_packed_nested) {
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_get(&cursor, &value));
     ck_assert_uint_eq(f + 127, value);
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -2832,9 +2765,8 @@ START_TEST(test_put_string) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(8, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -2886,9 +2818,8 @@ START_TEST(test_put_message) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(9, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal2));
@@ -2934,9 +2865,8 @@ START_TEST(test_put_message_invalid) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(9, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f, pb_cursor_pos(&cursor));
   }
 
   /* Assert cursor validity and error */
@@ -3005,9 +2935,8 @@ START_TEST(test_put_invalid) {
   uint32_t value = 127;
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_put(&cursor, &value));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -3037,9 +2966,8 @@ START_TEST(test_put_invalid_tag) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -3077,9 +3005,8 @@ START_TEST(test_erase) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(2, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     ck_assert_uint_eq(8 - f * 2, pb_journal_size(&journal));
@@ -3125,9 +3052,8 @@ START_TEST(test_erase_packed) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
   }
 
   /* Assert cursor validity and error */
@@ -3174,9 +3100,8 @@ START_TEST(test_erase_packed_merged) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
   }
 
   /* Assert cursor validity and error */
@@ -3226,9 +3151,8 @@ START_TEST(test_erase_packed_nested) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(3, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
   }
 
   /* Assert cursor validity and error */
@@ -3297,9 +3221,8 @@ START_TEST(test_erase_string) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(8, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     ck_assert_uint_eq(18 - (f + 1) * 9, pb_journal_size(&journal));
@@ -3340,9 +3263,8 @@ START_TEST(test_erase_message) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(9, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     ck_assert_uint_eq(8 - f * 2, pb_journal_size(&journal));
@@ -3386,9 +3308,8 @@ START_TEST(test_erase_message_nested) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(9, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     ck_assert_uint_eq(10 - f * 2, pb_journal_size(&journal));
@@ -3462,9 +3383,8 @@ START_TEST(test_erase_invalid) {
   /* Erase value from cursor */
   ck_assert_uint_eq(PB_ERROR_INVALID, pb_cursor_erase(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -3493,9 +3413,8 @@ START_TEST(test_erase_invalid_tag) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -3536,9 +3455,8 @@ START_TEST(test_raw) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(6, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -3572,9 +3490,8 @@ START_TEST(test_raw_packed) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(5, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -3617,9 +3534,8 @@ START_TEST(test_raw_packed_merged) {
     fail_unless(pb_cursor_valid(&cursor));
     ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-    /* Assert cursor tag and position */
+    /* Assert cursor tag */
     ck_assert_uint_eq(5, pb_cursor_tag(&cursor));
-    ck_assert_uint_eq(f - 1, pb_cursor_pos(&cursor));
 
     /* Assert journal size */
     fail_if(pb_journal_empty(&journal));
@@ -3673,9 +3589,8 @@ START_TEST(test_raw_unaligned) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(6, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -3698,9 +3613,8 @@ START_TEST(test_raw_invalid) {
   float *raw = pb_cursor_raw(&cursor);
   ck_assert_ptr_eq(NULL, raw);
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -3729,9 +3643,8 @@ START_TEST(test_raw_invalid_tag) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -3762,9 +3675,8 @@ START_TEST(test_raw_invalid_type) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(9, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);
@@ -3819,9 +3731,8 @@ START_TEST(test_align) {
   ck_assert_uint_eq(PB_ERROR_NONE, pb_field_align(&field2));
   fail_unless(pb_field_equals(&field1, &field2));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(8, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Free all allocated memory */
   pb_cursor_destroy(&cursor);

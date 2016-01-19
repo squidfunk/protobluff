@@ -294,7 +294,7 @@ init(pb_part_t *part, pb_wiretype_t wiretype, pb_tag_t tag) {
  * ------------------------------------------------------------------------- */
 
 /*!
- * Create a part from a message for a specific tag.
+ * Create a part within a message for a specific tag.
  *
  * This function returns a part to read or alter a certain field or submessage
  * of a message. However, how and when a field or submessage is created in the
@@ -408,7 +408,7 @@ pb_part_create(pb_message_t *message, pb_tag_t tag) {
 
         /* Otherwise correct insert vector in documented cases */
         const pb_offset_t *offset = pb_cursor_offset(&cursor);
-        if (pb_cursor_pos(&cursor) || pb_cursor_tag(&cursor) <= tag)            // TODO: pb_cursor_pos check seems unnecessary - find edge test cacses
+        if (pb_cursor_tag(&cursor) <= tag)
           start = offset->end;
       }
 

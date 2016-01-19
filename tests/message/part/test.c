@@ -91,7 +91,7 @@ descriptor = { {
  * ------------------------------------------------------------------------- */
 
 /*
- * Create a part from a message for a specific tag.
+ * Create a part within a message for a specific tag.
  */
 START_TEST(test_create) {
   const uint8_t data[] = { 8, 127 };
@@ -169,7 +169,7 @@ START_TEST(test_create_repeated) {
 } END_TEST
 
 /*
- * Create a part from an empty message for a specific tag.
+ * Create a part within an empty message for a specific tag.
  */
 START_TEST(test_create_message_empty) {
   pb_journal_t journal = pb_journal_create_empty();
@@ -200,7 +200,77 @@ START_TEST(test_create_message_empty) {
 } END_TEST
 
 /*
- * Create a part from a merged message for a specific tag.
+ * Create a part within a message before a specific tag.
+ */
+START_TEST(test_create_message_before) {
+  const uint8_t data[] = { 16, 127 };
+  const size_t  size   = 2;
+
+  /* Create journal, message and part */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_part_t    part    = pb_part_create(&message, 1);
+
+  /* Assert part validity and error */
+  fail_unless(pb_part_valid(&part));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_part_error(&part));
+
+  /* Assert part size and version */
+  fail_unless(pb_part_empty(&part));
+  ck_assert_uint_eq(0, pb_part_size(&part));
+  ck_assert_uint_eq(1, pb_part_version(&part));
+
+  /* Assert part offsets */
+  ck_assert_uint_eq(1, pb_part_start(&part));
+  ck_assert_uint_eq(1, pb_part_end(&part));
+
+  /* Assert journal size */
+  fail_if(pb_journal_empty(&journal));
+  ck_assert_uint_eq(3, pb_journal_size(&journal));
+
+  /* Free all allocated memory */
+  pb_part_destroy(&part);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Create a part within a message after a specific tag.
+ */
+START_TEST(test_create_message_after) {
+  const uint8_t data[] = { 8, 127 };
+  const size_t  size   = 2;
+
+  /* Create journal, message and part */
+  pb_journal_t journal = pb_journal_create(data, size);
+  pb_message_t message = pb_message_create(&descriptor, &journal);
+  pb_part_t    part    = pb_part_create(&message, 2);
+
+  /* Assert part validity and error */
+  fail_unless(pb_part_valid(&part));
+  ck_assert_uint_eq(PB_ERROR_NONE, pb_part_error(&part));
+
+  /* Assert part size and version */
+  fail_unless(pb_part_empty(&part));
+  ck_assert_uint_eq(0, pb_part_size(&part));
+  ck_assert_uint_eq(1, pb_part_version(&part));
+
+  /* Assert part offsets */
+  ck_assert_uint_eq(3, pb_part_start(&part));
+  ck_assert_uint_eq(3, pb_part_end(&part));
+
+  /* Assert journal size */
+  fail_if(pb_journal_empty(&journal));
+  ck_assert_uint_eq(3, pb_journal_size(&journal));
+
+  /* Free all allocated memory */
+  pb_part_destroy(&part);
+  pb_message_destroy(&message);
+  pb_journal_destroy(&journal);
+} END_TEST
+
+/*
+ * Create a part within a merged message for a specific tag.
  */
 START_TEST(test_create_message_merged) {
   const uint8_t data[] = { 8, 127, 8, 127 };
@@ -235,7 +305,7 @@ START_TEST(test_create_message_merged) {
 } END_TEST
 
 /*
- * Create a part from an invalid message for a specific tag.
+ * Create a part within an invalid message for a specific tag.
  */
 START_TEST(test_create_message_invalid) {
   pb_message_t message = pb_message_create_invalid();
@@ -251,7 +321,7 @@ START_TEST(test_create_message_invalid) {
 } END_TEST
 
 /*
- * Create a part from a message for a specific tag that is part of a oneof.
+ * Create a part within a message for a specific tag that is part of a oneof.
  */
 START_TEST(test_create_oneof) {
   pb_journal_t journal = pb_journal_create_empty();
@@ -282,7 +352,7 @@ START_TEST(test_create_oneof) {
 } END_TEST
 
 /*
- * Create a part from a message for a specific tag that is part of a oneof.
+ * Create a part within a message for a specific tag that is part of a oneof.
  */
 START_TEST(test_create_oneof_existing) {
   const uint8_t data[] = { 24, 127 };
@@ -317,7 +387,7 @@ START_TEST(test_create_oneof_existing) {
 } END_TEST
 
 /*
- * Create a part from a message for a specific tag that is part of a oneof.
+ * Create a part within a message for a specific tag that is part of a oneof.
  */
 START_TEST(test_create_oneof_existing_before) {
   const uint8_t data[] = { 32, 127, 53, 0, 0, 0, 0, 98, 2, 8, 1 };
@@ -352,7 +422,7 @@ START_TEST(test_create_oneof_existing_before) {
 } END_TEST
 
 /*
- * Create a part from a message for a specific tag that is part of a oneof.
+ * Create a part within a message for a specific tag that is part of a oneof.
  */
 START_TEST(test_create_oneof_existing_after) {
   const uint8_t data[] = { 32, 127, 53, 0, 0, 0, 0, 98, 0 };
@@ -387,7 +457,7 @@ START_TEST(test_create_oneof_existing_after) {
 } END_TEST
 
 /*
- * Create a part from a journal.
+ * Create a part within a journal.
  */
 START_TEST(test_create_from_journal) {
   const uint8_t data[] = { 8, 127 };
@@ -423,7 +493,7 @@ START_TEST(test_create_from_journal) {
 } END_TEST
 
 /*
- * Create a part from an invalid journal.
+ * Create a part within an invalid journal.
  */
 START_TEST(test_create_from_journal_invalid) {
   pb_journal_t journal = pb_journal_create_invalid();
@@ -494,7 +564,7 @@ START_TEST(test_create_from_cursor) {
 } END_TEST
 
 /*
- * Create a part from an invalid cursor.
+ * Create a part within an invalid cursor.
  */
 START_TEST(test_create_from_cursor_invalid) {
   pb_journal_t journal = pb_journal_create_empty();
@@ -1003,6 +1073,8 @@ main(void) {
   tcase_add_test(tcase, test_create);
   tcase_add_test(tcase, test_create_repeated);
   tcase_add_test(tcase, test_create_message_empty);
+  tcase_add_test(tcase, test_create_message_before);
+  tcase_add_test(tcase, test_create_message_after);
   tcase_add_test(tcase, test_create_message_merged);
   tcase_add_test(tcase, test_create_message_invalid);
   tcase_add_test(tcase, test_create_oneof);

@@ -1,3 +1,11 @@
+protobluff-1.0.0 (2016-xx-xx)
+
+  Preparing for 1.0.0 stable...
+
+  Runtime:
+
+  * Removed pb_cursor_pos() (deprecated in 0.4.0)
+
 protobluff-0.5.0 (2016-01-11)
 
   This release adds support for oneofs. protobluff now implements all features

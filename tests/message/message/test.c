@@ -954,9 +954,8 @@ START_TEST(test_create_from_cursor_invalid_tag) {
   fail_if(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_EOM, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(0, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Create submessage for invalid tag */
   pb_message_t submessage = pb_message_create_from_cursor(&cursor);
@@ -988,9 +987,8 @@ START_TEST(test_create_from_cursor_invalid_wiretype) {
   fail_unless(pb_cursor_valid(&cursor));
   ck_assert_uint_eq(PB_ERROR_NONE, pb_cursor_error(&cursor));
 
-  /* Assert cursor tag and position */
+  /* Assert cursor tag */
   ck_assert_uint_eq(1, pb_cursor_tag(&cursor));
-  ck_assert_uint_eq(0, pb_cursor_pos(&cursor));
 
   /* Create submessage for invalid wiretype */
   pb_message_t submessage = pb_message_create_from_cursor(&cursor);
