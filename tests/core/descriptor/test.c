@@ -148,7 +148,7 @@ START_TEST(test_iterator) {
 
   /* Walk through descriptor fields forwards */
   fail_unless(pb_descriptor_iter_begin(&it));
-  for (size_t f = 1; f <= 12; f++, !!pb_descriptor_iter_next(&it)) {
+  for (size_t f = 1; f <= 12; f++) {
     const pb_field_descriptor_t *descriptor =
       pb_descriptor_iter_current(&it);
     ck_assert_uint_eq(f - 1, pb_descriptor_iter_pos(&it));
@@ -160,6 +160,9 @@ START_TEST(test_iterator) {
     /* Assert field name and tag */
     ck_assert_uint_eq(f, pb_field_descriptor_tag(descriptor));
     fail_if(strcmp(name, pb_field_descriptor_name(descriptor)));
+
+    /* Advance iterator */
+    ck_assert_uint_eq(f != 12, pb_descriptor_iter_next(&it));
   }
 
   /* Assert descriptor iterator validity */
@@ -167,7 +170,7 @@ START_TEST(test_iterator) {
 
   /* Walk through descriptor fields backwards */
   fail_unless(pb_descriptor_iter_end(&it));
-  for (size_t f = 12; f >= 1; f--, !!pb_descriptor_iter_prev(&it)) {
+  for (size_t f = 12; f >= 1; f--) {
     const pb_field_descriptor_t *descriptor =
       pb_descriptor_iter_current(&it);
     ck_assert_uint_eq(f - 1, pb_descriptor_iter_pos(&it));
@@ -179,6 +182,9 @@ START_TEST(test_iterator) {
     /* Assert field name and tag */
     ck_assert_uint_eq(f, pb_field_descriptor_tag(descriptor));
     fail_if(strcmp(name, pb_field_descriptor_name(descriptor)));
+
+    /* Advance iterator */
+    ck_assert_uint_eq(f != 1, pb_descriptor_iter_prev(&it));
   }
 
   /* Assert descriptor iterator validity again */
@@ -322,7 +328,7 @@ START_TEST(test_enum_iterator) {
 
   /* Walk through enum value descriptors forwards */
   fail_unless(pb_enum_descriptor_iter_begin(&it));
-  for (size_t v = 0; v < 3; v++, !!pb_enum_descriptor_iter_next(&it)) {
+  for (size_t v = 0; v < 3; v++) {
     const pb_enum_value_descriptor_t *descriptor =
       pb_enum_descriptor_iter_current(&it);
     ck_assert_uint_eq(v, pb_enum_descriptor_iter_pos(&it));
@@ -334,6 +340,9 @@ START_TEST(test_enum_iterator) {
     /* Assert value number and name */
     ck_assert_uint_eq(v, pb_enum_value_descriptor_number(descriptor));
     fail_if(strcmp(name, pb_enum_value_descriptor_name(descriptor)));
+
+    /* Advance iterator */
+    ck_assert_uint_eq(v != 2, pb_enum_descriptor_iter_next(&it));
   }
 
   /* Assert enum descriptor iterator validity */
@@ -354,7 +363,10 @@ START_TEST(test_enum_iterator) {
     /* Assert value number and name */
     ck_assert_uint_eq(v, pb_enum_value_descriptor_number(descriptor));
     fail_if(strcmp(name, pb_enum_value_descriptor_name(descriptor)));
-  } while (v--, pb_enum_descriptor_iter_prev(&it));
+
+    /* Advance iterator */
+    ck_assert_uint_eq(v != 0, pb_enum_descriptor_iter_prev(&it));
+  } while (v--);
 
   /* Assert enum descriptor iterator validity again */
   fail_if(pb_enum_descriptor_iter_prev(&it));
@@ -444,7 +456,7 @@ START_TEST(test_oneof_iterator) {
 
   /* Walk through descriptor fields forwards */
   fail_unless(pb_oneof_descriptor_iter_begin(&it));
-  for (size_t f = 1; f <= 3; f++, !!pb_oneof_descriptor_iter_next(&it)) {
+  for (size_t f = 1; f <= 3; f++) {
     const pb_field_descriptor_t *descriptor =
       pb_oneof_descriptor_iter_current(&it);
     ck_assert_uint_eq(f - 1, pb_oneof_descriptor_iter_pos(&it));
@@ -456,6 +468,9 @@ START_TEST(test_oneof_iterator) {
     /* Assert field name and tag */
     ck_assert_uint_eq(f, pb_field_descriptor_tag(descriptor));
     fail_if(strcmp(name, pb_field_descriptor_name(descriptor)));
+
+    /* Advance iterator */
+    ck_assert_uint_eq(f != 3, pb_oneof_descriptor_iter_next(&it));
   }
 
   /* Assert descriptor iterator validity */
@@ -463,7 +478,7 @@ START_TEST(test_oneof_iterator) {
 
   /* Walk through descriptor fields backwards */
   fail_unless(pb_oneof_descriptor_iter_end(&it));
-  for (size_t f = 3; f >= 1; f--, !!pb_oneof_descriptor_iter_prev(&it)) {
+  for (size_t f = 3; f >= 1; f--) {
     const pb_field_descriptor_t *descriptor =
       pb_oneof_descriptor_iter_current(&it);
     ck_assert_uint_eq(f - 1, pb_oneof_descriptor_iter_pos(&it));
@@ -475,6 +490,9 @@ START_TEST(test_oneof_iterator) {
     /* Assert field name and tag */
     ck_assert_uint_eq(f, pb_field_descriptor_tag(descriptor));
     fail_if(strcmp(name, pb_field_descriptor_name(descriptor)));
+
+    /* Advance iterator */
+    ck_assert_uint_eq(f != 1, pb_oneof_descriptor_iter_prev(&it));
   }
 
   /* Assert descriptor iterator validity again */

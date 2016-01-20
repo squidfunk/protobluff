@@ -392,7 +392,7 @@ pb_descriptor_iter_prev(pb_descriptor_iter_t *it) {
   assert(it && it->pos != SIZE_MAX);
   assert(!pb_descriptor_empty(it->descriptor));
   return it->pos > 0
-    ? it->pos--
+    ? !!(it->pos--)
     : 0;
 }
 
@@ -408,7 +408,7 @@ pb_descriptor_iter_next(pb_descriptor_iter_t *it) {
   assert(it && it->pos != SIZE_MAX);
   assert(!pb_descriptor_empty(it->descriptor));
   return it->pos < pb_descriptor_size(it->descriptor) - 1
-    ? ++it->pos
+    ? !!(++it->pos)
     : 0;
 }
 
@@ -559,7 +559,7 @@ pb_enum_descriptor_iter_prev(pb_enum_descriptor_iter_t *it) {
   assert(it && it->pos != SIZE_MAX);
   assert(!pb_enum_descriptor_empty(it->descriptor));
   return it->pos > 0
-    ? it->pos--
+    ? !!(it->pos--)
     : 0;
 }
 
@@ -575,7 +575,7 @@ pb_enum_descriptor_iter_next(pb_enum_descriptor_iter_t *it) {
   assert(it && it->pos != SIZE_MAX);
   assert(!pb_enum_descriptor_empty(it->descriptor));
   return it->pos < pb_enum_descriptor_size(it->descriptor) - 1
-    ? ++it->pos
+    ? !!(++it->pos)
     : 0;
 }
 
@@ -700,7 +700,7 @@ pb_oneof_descriptor_iter_prev(pb_oneof_descriptor_iter_t *it) {
   assert(it && it->pos != SIZE_MAX);
   assert(!pb_oneof_descriptor_empty(it->descriptor));
   return it->pos > 0
-    ? it->pos--
+    ? !!(it->pos--)
     : 0;
 }
 
@@ -716,7 +716,7 @@ pb_oneof_descriptor_iter_next(pb_oneof_descriptor_iter_t *it) {
   assert(it && it->pos != SIZE_MAX);
   assert(!pb_oneof_descriptor_empty(it->descriptor));
   return it->pos < pb_oneof_descriptor_size(it->descriptor) - 1
-    ? ++it->pos
+    ? !!(++it->pos)
     : 0;
 }
 
