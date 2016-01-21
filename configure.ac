@@ -123,10 +123,10 @@ AC_ARG_ENABLE([optimized],
 	 OPTIMIZATIONS+=" -fomit-frame-pointer"])
 AC_SUBST([OPTIMIZATIONS])
 
-# Enable stripped build
+# Disable stripped build
 AC_ARG_ENABLE([stripped],
-	[AS_HELP_STRING([--enable-stripped],
-		[strip internal symbols @<:@default=disabled@:>@])],
+	[AS_HELP_STRING([--disable-stripped],
+		[strip internal symbols @<:@default=enabled@:>@])],
 	[CPPFLAGS+=" -fvisibility=hidden"], [])
 
 # Enable coverage report
