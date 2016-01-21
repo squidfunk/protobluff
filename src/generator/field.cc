@@ -102,6 +102,11 @@ namespace protobluff {
     variables_["name"] = prefix + descriptor_->name();
     variables_["type"] = descriptor_->type_name();
 
+    /* Prepare constant value */
+    variables_["constant"]   = StringReplace(
+      variables_["signature"], ".", "_", true);
+    UpperString(&(variables_["constant"]));
+
     /* Extract native type */
     switch (descriptor_->cpp_type()) {
       case FieldDescriptor::CPPTYPE_INT32:
@@ -266,6 +271,18 @@ namespace protobluff {
     variables_["deprecated"] =
       descriptor_->options().deprecated()
         ? "PB_DEPRECATED\n" : "";
+  }
+
+  /*!
+   * Generate tag.
+   *
+   * \param[in,out] printer Printer
+   */
+  void Field::
+  GenerateTag(Printer *printer) const {
+    assert(printer);
+    printer->Print(variables_,
+      "#define `constant`_T `tag`\n");
   }
 
   /*!

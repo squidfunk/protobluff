@@ -52,12 +52,12 @@ namespace protobluff {
         *descriptor);                  /* Enum value descriptor */
 
     void
-    GenerateDescriptor(
+    GenerateValue(
       Printer *printer)                /* Printer */
     const;
 
     void
-    GenerateValue(
+    GenerateDescriptor(
       Printer *printer)                /* Printer */
     const;
 

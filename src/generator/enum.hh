@@ -55,17 +55,17 @@ namespace protobluff {
         *descriptor);                  /* Enum descriptor */
 
     void
+    GenerateValues(
+      Printer *printer)                /* Printer */
+    const;
+
+    void
     GenerateDeclaration(
       Printer *printer)                /* Printer */
     const;
 
     void
     GenerateDescriptor(
-      Printer *printer)                /* Printer */
-    const;
-
-    void
-    GenerateValues(
       Printer *printer)                /* Printer */
     const;
 

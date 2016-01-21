@@ -64,6 +64,18 @@ namespace protobluff {
   }
 
   /*!
+   * Generate value.
+   *
+   * \param[in,out] printer Printer
+   */
+  void EnumValue::
+  GenerateValue(Printer *printer) const {
+    assert(printer);
+    printer->Print(variables_,
+      "#define `constant`_V `number`\n");
+  }
+
+  /*!
    * Generate descriptor.
    *
    * \param[in,out] printer Printer
@@ -76,18 +88,6 @@ namespace protobluff {
       "/* `signature` = `number` */\n"
       "{ .number = `number`,\n"
       "  .name   = \"`name`\" }");
-  }
-
-  /*!
-   * Generate value.
-   *
-   * \param[in,out] printer Printer
-   */
-  void EnumValue::
-  GenerateValue(Printer *printer) const {
-    assert(printer);
-    printer->Print(variables_,
-      "#define `constant` `number`\n");
   }
 
   /*!

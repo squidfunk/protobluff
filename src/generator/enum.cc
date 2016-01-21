@@ -80,6 +80,21 @@ namespace protobluff {
   }
 
   /*!
+   * Generate values.
+   *
+   * \param[in,out] printer Printer
+   */
+  void Enum::
+  GenerateValues(Printer *printer) const {
+    assert(printer);
+    printer->Print(variables_,
+      "/* `signature` : values */\n");
+    for (size_t v = 0; v < descriptor_->value_count(); v++)
+      values_[v]->GenerateValue(printer);
+    printer->Print("\n");
+  }
+
+  /*!
    * Generate declaration.
    *
    * \param[in,out] printer Printer
@@ -139,20 +154,5 @@ namespace protobluff {
         "`enum`_descriptor = {};\n"
         "\n");
     }
-  }
-
-  /*!
-   * Generate values.
-   *
-   * \param[in,out] printer Printer
-   */
-  void Enum::
-  GenerateValues(Printer *printer) const {
-    assert(printer);
-    printer->Print(variables_,
-      "/* `signature` : values */\n");
-    for (size_t v = 0; v < descriptor_->value_count(); v++)
-      values_[v]->GenerateValue(printer);
-    printer->Print("\n");
   }
 }

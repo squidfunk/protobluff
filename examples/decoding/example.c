@@ -34,6 +34,9 @@
 /*!
  * Handler for phonenumber messages.
  *
+ * If the tag numbers of the .proto file are ascending and there are a lot
+ * of tags, it probably best to use a jump table.
+ *
  * \param[in]     descriptor Field descriptor
  * \param[in]     value      Pointer holding value
  * \param[in,out] user       User data
@@ -46,13 +49,13 @@ handler_phonenumber(
   switch (pb_field_descriptor_tag(descriptor)) {
 
     /* Print number */
-    case 1:
+    case PERSON_PHONENUMBER_NUMBER_T:
       printf("%.*s",
         (int)pb_string_size(value), pb_string_data(value));
       break;
 
     /* Print type */
-    case 2:
+    case PERSON_PHONENUMBER_TYPE_T:
       printf(" (%s)", pb_enum_value_descriptor_name(
         pb_enum_descriptor_value_by_number(
           pb_field_descriptor_enum(descriptor),
@@ -77,24 +80,24 @@ handler_person(
   switch (pb_field_descriptor_tag(descriptor)) {
 
     /* Print name */
-    case 1:
+    case PERSON_NAME_T:
       printf("name:  %.*s\n",
         (int)pb_string_size(value), pb_string_data(value));
       break;
 
     /* Print id */
-    case 2:
+    case PERSON_ID_T:
       printf("id:    %d\n", *(const int32_t *)value);
       break;
 
     /* Print email */
-    case 3:
+    case PERSON_EMAIL_T:
       printf("email: %.*s\n",
         (int)pb_string_size(value), pb_string_data(value));
       break;
 
     /* Print phone numbers */
-    case 4:
+    case PERSON_PHONE_T:
       printf("phone: ");
       error = pb_decoder_decode(value, handler_phonenumber, user);
       printf("\n");

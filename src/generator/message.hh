@@ -60,12 +60,17 @@ namespace protobluff {
       const Descriptor *descriptor);   /* Descriptor */
 
     void
-    GenerateDeclaration(
+    GenerateTags(
       Printer *printer)                /* Printer */
     const;
 
     void
     GenerateDefaults(
+      Printer *printer)                /* Printer */
+    const;
+
+    void
+    GenerateDeclaration(
       Printer *printer)                /* Printer */
     const;
 

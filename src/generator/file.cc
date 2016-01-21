@@ -204,8 +204,15 @@ namespace protobluff {
       }
     }
 
-    /* Generate descriptors for messages */
+    /* Generate tags for messages */
     if (descriptor_->message_type_count()) {
+      PrintBanner(printer, "Tags");
+
+      /* Generate tags for messages and nested messages */
+      for (size_t m = 0; m < descriptor_->message_type_count(); m++)
+        messages_[m]->GenerateTags(printer);
+
+      /* Generate descriptors for messages */
       PrintBanner(printer, "Descriptors");
 
       /* Generate descriptors for messages and nested messages */

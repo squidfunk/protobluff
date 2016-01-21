@@ -122,6 +122,42 @@ namespace protobluff {
   }
 
   /*!
+   * Generate tags.
+   *
+   * \param[in,out] printer Printer
+   */
+  void Message::
+  GenerateTags(Printer *printer) const {
+    assert(printer);
+    printer->Print(variables_,
+      "/* `signature` : tags */\n");
+    for (size_t f = 0; f < descriptor_->field_count(); f++)
+      fields_[f]->GenerateTag(printer);
+    printer->Print("\n");
+
+    /* Generate tags for nested messages */
+    for (size_t n = 0; n < descriptor_->nested_type_count(); n++)
+      nested_[n]->GenerateTags(printer);
+  }
+
+  /*!
+   * Generate default values.
+   *
+   * \param[in,out] printer Printer
+   */
+  void Message::
+  GenerateDefaults(Printer *printer) const {
+    assert(printer);
+    for (size_t f = 0; f < descriptor_->field_count(); f++)
+      if (fields_[f]->HasDefault())
+        fields_[f]->GenerateDefault(printer);
+
+    /* Generate default values for nested messages */
+    for (size_t n = 0; n < descriptor_->nested_type_count(); n++)
+      nested_[n]->GenerateDefaults(printer);
+  }
+
+  /*!
    * Generate declaration.
    *
    * \param[in,out] printer Printer
@@ -140,23 +176,6 @@ namespace protobluff {
     /* Generate forward declarations for nested messages */
     for (size_t n = 0; n < descriptor_->nested_type_count(); n++)
       nested_[n]->GenerateDeclaration(printer);
-  }
-
-  /*!
-   * Generate default values.
-   *
-   * \param[in,out] printer Printer
-   */
-  void Message::
-  GenerateDefaults(Printer *printer) const {
-    assert(printer);
-    for (size_t f = 0; f < descriptor_->field_count(); f++)
-      if (fields_[f]->HasDefault())
-        fields_[f]->GenerateDefault(printer);
-
-    /* Generate default values for nested messages */
-    for (size_t n = 0; n < descriptor_->nested_type_count(); n++)
-      nested_[n]->GenerateDefaults(printer);
   }
 
   /*!

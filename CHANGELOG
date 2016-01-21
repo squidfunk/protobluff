@@ -1,11 +1,13 @@
 protobluff-1.0.0 (2016-xx-xx)
 
-  Preparing for 1.0.0 stable...
+  Preparing for 1.0.0...
 
   Runtime:
 
   * Fixed descriptor iterator prev/next return values
   * Fixed warnings in descriptor tests
+  * Added constants for tags to generated source (_T suffixes)
+  * Added _V suffixes to generated source for enum values
   * Added reference guide
   * Removed pb_cursor_pos() (deprecated in 0.4.0)
   * Removed raw pointer access (deprecated in 0.4.0)

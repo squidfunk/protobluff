@@ -52,6 +52,11 @@ namespace protobluff {
         *descriptor);                  /* Field descriptor */
 
     void
+    GenerateTag(
+      Printer *printer)                /* Printer */
+    const;
+
+    void
     GenerateDefault(
       Printer *printer)                /* Printer */
     const;
