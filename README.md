@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/squidfunk/protobluff.svg)](https://travis-ci.org/squidfunk/protobluff)
 [![Coverage Status](https://coveralls.io/repos/squidfunk/protobluff/badge.svg?branch=master&service=github)](https://coveralls.io/github/squidfunk/protobluff?branch=master)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/2ffa154a4c2d4977a16b9276d9131e3f)](https://www.codacy.com/app/squidfunk/protobluff)
 [![Release Status](https://img.shields.io/github/release/squidfunk/protobluff.svg)](https://github.com/squidfunk/protobluff/releases/latest)
 [![License](https://img.shields.io/github/license/squidfunk/protobluff.svg)](https://github.com/squidfunk/protobluff/blob/master/LICENSE)
 
