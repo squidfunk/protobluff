@@ -1,7 +1,7 @@
 ## Interface
 
 The interface for the allocator that needs to be implemented is defined in
-`allocator.h`:
+`core/allocator.h`:
 
 ``` c
 typedef void *

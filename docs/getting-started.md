@@ -18,8 +18,8 @@ make install
 ```
 
 protobluff should compile and run on all UNIX systems (including Linux and Mac
-OS) as it adheres to the C99 and C++98 standards and does not make use of any
-system-specific functionality.
+OS) as it adheres to the C99 and C++98 standards, has no dependencies (except
+for the code generator) and makes no system calls.
 
 After installing protobluff, the code generator can be used to generate
 bindings from `.proto` schema files to get started. See
@@ -31,8 +31,8 @@ By default, protobluff is compiled aggressively optimized with `-O3` and some
 further optimizations which make it nearly impossible to debug. If debugging
 is necessary, optimizations should be disabled. Stripped compilation will
 remove all symbols that are not defined in the public header files, allowing
-further optimizations. Enabling the coverage report is only necessary to
-determine unit test coverage, and thus only needed during development.
+further optimizations. Enabling the coverage report is necessary to determine
+unit test coverage, and thus only needed during development.
 
 ``` sh
 ./configure
@@ -117,12 +117,12 @@ person_destroy(&person);
 pb_journal_destroy(&journal);
 ```
 
-At first, the name, email and id of the person are written, and afterwards
-the two phone numbers. However, the order of operations is not important.
-protobluff will ensure that the fields are written in the right place, so we
-could also write the name, then create the mobile phone number again, add the
-email and id, change the phone number, and add the home phone number last.
-The result will be the same. See the examples folder for more usage examples.
+First the name, email and id of the person are written and then the two phone
+numbers. However, the order of operations is not important. protobluff will
+ensure that the fields are written in the right place, so we could also write
+the name, then create the mobile phone number, add the email and id, change the
+phone number again and add the home phone number last. The result will be the
+same. See the examples folder for more usage examples.
 
 ## Linking
 

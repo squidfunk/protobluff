@@ -1,0 +1,84 @@
+# Copyright (c) 2013-2016 Martin Donath <martin.donath@squidfunk.com>
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
+
+# Project information
+site_name: protobluff
+site_description: A modular Protocol Buffers implementation for C
+site_author: Martin Donath
+site_url: http://squidfunk.github.io/protobluff/
+
+# Repository
+repo_name: squidfunk/protobluff
+repo_url: https://github.com/squidfunk/protobluff
+
+# Copyright
+copyright: Copyright &copy; 2013-2016 Martin Donath
+
+# Documentation and theme
+theme_dir: mkdocs-material/material
+
+# Extra variables
+extra:
+  logo: images/protobluff.svg
+  palette:
+    primary: indigo
+    accent: teal
+  social:
+    - type: github
+      link: https://github.com/squidfunk
+    - type: twitter
+      link: https://twitter.com/squidfunk
+    - type: linkedin
+      link: https://de.linkedin.com/in/martin-donath-20a95039
+
+# Extensions
+markdown_extensions:
+  - markdown.extensions.admonition
+  - markdown.extensions.codehilite(guess_lang=false,linenums=true)
+  - markdown.extensions.footnotes
+  - markdown.extensions.meta
+  - markdown.extensions.toc(permalink=true)
+  - pymdownx.betterem(smart_enable=all)
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.githubemoji
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tasklist(custom_checkbox=true)
+  - pymdownx.tilde
+
+# Page tree
+pages:
+  - About: index.md
+  - Getting started: getting-started.md
+  - Design rationale: design-rationale.md
+  - Similar projects: similar-projects.md
+  - Developer guide:
+    - Choosing a runtime: guide/runtimes.md
+    - Buffers and journals: guide/buffers-and-journals.md
+    - Working with messages: guide/messages.md
+    - Scalar types: guide/scalar-types.md
+    - Repeated fields: guide/repeated-fields.md
+    - Error handling: guide/error-handling.md
+    - Custom allocators: guide/allocators.md
+    - Miscellaneous: guide/miscellaneous.md
