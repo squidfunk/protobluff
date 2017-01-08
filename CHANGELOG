@@ -1,6 +1,6 @@
-protobluff-1.0.0 (2016-xx-xx)
+protobluff-1.0.0 (2017-01-08)
 
-  Preparing for 1.0.0...
+  protobluff is reaches maturity.
 
   Runtime:
 
@@ -12,6 +12,10 @@ protobluff-1.0.0 (2016-xx-xx)
   * Enabled stripped build by default
   * Removed pb_cursor_pos() (deprecated in 0.4.0)
   * Removed raw pointer access (deprecated in 0.4.0)
+
+  Generator:
+
+  * Fixed generated source of nested enum value accessors
 
 protobluff-0.5.0 (2016-01-11)
 
