@@ -725,23 +725,23 @@ namespace protobluff {
         const EnumDescriptor *descriptor = descriptor_->enum_type();
         for (size_t v = 0; v < descriptor->value_count(); v++) {
           const EnumValueDescriptor *value = descriptor->value(v);
-          map<string, string> variables (variables_);
+          map<string, string> enum_variables (variables);
 
           /* Lowercase enum value name */
           string name = value->name();
           LowerString(&name);
 
           /* Prepare accessor variables */
-          variables["field"] += "_" + name;
-          variables["value"] = "(const pb_enum_t []){ "
+          enum_variables["field"] += "_" + name;
+          enum_variables["value"] = "(const pb_enum_t []){ "
             + SimpleItoa(value->number()) +
           " }";
 
           /* Extract enum value signature */
-          variables["enum.signature"] = value->name();
+          enum_variables["enum.signature"] = value->name();
 
           /* Generate accessors for enum value */
-          printer->Print(variables,
+          printer->Print(enum_variables,
             "/* `signature` : has(`enum.signature`) */\n"
             "`deprecated`"
             "PB_INLINE int\n"
@@ -750,7 +750,8 @@ namespace protobluff {
             "  assert(pb_message_descriptor(message) == \n"
             "    &`message`_descriptor);\n"
             "  return pb_message_nested_match(message,\n"
-            "    `tag`, `value`);\n"
+            "    `tag`, \n"
+            "    `value`);\n"
             "}\n"
             "\n"
             "/* `signature` : put(`enum.signature`) */\n"
@@ -762,10 +763,10 @@ namespace protobluff {
             "  assert(pb_message_descriptor(message) == \n"
             "    &`message`_descriptor);\n"
             "  return pb_message_nested_put(message,\n"
-            "    `tag`, `value`);\n"
+            "    `tag`, \n"
+            "    `value`);\n"
             "}\n"
             "\n");
-
         }
       }
     }
