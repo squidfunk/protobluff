@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 Martin Donath <martin.donath@squidfunk.com>
+ * Copyright (c) 2013-2017 Martin Donath <martin.donath@squidfunk.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,7 +27,8 @@
  * ------------------------------------------------------------------------- */
 
 /*! Mapping: error ==> error string */
-static const char *error_map[] = {
+static const char *
+error_map[] = {
   [PB_ERROR_NONE]       = "None",
   [PB_ERROR_ALLOC]      = "Allocation failed",
   [PB_ERROR_INVALID]    = "Invalid arguments or data",

@@ -1,3 +1,24 @@
+0.5.0 => 1.0.0
+
+  Messages
+
+    Raw pointer access has been removed, because unaligned access of floats
+    and doubles may cause undefined behavior on some architectures. Now, the
+    values should be loaded and stored with the get and put accessors.
+
+    This makes it necessary to regenerate the bindings and change all accessors
+    that write values through raw pointers.
+
+    < 1.0.0:
+
+      float *value = person_raw_weight(&person);
+
+    = 1.0.0:
+
+      float value;
+      person_get_weight(&person, &value);
+      person_put_weight(&person, &value);
+
 0.4.0 => 0.5.0
 
   The bindings have to be regenerated.
