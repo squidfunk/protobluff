@@ -335,8 +335,8 @@ namespace protobluff {
       printer->Print(variables_, ",\n"
         "  .value = &`oneof`_descriptor");
 
-    /* Generate default value */
-    if (descriptor_->has_default_value())
+    /* Generate default value (implicitly for enums)*/
+    if (HasDefault())
       printer->Print(variables_, ",\n"
         "  .value = &`variable`_default");
 
