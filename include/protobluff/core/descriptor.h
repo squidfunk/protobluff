@@ -201,7 +201,7 @@ PB_INLINE const pb_descriptor_t *
 pb_field_descriptor_nested(const pb_field_descriptor_t *descriptor) {
   assert(descriptor);
   return descriptor->type == PB_TYPE_MESSAGE
-    ? descriptor->refer
+    ? (const pb_descriptor_t *)descriptor->refer
     : NULL;
 }
 
@@ -215,7 +215,7 @@ PB_INLINE const pb_enum_descriptor_t *
 pb_field_descriptor_enum(const pb_field_descriptor_t *descriptor) {
   assert(descriptor);
   return descriptor->type == PB_TYPE_ENUM
-    ? descriptor->refer
+    ? (const pb_enum_descriptor_t *)descriptor->refer
     : NULL;
 }
 
@@ -229,7 +229,7 @@ PB_INLINE const pb_oneof_descriptor_t *
 pb_field_descriptor_oneof(const pb_field_descriptor_t *descriptor) {
   assert(descriptor);
   return descriptor->label == PB_LABEL_ONEOF
-    ? descriptor->value
+    ? (const pb_oneof_descriptor_t *)descriptor->value
     : NULL;
 }
 
