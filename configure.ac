@@ -224,7 +224,7 @@ AC_CONFIG_FILES([
 # Compiler flags
 CFLAGS+=" -std=c99"
 CXXFLAGS+=" -std=c++98"
-CPPFLAGS+=" -Wall -Wno-deprecated-declarations -Wno-address -march=native"
+CPPFLAGS+=" -Wall -Wno-deprecated-declarations -Wno-address"
 
 # Output result
 AC_OUTPUT
