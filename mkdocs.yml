@@ -32,14 +32,16 @@ repo_url: https://github.com/squidfunk/protobluff
 copyright: Copyright &copy; 2013-2016 Martin Donath
 
 # Documentation and theme
-theme: material
+theme:
+  name: material
+  feature:
+    tabs: true
+  palette:
+    primary: teal
+    accent: teal
 
 # Extra variables
 extra:
-  logo: images/protobluff.svg
-  palette:
-    primary: indigo
-    accent: teal
   social:
     - type: github
       link: https://github.com/squidfunk

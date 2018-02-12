@@ -53,6 +53,6 @@ before_install:
 # Perform build and tests
 script: ./configure --enable-coverage && make && make test coverage
 
-# If successful, create and push coverage report
+# Deploy artifacts
 after_success:
-  - codecov -X gcov
+  - ./.travis.sh
