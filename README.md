@@ -1,9 +1,21 @@
 # protobluff
 
-[![Build Status](https://travis-ci.org/squidfunk/protobluff.svg)](https://travis-ci.org/squidfunk/protobluff)
-[![Coverage Status](https://coveralls.io/repos/squidfunk/protobluff/badge.svg?branch=master&service=github)](https://coveralls.io/github/squidfunk/protobluff?branch=master)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/2ffa154a4c2d4977a16b9276d9131e3f)](https://www.codacy.com/app/squidfunk/protobluff)
-[![Release Status](https://img.shields.io/github/release/squidfunk/protobluff.svg)](https://github.com/squidfunk/protobluff/releases/latest)
+[![Travis][travis-image]][travis-link]
+[![Codecov][codecov-image]][codecov-link]
+[![Gitter][gitter-image]][gitter-link]
+[![Codacy][codacy-image]][codacy-link]
+[![Release][release-image]][release-link]
+
+  [travis-image]: https://travis-ci.org/squidfunk/protobluff.svg?branch=master
+  [travis-link]: https://travis-ci.org/squidfunk/protobluff
+  [codecov-image]: https://img.shields.io/codecov/c/github/squidfunk/protobluff/master.svg
+  [codecov-link]: https://codecov.io/gh/squidfunk/protobluff
+  [gitter-image]: https://img.shields.io/gitter/room/squidfunk/protobluff.svg
+  [gitter-link]: https://gitter.im/squidfunk/protobluff
+  [codacy-image]: https://api.codacy.com/project/badge/Grade/2ffa154a4c2d4977a16b9276d9131e3f
+  [codacy-link]: https://www.codacy.com/app/squidfunk/protobluff
+  [release-image]: https://img.shields.io/github/release/squidfunk/protobluff.svg
+  [release-link]: https://github.com/squidfunk/protobluff/releases/latest
 
 protobluff is a modular Protocol Buffers implementation for C.
 
