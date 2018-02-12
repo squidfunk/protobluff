@@ -51,8 +51,8 @@ before_install:
   - cd protobuf-2.6.1 && ./configure --prefix=/usr && make && sudo make install
   - cd ..
 
-  # Install coveralls integration
-  - gem install coveralls-lcov
+  # Install codecov integration
+  - pip install --user codecov
 
   # Generate build environment
   - ./autogen.sh
@@ -62,4 +62,4 @@ script: ./configure --enable-coverage && make && make test coverage
 
 # If successful, create and push coverage report
 after_success:
-  - coveralls-lcov tests/coverage.info
+  - codecov
