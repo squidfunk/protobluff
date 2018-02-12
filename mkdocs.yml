@@ -22,14 +22,15 @@
 site_name: protobluff
 site_description: A modular Protocol Buffers implementation for C
 site_author: Martin Donath
-site_url: http://squidfunk.github.io/protobluff/
+site_url: https://squidfunk.github.io/protobluff/
 
 # Repository
 repo_name: squidfunk/protobluff
 repo_url: https://github.com/squidfunk/protobluff
+edit_uri: ""
 
 # Copyright
-copyright: Copyright &copy; 2013-2016 Martin Donath
+copyright: 'Copyright &copy; 2013 - 2016 Martin Donath'
 
 # Documentation and theme
 theme:
