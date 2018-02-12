@@ -186,7 +186,7 @@ void SplitStringToIteratorUsing(const string& full,
 void SplitStringUsing(const string& full,
                       const char* delim,
                       vector<string>* result) {
-  back_insert_iterator< vector<string> > it(*result);
+  std::back_insert_iterator< vector<string> > it(*result);
   SplitStringToIteratorUsing(full, delim, it);
 }
 
@@ -224,7 +224,7 @@ void SplitStringToIteratorAllowEmpty(const StringType& full,
 
 void SplitStringAllowEmpty(const string& full, const char* delim,
                            vector<string>* result) {
-  back_insert_iterator<vector<string> > it(*result);
+  std::back_insert_iterator<vector<string> > it(*result);
   SplitStringToIteratorAllowEmpty(full, delim, 0, it);
 }
 
@@ -1045,10 +1045,10 @@ void DelocalizeRadix(char* buffer) {
 }
 
 char* DoubleToBuffer(double value, char* buffer) {
-  if (value == numeric_limits<double>::infinity()) {
+  if (value == std::numeric_limits<double>::infinity()) {
     strcpy(buffer, "inf");
     return buffer;
-  } else if (value == -numeric_limits<double>::infinity()) {
+  } else if (value == -std::numeric_limits<double>::infinity()) {
     strcpy(buffer, "-inf");
     return buffer;
   } else if (IsNaN(value)) {
@@ -1094,10 +1094,10 @@ bool safe_strtof(const char* str, float* value) {
 }
 
 char* FloatToBuffer(float value, char* buffer) {
-  if (value == numeric_limits<double>::infinity()) {
+  if (value == std::numeric_limits<double>::infinity()) {
     strcpy(buffer, "inf");
     return buffer;
-  } else if (value == -numeric_limits<double>::infinity()) {
+  } else if (value == -std::numeric_limits<double>::infinity()) {
     strcpy(buffer, "-inf");
     return buffer;
   } else if (IsNaN(value)) {

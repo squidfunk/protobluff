@@ -40,16 +40,16 @@ before_install:
   - cd ..
 
   # Install lcov 1.11
-  - wget http://downloads.sourceforge.net/ltp/lcov-1.11.tar.gz
-  - tar -xvf lcov-1.11.tar.gz
-  - cd lcov-1.11 && sudo make install
+  - wget http://downloads.sourceforge.net/ltp/lcov-1.13.tar.gz
+  - tar -xvf lcov-1.13.tar.gz
+  - cd lcov-1.13 && sudo make install
   - cd ..
 
   # Install protobuf 2.6.1
-  - wget https://github.com/google/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.gz
-  - tar -xvf protobuf-2.6.1.tar.gz
-  - cd protobuf-2.6.1 && ./configure --prefix=/usr && make && sudo make install
-  - cd ..
+  #- wget https://github.com/google/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.gz
+  #- tar -xvf protobuf-2.6.1.tar.gz
+  #- cd protobuf-2.6.1 && ./configure --prefix=/usr && make && sudo make install
+  #- cd ..
 
   # Install codecov integration
   - pip install --user codecov
