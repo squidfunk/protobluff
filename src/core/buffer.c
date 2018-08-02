@@ -134,6 +134,7 @@ pb_buffer_destroy(pb_buffer_t *buffer) {
     if (buffer->data) {
       pb_allocator_free(buffer->allocator, buffer->data);
       buffer->data = NULL;
+      buffer->size = 0;
     }
     buffer->allocator = NULL;
   }
