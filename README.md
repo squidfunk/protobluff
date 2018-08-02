@@ -212,9 +212,9 @@ PKG_CHECK_MODULES([protobluff], [protobluff])
 2. Services (using gRPC and/or ZMQ)
 3. Groups (unsure)
 
-These features will be implemented in the order presented. protobluff is
+These features should be implemented in the order presented. protobluff is
 basically compatible with proto3, as proto2 is binary compatible, but some
-special types like maps and the Any type need to be implemented.
+special types like maps and the `Any` type need to be implemented.
 
 ## License
 
