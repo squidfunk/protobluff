@@ -1,0 +1,886 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      
+        <meta name="description" content="A modular Protocol Buffers implementation for C">
+      
+      
+        <link rel="canonical" href="https://squidfunk.github.io/protobluff/guide/error-handling/">
+      
+      
+        <meta name="author" content="Martin Donath">
+      
+      
+        <meta name="lang:clipboard.copy" content="Copy to clipboard">
+      
+        <meta name="lang:clipboard.copied" content="Copied to clipboard">
+      
+        <meta name="lang:search.language" content="en">
+      
+        <meta name="lang:search.pipeline.stopwords" content="True">
+      
+        <meta name="lang:search.pipeline.trimmer" content="True">
+      
+        <meta name="lang:search.result.none" content="No matching documents">
+      
+        <meta name="lang:search.result.one" content="1 matching document">
+      
+        <meta name="lang:search.result.other" content="# matching documents">
+      
+        <meta name="lang:search.tokenizer" content="[\s\-]+">
+      
+      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-0.17.5, mkdocs-material-2.9.4">
+    
+    
+      
+        <title>Error handling - protobluff</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/application.451f80e5.css">
+      
+        <link rel="stylesheet" href="../../assets/stylesheets/application-palette.22915126.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#009688">
+      
+    
+    
+      <script src="../../assets/javascripts/modernizr.1aa3b519.js"></script>
+    
+    
+      <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+      
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono">
+        <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
+      
+    
+    <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
+    
+    
+  </head>
+  
+    
+    
+    <body dir="ltr" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    <svg class="md-svg">
+      <defs>
+        
+        
+          <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448"
+    viewBox="0 0 416 448" id="__github">
+  <path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19-18.125
+        8.5-18.125-8.5-10.75-19-3.125-20.5 3.125-20.5 10.75-19 18.125-8.5
+        18.125 8.5 10.75 19 3.125 20.5zM320 304q0 10-3.125 20.5t-10.75
+        19-18.125 8.5-18.125-8.5-10.75-19-3.125-20.5 3.125-20.5 10.75-19
+        18.125-8.5 18.125 8.5 10.75 19 3.125 20.5zM360
+        304q0-30-17.25-51t-46.75-21q-10.25 0-48.75 5.25-17.75 2.75-39.25
+        2.75t-39.25-2.75q-38-5.25-48.75-5.25-29.5 0-46.75 21t-17.25 51q0 22 8
+        38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0
+        37.25-1.75t35-7.375 30.5-15 20.25-25.75 8-38.375zM416 260q0 51.75-15.25
+        82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5-41.75
+        1.125q-19.5 0-35.5-0.75t-36.875-3.125-38.125-7.5-34.25-12.875-30.25-20.25-21.5-28.75q-15.5-30.75-15.5-82.75
+        0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25
+        30.875q36.75-8.75 77.25-8.75 37 0 70 8 26.25-20.5
+        46.75-30.25t47.25-9.75q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34
+        99.5z" />
+</svg>
+        
+      </defs>
+    </svg>
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+    
+      <a href="#overview" tabindex="1" class="md-skip">
+        Skip to content
+      </a>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="https://squidfunk.github.io/protobluff/" title="protobluff" class="md-header-nav__button md-logo">
+          
+            <i class="md-icon"></i>
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          
+            
+              <span class="md-header-nav__topic">
+                protobluff
+              </span>
+              <span class="md-header-nav__topic">
+                Error handling
+              </span>
+            
+          
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        
+          
+            <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+            
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+          
+        
+      </div>
+      
+        <div class="md-flex__cell md-flex__cell--shrink">
+          <div class="md-header-nav__source">
+            
+
+
+  
+
+
+  <a href="https://github.com/squidfunk/protobluff" title="Go to repository" class="md-source" data-md-source="github">
+    
+      <div class="md-source__icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <use xlink:href="#__github" width="24" height="24"></use>
+        </svg>
+      </div>
+    
+    <div class="md-source__repository">
+      squidfunk/protobluff
+    </div>
+  </a>
+
+          </div>
+        </div>
+      
+    </div>
+  </nav>
+</header>
+    
+    <div class="md-container">
+      
+        
+      
+      
+        
+
+  
+
+<nav class="md-tabs md-tabs--active" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  <li class="md-tabs__item">
+    
+      <a href="../.." title="About" class="md-tabs__link">
+        About
+      </a>
+    
+  </li>
+
+      
+        
+      
+        
+      
+        
+      
+        
+  
+  
+    <li class="md-tabs__item">
+      
+        <a href="../runtimes/" title="Developer guide" class="md-tabs__link md-tabs__link--active">
+          Developer guide
+        </a>
+      
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+      
+      <main class="md-main">
+        <div class="md-main__inner md-grid" data-md-component="container">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="https://squidfunk.github.io/protobluff/" title="protobluff" class="md-nav__button md-logo">
+      
+        <i class="md-icon"></i>
+      
+    </a>
+    protobluff
+  </label>
+  
+    <div class="md-nav__source">
+      
+
+
+  
+
+
+  <a href="https://github.com/squidfunk/protobluff" title="Go to repository" class="md-source" data-md-source="github">
+    
+      <div class="md-source__icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <use xlink:href="#__github" width="24" height="24"></use>
+        </svg>
+      </div>
+    
+    <div class="md-source__repository">
+      squidfunk/protobluff
+    </div>
+  </a>
+
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="About" class="md-nav__link">
+      About
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../getting-started/" title="Getting started" class="md-nav__link">
+      Getting started
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../design-rationale/" title="Design rationale" class="md-nav__link">
+      Design rationale
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../similar-projects/" title="Similar projects" class="md-nav__link">
+      Similar projects
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5" checked>
+    
+    <label class="md-nav__link" for="nav-5">
+      Developer guide
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-5">
+        Developer guide
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../runtimes/" title="Choosing a runtime" class="md-nav__link">
+      Choosing a runtime
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../buffers-and-journals/" title="Buffers and journals" class="md-nav__link">
+      Buffers and journals
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../messages/" title="Working with messages" class="md-nav__link">
+      Working with messages
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../scalar-types/" title="Scalar types" class="md-nav__link">
+      Scalar types
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../repeated-fields/" title="Repeated fields" class="md-nav__link">
+      Repeated fields
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Error handling
+      </label>
+    
+    <a href="./" title="Error handling" class="md-nav__link md-nav__link--active">
+      Error handling
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" title="Overview" class="md-nav__link">
+    Overview
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors-in-return-values" title="Errors in return values" class="md-nav__link">
+    Errors in return values
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors-upon-creation" title="Errors upon creation" class="md-nav__link">
+    Errors upon creation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-codes" title="Error codes" class="md-nav__link">
+    Error codes
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pb_error_none" title="PB_ERROR_NONE" class="md-nav__link">
+    PB_ERROR_NONE
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pb_error_alloc" title="PB_ERROR_ALLOC" class="md-nav__link">
+    PB_ERROR_ALLOC
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pb_error_invalid" title="PB_ERROR_INVALID" class="md-nav__link">
+    PB_ERROR_INVALID
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pb_error_varint" title="PB_ERROR_VARINT" class="md-nav__link">
+    PB_ERROR_VARINT
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pb_error_offset" title="PB_ERROR_OFFSET" class="md-nav__link">
+    PB_ERROR_OFFSET
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pb_error_absent" title="PB_ERROR_ABSENT" class="md-nav__link">
+    PB_ERROR_ABSENT
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pb_error_eom" title="PB_ERROR_EOM" class="md-nav__link">
+    PB_ERROR_EOM
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../allocators/" title="Custom allocators" class="md-nav__link">
+      Custom allocators
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../miscellaneous/" title="Miscellaneous" class="md-nav__link">
+      Miscellaneous
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" title="Overview" class="md-nav__link">
+    Overview
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors-in-return-values" title="Errors in return values" class="md-nav__link">
+    Errors in return values
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors-upon-creation" title="Errors upon creation" class="md-nav__link">
+    Errors upon creation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-codes" title="Error codes" class="md-nav__link">
+    Error codes
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pb_error_none" title="PB_ERROR_NONE" class="md-nav__link">
+    PB_ERROR_NONE
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pb_error_alloc" title="PB_ERROR_ALLOC" class="md-nav__link">
+    PB_ERROR_ALLOC
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pb_error_invalid" title="PB_ERROR_INVALID" class="md-nav__link">
+    PB_ERROR_INVALID
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pb_error_varint" title="PB_ERROR_VARINT" class="md-nav__link">
+    PB_ERROR_VARINT
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pb_error_offset" title="PB_ERROR_OFFSET" class="md-nav__link">
+    PB_ERROR_OFFSET
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pb_error_absent" title="PB_ERROR_ABSENT" class="md-nav__link">
+    PB_ERROR_ABSENT
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pb_error_eom" title="PB_ERROR_EOM" class="md-nav__link">
+    PB_ERROR_EOM
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                  <h1>Error handling</h1>
+                
+                <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>From a paranoid point of view, there's a lot that can go wrong when working
+with Protocol Buffers messages, e.g. allocation errors, buffer underruns or
+garbled data. For this reason, protobluff is designed to anticipate and catch
+all possible errors and to be very specific about what went wrong.</p>
+<p>protobluff will always handle erroneous messages gracefully by design. If a
+buffer with an allocation error is passed to a message constructor, the message
+will be flagged invalid. Next, if a field to or from this invalid message is
+written or read, the resulting return code will indicate the same. The error
+will gracefully propagate through all subsequent function calls. However, to
+catch errors and unexpected behavior, the validity of the created structures
+and return values should always be checked explicitly.</p>
+<p>Errors are represented through codes defined in the type <code>pb_error_t</code> in the
+public header file <code>core/common.h</code>. For a detailed explanation of the specific
+error codes see <a href="#error-codes">this section</a>.</p>
+<h2 id="errors-in-return-values">Errors in return values<a class="headerlink" href="#errors-in-return-values" title="Permanent link">&para;</a></h2>
+<p>All functions that return the type <code>pb_error_t</code> are meant to be encapsulated
+in conditional clauses. The compiler will be very whiny if this is forgotten,
+thanks to the custom compiler attribute <code>__warn_unused_result__</code> that is
+defined for the respective functions if supported by the compiler (Clang and
+GCC have had this for a long time). Though it is not recommended, this
+behavior can be deactivated by compiling the linking program with the flag
+<code>-Wno-unused-result</code>.</p>
+<p>If the call to a function is successful, <code>PB_ERROR_NONE</code> is returned which is
+set to the value <code>0</code>, POSIX-style. All other error codes have values greater
+than zero. This allows easy checks for error conditions in two levels of
+verbosity. If no further details regarding the error are necessary, checking
+for errors is as simple as:</p>
+<div class="codehilite"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">pb_validator_check</span><span class="p">(</span><span class="o">&amp;</span><span class="n">validator</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">buffer</span><span class="p">))</span> <span class="p">{</span>
+  <span class="cm">/* Nope, there was an error */</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>When more information on the type of the error is needed, the following idiom
+should be applied:</p>
+<div class="codehilite"><pre><span></span><span class="n">pb_error_t</span> <span class="n">error</span><span class="p">;</span>
+<span class="k">if</span> <span class="p">((</span><span class="n">error</span> <span class="o">=</span> <span class="n">pb_validator_check</span><span class="p">(</span><span class="o">&amp;</span><span class="n">validator</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">buffer</span><span class="p">)))</span> <span class="p">{</span>
+  <span class="cm">/* Nope, there was an error */</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>The function <code>pb_error_string</code> is similar to the POSIX function <code>strerror</code>
+that returns a human-readable representation of an error code:</p>
+<div class="codehilite"><pre><span></span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Error: %s&quot;</span><span class="p">,</span> <span class="n">pb_error_string</span><span class="p">(</span><span class="n">error</span><span class="p">));</span>
+</pre></div>
+
+<h2 id="errors-upon-creation">Errors upon creation<a class="headerlink" href="#errors-upon-creation" title="Permanent link">&para;</a></h2>
+<p>When creating new structures, protobluff makes heavy use of the stack where
+possible to minimize the need for dynamic allocations:</p>
+<div class="codehilite"><pre><span></span><span class="n">pb_buffer_t</span> <span class="n">buffer</span> <span class="o">=</span> <span class="n">pb_buffer_create_empty</span><span class="p">();</span>
+</pre></div>
+
+<p>Usually, libraries that use dynamic allocation and return pointers implement
+error conditions by returning <code>NULL</code> pointers. However, to get further details
+on the type of error an extra argument to receive the type of error would have
+to be passed to the function call or a global variable like <code>errno</code> would have
+to be used. As protobluff uses stack allocation wherever possible, a different
+approach has to be taken.</p>
+<p>For this reason, errors that happen upon creation are encoded into the
+resulting structure, which has two advantages opposed to passing an argument to
+receive the error: first, there's no need to pass an error pointer as an extra
+argument. Second, as stated before, the error is encoded into the structure, so
+subsequent calls on an erroneous structure will fail gracefully, e.g.:</p>
+<div class="codehilite"><pre><span></span><span class="cm">/* Allocation fails, therefore buffer is invalid */</span>
+<span class="n">pb_buffer_t</span> <span class="n">buffer</span> <span class="o">=</span> <span class="n">pb_buffer_create_empty</span><span class="p">();</span>
+
+<span class="cm">/* Message is invalid, as it&#39;s created from an invalid buffer */</span>
+<span class="n">pb_message_t</span> <span class="n">message</span> <span class="o">=</span> <span class="n">pb_message_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">descriptor</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">buffer</span><span class="p">);</span>
+
+<span class="cm">/* Write to field is not executed, as message is invalid */</span>
+<span class="n">pb_message_put</span><span class="p">(</span><span class="o">&amp;</span><span class="n">message</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">value</span><span class="p">);</span>
+</pre></div>
+
+<p>Nevertheless, it is highly recommended to check every function that returns a
+new structure or the type <code>pb_error_t</code> for errors. See the specific sections
+for more details on how this should be done in the respective cases.</p>
+<h2 id="error-codes">Error codes<a class="headerlink" href="#error-codes" title="Permanent link">&para;</a></h2>
+<h3 id="pb_error_none"><code>PB_ERROR_NONE</code><a class="headerlink" href="#pb_error_none" title="Permanent link">&para;</a></h3>
+<p>The operation was successful. This constant will always yield the value <code>0</code>.</p>
+<h3 id="pb_error_alloc"><code>PB_ERROR_ALLOC</code><a class="headerlink" href="#pb_error_alloc" title="Permanent link">&para;</a></h3>
+<p>The required memory could not be allocated, almost only due to an out-of-memory
+condition (<code>ENOMEM</code>). This may happen when creating a buffer or implicitly
+altering a buffer by writing to its dedicated message or fields.</p>
+<h3 id="pb_error_invalid"><code>PB_ERROR_INVALID</code><a class="headerlink" href="#pb_error_invalid" title="Permanent link">&para;</a></h3>
+<p>The arguments passed to the function were not valid, e.g. passing an invalid
+buffer to a message constructor or trying to write a value to a message for a
+tag that is not part of the underlying message definition.</p>
+<h3 id="pb_error_varint"><code>PB_ERROR_VARINT</code><a class="headerlink" href="#pb_error_varint" title="Permanent link">&para;</a></h3>
+<p>An invalid variable-sized integer was encountered, i.e. the corresponding type
+is too small. If this happens, the underlying message is either garbled or the
+message definitions may not be in sync. For example, a field was changed from
+<code>int32</code> to <code>int64</code> on the encoding side, but forgotten to be updated on the
+decoding side.</p>
+<h3 id="pb_error_offset"><code>PB_ERROR_OFFSET</code><a class="headerlink" href="#pb_error_offset" title="Permanent link">&para;</a></h3>
+<p>This error is most likely related to garbled data, e.g. when a length prefix
+denoted that a message of certain length follows, but the buffer terminated
+unexpectedly.</p>
+<h3 id="pb_error_absent"><code>PB_ERROR_ABSENT</code><a class="headerlink" href="#pb_error_absent" title="Permanent link">&para;</a></h3>
+<p>This error is returned when trying to read the value of an optional field that
+is not present and the field does not define a default value, or a required
+field is missing during message validation.</p>
+<h3 id="pb_error_eom"><code>PB_ERROR_EOM</code><a class="headerlink" href="#pb_error_eom" title="Permanent link">&para;</a></h3>
+<p>Returned by <code>pb_cursor_error</code>, when the cursor is past the end of the last
+matching field occurrence, to indicate that the cursor in not valid anymore.</p>
+                
+                  
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../repeated-fields/" title="Repeated fields" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Repeated fields
+              </span>
+            </div>
+          </a>
+        
+        
+          <a href="../allocators/" title="Custom allocators" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Custom allocators
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+          <div class="md-footer-copyright__highlight">
+            Copyright &copy; 2013 - 2016 Martin Donath
+          </div>
+        
+        powered by
+        <a href="https://www.mkdocs.org">MkDocs</a>
+        and
+        <a href="https://squidfunk.github.io/mkdocs-material/">
+          Material for MkDocs</a>
+      </div>
+      
+        
+  <div class="md-footer-social">
+    <link rel="stylesheet" href="../../assets/fonts/font-awesome.css">
+    
+      <a href="http://struct.cc" class="md-footer-social__link fa fa-globe"></a>
+    
+      <a href="https://github.com/squidfunk" class="md-footer-social__link fa fa-github-alt"></a>
+    
+      <a href="https://twitter.com/squidfunk" class="md-footer-social__link fa fa-twitter"></a>
+    
+      <a href="https://linkedin.com/in/squidfunk" class="md-footer-social__link fa fa-linkedin"></a>
+    
+  </div>
+
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../assets/javascripts/application.30f6b8b1.js"></script>
+      
+      <script>app.initialize({version:"0.17.5",url:{base:"../.."}})</script>
+      
+    
+    
+      
+    
+  </body>
+</html>
