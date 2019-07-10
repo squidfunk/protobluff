@@ -44,6 +44,7 @@ namespace protobluff {
 
   using ::std::map;
   using ::std::string;
+  using ::std::unique_ptr;
   using ::std::vector;
 
   using ::google::protobuf::FileDescriptor;
@@ -88,11 +89,11 @@ namespace protobluff {
     const FileDescriptor *descriptor_; /* File descriptor */
     const FileOptions::OptimizeMode
       mode_;                           /* Optimization mode */
-    std::unique_ptr<
-      std::unique_ptr<Enum>[]
+    unique_ptr<
+      unique_ptr<Enum>[]
     > enums_;                          /* Enum generators */
-    std::unique_ptr<
-      std::unique_ptr<Message>[]
+    unique_ptr<
+      unique_ptr<Message>[]
     > messages_;                       /* Message generators */
     vector<Extension *> extensions_;   /* Extension generators */
     map<string, string> variables_;    /* Variables */

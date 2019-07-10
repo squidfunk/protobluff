@@ -39,6 +39,7 @@
 namespace protobluff {
 
   using ::std::sort;
+  using ::std::unique_ptr;
   using ::std::vector;
 
   using ::google::protobuf::EnumDescriptor;
@@ -57,7 +58,7 @@ namespace protobluff {
   Enum::
   Enum(const EnumDescriptor *descriptor) :
       descriptor_(descriptor),
-      values_(new std::unique_ptr<EnumValue>[descriptor_->value_count()]) {
+      values_(new unique_ptr<EnumValue>[descriptor_->value_count()]) {
 
     /* Sort enum value generators by number */
     vector<EnumValue *> sorted;

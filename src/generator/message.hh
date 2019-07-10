@@ -44,6 +44,7 @@ namespace protobluff {
 
   using ::std::map;
   using ::std::string;
+  using ::std::unique_ptr;
   using ::std::vector;
 
   using ::google::protobuf::Descriptor;
@@ -130,17 +131,17 @@ namespace protobluff {
 
   private:
     const Descriptor *descriptor_;     /* Descriptor */
-    std::unique_ptr<
-      std::unique_ptr<Field>[]
+    unique_ptr<
+      unique_ptr<Field>[]
     > fields_;                         /* Field generators */
-    std::unique_ptr<
-      std::unique_ptr<Enum>[]
+    unique_ptr<
+      unique_ptr<Enum>[]
     > enums_;                          /* Enum generators */
-    std::unique_ptr<
-      std::unique_ptr<Oneof>[]
+    unique_ptr<
+      unique_ptr<Oneof>[]
     > oneofs_;                         /* Oneof generators */
-    std::unique_ptr<
-      std::unique_ptr<Message>[]
+    unique_ptr<
+      unique_ptr<Message>[]
     > nested_;                         /* Nested message generators */
     vector<Extension *> extensions_;   /* Extension generators */
     map<string, string> variables_;    /* Variables */

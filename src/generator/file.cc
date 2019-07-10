@@ -47,6 +47,7 @@ namespace protobluff {
 
   using ::std::set;
   using ::std::string;
+  using ::std::unique_ptr;
   using ::std::vector;
 
   using ::google::protobuf::FileDescriptor;
@@ -69,8 +70,8 @@ namespace protobluff {
       mode_(descriptor_->options().has_optimize_for()
         ? descriptor_->options().optimize_for()
         : FileOptions::SPEED),
-      enums_(new std::unique_ptr<Enum>[descriptor_->enum_type_count()]),
-      messages_(new std::unique_ptr<Message>[descriptor_->message_type_count()]) {
+      enums_(new unique_ptr<Enum>[descriptor_->enum_type_count()]),
+      messages_(new unique_ptr<Message>[descriptor_->message_type_count()]) {
 
     /* Initialize enum generators */
     for (size_t e = 0; e < descriptor_->enum_type_count(); e++)

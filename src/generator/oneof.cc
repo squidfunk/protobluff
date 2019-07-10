@@ -40,6 +40,7 @@ namespace protobluff {
 
   using ::std::sort;
   using ::std::string;
+  using ::std::unique_ptr;
   using ::std::vector;
 
   using ::google::protobuf::Descriptor;
@@ -60,7 +61,7 @@ namespace protobluff {
   Oneof::
   Oneof(const OneofDescriptor *descriptor) :
       descriptor_(descriptor),
-      fields_(new std::unique_ptr<Field>[descriptor_->field_count()]) {
+      fields_(new unique_ptr<Field>[descriptor_->field_count()]) {
 
     /* Sort field generators by tag */
     vector<Field *> sorted;

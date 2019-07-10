@@ -44,6 +44,7 @@ namespace protobluff {
 
   using ::std::set;
   using ::std::sort;
+  using ::std::unique_ptr;
   using ::std::vector;
 
   using ::google::protobuf::Descriptor;
@@ -62,10 +63,10 @@ namespace protobluff {
   Message::
   Message(const Descriptor *descriptor) :
       descriptor_(descriptor),
-      fields_(new std::unique_ptr<Field>[descriptor_->field_count()]),
-      enums_(new std::unique_ptr<Enum>[descriptor_->enum_type_count()]),
-      oneofs_(new std::unique_ptr<Oneof>[descriptor_->oneof_decl_count()]),
-      nested_(new std::unique_ptr<Message>[descriptor_->nested_type_count()]) {
+      fields_(new unique_ptr<Field>[descriptor_->field_count()]),
+      enums_(new unique_ptr<Enum>[descriptor_->enum_type_count()]),
+      oneofs_(new unique_ptr<Oneof>[descriptor_->oneof_decl_count()]),
+      nested_(new unique_ptr<Message>[descriptor_->nested_type_count()]) {
 
     /* Sort field generators by tag */
     vector<Field *> sorted;

@@ -40,6 +40,7 @@ namespace protobluff {
 
   using ::std::map;
   using ::std::string;
+  using ::std::unique_ptr;
 
   using ::google::protobuf::OneofDescriptor;
   using ::google::protobuf::io::Printer;
@@ -70,8 +71,8 @@ namespace protobluff {
   private:
     const OneofDescriptor
       *descriptor_;                    /* Oneof descriptor */
-    std::unique_ptr<
-      std::unique_ptr<Field>[]
+    unique_ptr<
+      unique_ptr<Field>[]
     > fields_;                         /* Field generators */
     map<string, string> variables_;    /* Variables */
   };

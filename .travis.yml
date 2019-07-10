@@ -51,7 +51,11 @@ before_install:
   - ./autogen.sh
 
 # Perform build and tests
-script: ./configure --enable-coverage && make && make test coverage
+script:
+  - >
+    ./configure --enable-coverage &&
+    make --silent &&
+    make --silent test coverage
 
 # Deploy artifacts
 after_success:

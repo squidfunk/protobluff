@@ -40,6 +40,7 @@ namespace protobluff {
 
   using ::std::map;
   using ::std::string;
+  using ::std::unique_ptr;
 
   using ::google::protobuf::EnumDescriptor;
   using ::google::protobuf::io::Printer;
@@ -69,8 +70,8 @@ namespace protobluff {
 
   private:
     const EnumDescriptor *descriptor_; /* Enum descriptor */
-    std::unique_ptr<
-      std::unique_ptr<EnumValue>[]
+    unique_ptr<
+      unique_ptr<EnumValue>[]
     > values_;                         /* Enum value generators */
     map<string, string> variables_;    /* Variables */
   };

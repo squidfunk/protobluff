@@ -46,6 +46,7 @@ namespace protobluff {
   using ::std::endl;
   using ::std::map;
   using ::std::string;
+  using ::std::unique_ptr;
   using ::std::vector;
 
   using ::google::protobuf::Descriptor;
@@ -487,7 +488,7 @@ namespace protobluff {
         trace.push_back(descriptor_);
 
         /* Follow trace for corresponding message generator */
-        std::unique_ptr<Message> temp(new Message(descriptor_->message_type()));
+        unique_ptr<Message> temp(new Message(descriptor_->message_type()));
         temp->GenerateAccessors(printer, trace);
       }
 
@@ -684,7 +685,7 @@ namespace protobluff {
         trace.push_back(descriptor_);
 
         /* Follow trace for corresponding message generator */
-        std::unique_ptr<Message> temp(new Message(message));
+        unique_ptr<Message> temp(new Message(message));
         temp->GenerateAccessors(printer, trace);
         trace.pop_back();
       }

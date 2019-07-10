@@ -40,6 +40,7 @@
 namespace protobluff {
 
   using ::std::string;
+  using ::std::unique_ptr;
 
   using ::google::protobuf::compiler::CodeGenerator;
   using ::google::protobuf::compiler::OutputDirectory;
@@ -71,7 +72,7 @@ namespace protobluff {
 
     /* Generate header file */
     {
-      std::unique_ptr<ZeroCopyOutputStream> output(
+      unique_ptr<ZeroCopyOutputStream> output(
         directory->Open(basename + ".h"));
       Printer printer (output.get(), '`');
       file.GenerateHeader(&printer);
@@ -79,7 +80,7 @@ namespace protobluff {
 
     /* Generate source file */
     {
-      std::unique_ptr<ZeroCopyOutputStream> output(
+      unique_ptr<ZeroCopyOutputStream> output(
         directory->Open(basename + ".c"));
       Printer printer (output.get(), '`');
       file.GenerateSource(&printer);
