@@ -49,8 +49,6 @@ namespace protobluff {
   using ::google::protobuf::FileDescriptor;
   using ::google::protobuf::FileOptions;
   using ::google::protobuf::io::Printer;
-  using ::google::protobuf::scoped_array;
-  using ::google::protobuf::scoped_ptr;
 
   class File {
 
@@ -90,11 +88,11 @@ namespace protobluff {
     const FileDescriptor *descriptor_; /* File descriptor */
     const FileOptions::OptimizeMode
       mode_;                           /* Optimization mode */
-    scoped_array<
-      scoped_ptr<Enum>
+    std::unique_ptr<
+      std::unique_ptr<Enum>[]
     > enums_;                          /* Enum generators */
-    scoped_array<
-      scoped_ptr<Message>
+    std::unique_ptr<
+      std::unique_ptr<Message>[]
     > messages_;                       /* Message generators */
     vector<Extension *> extensions_;   /* Extension generators */
     map<string, string> variables_;    /* Variables */

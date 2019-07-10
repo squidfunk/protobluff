@@ -46,7 +46,6 @@ namespace protobluff {
   using ::google::protobuf::FileDescriptor;
   using ::google::protobuf::io::Printer;
   using ::google::protobuf::io::ZeroCopyOutputStream;
-  using ::google::protobuf::scoped_ptr;
 
   using ::google::protobuf::StripSuffixString;
 
@@ -72,7 +71,7 @@ namespace protobluff {
 
     /* Generate header file */
     {
-      scoped_ptr<ZeroCopyOutputStream> output(
+      std::unique_ptr<ZeroCopyOutputStream> output(
         directory->Open(basename + ".h"));
       Printer printer (output.get(), '`');
       file.GenerateHeader(&printer);
@@ -80,7 +79,7 @@ namespace protobluff {
 
     /* Generate source file */
     {
-      scoped_ptr<ZeroCopyOutputStream> output(
+      std::unique_ptr<ZeroCopyOutputStream> output(
         directory->Open(basename + ".c"));
       Printer printer (output.get(), '`');
       file.GenerateSource(&printer);

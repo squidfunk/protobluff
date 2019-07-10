@@ -49,7 +49,6 @@ namespace protobluff {
   using ::google::protobuf::Descriptor;
   using ::google::protobuf::FieldDescriptor;
   using ::google::protobuf::io::Printer;
-  using ::google::protobuf::scoped_ptr;
 
   using ::google::protobuf::LowerString;
   using ::google::protobuf::SimpleItoa;
@@ -63,10 +62,10 @@ namespace protobluff {
   Message::
   Message(const Descriptor *descriptor) :
       descriptor_(descriptor),
-      fields_(new scoped_ptr<Field>[descriptor_->field_count()]),
-      enums_(new scoped_ptr<Enum>[descriptor_->enum_type_count()]),
-      oneofs_(new scoped_ptr<Oneof>[descriptor_->oneof_decl_count()]),
-      nested_(new scoped_ptr<Message>[descriptor_->nested_type_count()]) {
+      fields_(new std::unique_ptr<Field>[descriptor_->field_count()]),
+      enums_(new std::unique_ptr<Enum>[descriptor_->enum_type_count()]),
+      oneofs_(new std::unique_ptr<Oneof>[descriptor_->oneof_decl_count()]),
+      nested_(new std::unique_ptr<Message>[descriptor_->nested_type_count()]) {
 
     /* Sort field generators by tag */
     vector<Field *> sorted;

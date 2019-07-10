@@ -43,8 +43,6 @@ namespace protobluff {
 
   using ::google::protobuf::OneofDescriptor;
   using ::google::protobuf::io::Printer;
-  using ::google::protobuf::scoped_array;
-  using ::google::protobuf::scoped_ptr;
 
   class Oneof {
 
@@ -72,8 +70,8 @@ namespace protobluff {
   private:
     const OneofDescriptor
       *descriptor_;                    /* Oneof descriptor */
-    scoped_array<
-      scoped_ptr<Field>
+    std::unique_ptr<
+      std::unique_ptr<Field>[]
     > fields_;                         /* Field generators */
     map<string, string> variables_;    /* Variables */
   };

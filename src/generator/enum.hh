@@ -43,8 +43,6 @@ namespace protobluff {
 
   using ::google::protobuf::EnumDescriptor;
   using ::google::protobuf::io::Printer;
-  using ::google::protobuf::scoped_array;
-  using ::google::protobuf::scoped_ptr;
 
   class Enum {
 
@@ -71,8 +69,8 @@ namespace protobluff {
 
   private:
     const EnumDescriptor *descriptor_; /* Enum descriptor */
-    scoped_array<
-      scoped_ptr<EnumValue>
+    std::unique_ptr<
+      std::unique_ptr<EnumValue>[]
     > values_;                         /* Enum value generators */
     map<string, string> variables_;    /* Variables */
   };

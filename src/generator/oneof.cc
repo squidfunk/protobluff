@@ -46,7 +46,6 @@ namespace protobluff {
   using ::google::protobuf::FieldDescriptor;
   using ::google::protobuf::OneofDescriptor;
   using ::google::protobuf::io::Printer;
-  using ::google::protobuf::scoped_ptr;
 
   using ::google::protobuf::JoinStrings;
   using ::google::protobuf::LowerString;
@@ -61,7 +60,7 @@ namespace protobluff {
   Oneof::
   Oneof(const OneofDescriptor *descriptor) :
       descriptor_(descriptor),
-      fields_(new scoped_ptr<Field>[descriptor_->field_count()]) {
+      fields_(new std::unique_ptr<Field>[descriptor_->field_count()]) {
 
     /* Sort field generators by tag */
     vector<Field *> sorted;

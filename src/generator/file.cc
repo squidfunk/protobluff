@@ -52,7 +52,6 @@ namespace protobluff {
   using ::google::protobuf::FileDescriptor;
   using ::google::protobuf::FileOptions;
   using ::google::protobuf::io::Printer;
-  using ::google::protobuf::scoped_ptr;
 
   using ::google::protobuf::SimpleItoa;
   using ::google::protobuf::StringReplace;
@@ -70,8 +69,8 @@ namespace protobluff {
       mode_(descriptor_->options().has_optimize_for()
         ? descriptor_->options().optimize_for()
         : FileOptions::SPEED),
-      enums_(new scoped_ptr<Enum>[descriptor_->enum_type_count()]),
-      messages_(new scoped_ptr<Message>[descriptor_->message_type_count()]) {
+      enums_(new std::unique_ptr<Enum>[descriptor_->enum_type_count()]),
+      messages_(new std::unique_ptr<Message>[descriptor_->message_type_count()]) {
 
     /* Initialize enum generators */
     for (size_t e = 0; e < descriptor_->enum_type_count(); e++)
