@@ -44,7 +44,6 @@ namespace protobluff {
   using ::google::protobuf::EnumDescriptor;
   using ::google::protobuf::FieldDescriptor;
   using ::google::protobuf::io::Printer;
-  using ::google::protobuf::scoped_ptr;
 
   using ::google::protobuf::LowerString;
   using ::google::protobuf::SimpleItoa;
@@ -58,7 +57,7 @@ namespace protobluff {
   Enum::
   Enum(const EnumDescriptor *descriptor) :
       descriptor_(descriptor),
-      values_(new scoped_ptr<EnumValue>[descriptor_->value_count()]) {
+      values_(new std::unique_ptr<EnumValue>[descriptor_->value_count()]) {
 
     /* Sort enum value generators by number */
     vector<EnumValue *> sorted;

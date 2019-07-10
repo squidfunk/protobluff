@@ -49,8 +49,6 @@ namespace protobluff {
   using ::google::protobuf::Descriptor;
   using ::google::protobuf::FieldDescriptor;
   using ::google::protobuf::io::Printer;
-  using ::google::protobuf::scoped_array;
-  using ::google::protobuf::scoped_ptr;
 
   class Message {
 
@@ -132,17 +130,17 @@ namespace protobluff {
 
   private:
     const Descriptor *descriptor_;     /* Descriptor */
-    scoped_array<
-      scoped_ptr<Field>
+    std::unique_ptr<
+      std::unique_ptr<Field>[]
     > fields_;                         /* Field generators */
-    scoped_array<
-      scoped_ptr<Enum>
+    std::unique_ptr<
+      std::unique_ptr<Enum>[]
     > enums_;                          /* Enum generators */
-    scoped_array<
-      scoped_ptr<Oneof>
+    std::unique_ptr<
+      std::unique_ptr<Oneof>[]
     > oneofs_;                         /* Oneof generators */
-    scoped_array<
-      scoped_ptr<Message>
+    std::unique_ptr<
+      std::unique_ptr<Message>[]
     > nested_;                         /* Nested message generators */
     vector<Extension *> extensions_;   /* Extension generators */
     map<string, string> variables_;    /* Variables */

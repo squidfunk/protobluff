@@ -53,7 +53,6 @@ namespace protobluff {
   using ::google::protobuf::EnumValueDescriptor;
   using ::google::protobuf::FieldDescriptor;
   using ::google::protobuf::io::Printer;
-  using ::google::protobuf::scoped_ptr;
 
   using ::google::protobuf::HasPrefixString;
   using ::google::protobuf::JoinStrings;
@@ -488,7 +487,7 @@ namespace protobluff {
         trace.push_back(descriptor_);
 
         /* Follow trace for corresponding message generator */
-        scoped_ptr<Message> temp(new Message(descriptor_->message_type()));
+        std::unique_ptr<Message> temp(new Message(descriptor_->message_type()));
         temp->GenerateAccessors(printer, trace);
       }
 
@@ -685,7 +684,7 @@ namespace protobluff {
         trace.push_back(descriptor_);
 
         /* Follow trace for corresponding message generator */
-        scoped_ptr<Message> temp(new Message(message));
+        std::unique_ptr<Message> temp(new Message(message));
         temp->GenerateAccessors(printer, trace);
         trace.pop_back();
       }
