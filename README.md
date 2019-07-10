@@ -3,17 +3,14 @@
 [![Travis][travis-image]][travis-link]
 [![Codecov][codecov-image]][codecov-link]
 [![Gitter][gitter-image]][gitter-link]
-[![Codacy][codacy-image]][codacy-link]
 [![Release][release-image]][release-link]
 
   [travis-image]: https://travis-ci.org/squidfunk/protobluff.svg?branch=master
   [travis-link]: https://travis-ci.org/squidfunk/protobluff
   [codecov-image]: https://img.shields.io/codecov/c/github/squidfunk/protobluff/master.svg
   [codecov-link]: https://codecov.io/gh/squidfunk/protobluff
-  [gitter-image]: https://img.shields.io/gitter/room/squidfunk/protobluff.svg
+  [gitter-image]: https://badges.gitter.im/squidfunk/protobluff.svg
   [gitter-link]: https://gitter.im/squidfunk/protobluff
-  [codacy-image]: https://api.codacy.com/project/badge/Grade/2ffa154a4c2d4977a16b9276d9131e3f
-  [codacy-link]: https://www.codacy.com/app/squidfunk/protobluff
   [release-image]: https://img.shields.io/github/release/squidfunk/protobluff.svg
   [release-link]: https://github.com/squidfunk/protobluff/releases/latest
 
@@ -206,15 +203,14 @@ PKG_CHECK_MODULES([protobluff], [protobluff])
 11. Packed fields
 12. Oneofs
 
-### Not yet supported
+### Not (yet) supported
 
 1. proto3 support
 2. Services (using gRPC and/or ZMQ)
 3. Groups (unsure)
 
-These features should be implemented in the order presented. protobluff is
-basically compatible with proto3, as proto2 is binary compatible, but some
-special types like maps and the `Any` type need to be implemented.
+protobluff is basically compatible with proto3, as proto2 is binary compatible,
+but some special types like maps and the `Any` type need to be implemented.
 
 ## License
 
