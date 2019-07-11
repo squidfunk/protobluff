@@ -1,6 +1,6 @@
-protobluff-1.1.0 (2019-xx-xx)
+protobluff-1.1.0 (2019-06-11)
 
-  * Fixed compatibility issues with protobuf 3.6+
+  * Fixed generator compatibility issues with protobuf 3.6+
 
 protobluff-1.0.3 (2018-08-02)
 
