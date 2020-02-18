@@ -45,24 +45,24 @@ pb_message_nested_match(
   size_t size,                         /* Tag count */
   const void *value);                  /* Pointer holding value */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_error_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_message_nested_get(
   pb_message_t *message,               /* Message */
   const pb_tag_t tags[],               /* Tags */
   size_t size,                         /* Tag count */
   void *value);                        /* Pointer receiving value */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_error_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_message_nested_put(
   pb_message_t *message,               /* Message */
   const pb_tag_t tags[],               /* Tags */
   size_t size,                         /* Tag count */
   const void *value);                  /* Pointer holding value */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_error_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_message_nested_erase(
   pb_message_t *message,               /* Message */
   const pb_tag_t tags[],               /* Tags */

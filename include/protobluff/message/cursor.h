@@ -51,14 +51,14 @@ typedef struct pb_cursor_t {
  * Interface
  * ------------------------------------------------------------------------- */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_cursor_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_cursor_t
 pb_cursor_create(
   pb_message_t *message,               /* Message */
   pb_tag_t tag);                       /* Tag */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_cursor_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_cursor_t
 pb_cursor_create_nested(
   pb_message_t *message,               /* Message */
   const pb_tag_t tags[],               /* Tags */
@@ -90,20 +90,20 @@ pb_cursor_match(
   pb_cursor_t *cursor,                 /* Cursor */
   const void *value);                  /* Pointer holding value */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_error_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_cursor_get(
   pb_cursor_t *cursor,                 /* Cursor */
   void *value);                        /* Pointer receiving value */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_error_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_cursor_put(
   pb_cursor_t *cursor,                 /* Cursor */
   const void *value);                  /* Pointer holding value */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_error_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_cursor_erase(
   pb_cursor_t *cursor);                /* Cursor */
 

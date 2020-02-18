@@ -51,21 +51,21 @@ typedef struct pb_field_t {
  * Interface
  * ------------------------------------------------------------------------- */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_field_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_field_t
 pb_field_create(
   struct pb_message_t *message,        /* Message */
   pb_tag_t tag);                       /* Tag */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_field_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_field_t
 pb_field_create_nested(
   struct pb_message_t *message,        /* Message */
   const pb_tag_t tags[],               /* Tags */
   size_t size);                        /* Tag count */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_field_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_field_t
 pb_field_create_from_cursor(
   struct pb_cursor_t *cursor);         /* Cursor */
 
@@ -78,20 +78,20 @@ pb_field_match(
   pb_field_t *field,                   /* Field */
   const void *value);                  /* Pointer holding value */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_error_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_field_get(
   pb_field_t *field,                   /* Field */
   void *value);                        /* Pointer receiving value */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_error_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_field_put(
   pb_field_t *field,                   /* Field */
   const void *value);                  /* Pointer holding value */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_error_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_field_clear(
   pb_field_t *field);                  /* Field */
 
