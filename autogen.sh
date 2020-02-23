@@ -40,7 +40,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Generate files to build shared libraries
-command -v libtool > /dev/null 2>&1
+command -v libtoolize > /dev/null 2>&1
 if  [ $? -ne 0 ]; then
   echo "autogen.sh: error: could not find libtool." 1>&2
   echo "libtool is required to run autogen.sh." 1>&2
