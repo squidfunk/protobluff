@@ -45,13 +45,13 @@ typedef struct pb_encoder_t {
  * Interface
  * ------------------------------------------------------------------------- */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_encoder_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_encoder_t
 pb_encoder_create(
   const pb_descriptor_t *descriptor);  /* Descriptor */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_encoder_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_encoder_t
 pb_encoder_create_with_allocator(
   pb_allocator_t *allocator,           /* Allocator */
   const pb_descriptor_t *descriptor);  /* Descriptor */
@@ -60,8 +60,8 @@ PB_EXPORT void
 pb_encoder_destroy(
   pb_encoder_t *encoder);              /* Encoder */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_error_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_encoder_encode(
   pb_encoder_t *encoder,               /* Encoder */
   pb_tag_t tag,                        /* Tag */

@@ -51,32 +51,32 @@ typedef struct pb_message_t {
  * Interface
  * ------------------------------------------------------------------------- */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_message_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_message_t
 pb_message_create(
   const pb_descriptor_t *descriptor,   /* Descriptor */
   pb_journal_t *journal);              /* Journal */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_message_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_message_t
 pb_message_create_within(
   pb_message_t *message,               /* Message */
   pb_tag_t tag);                       /* Tag */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_message_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_message_t
 pb_message_create_nested(
   pb_message_t *message,               /* Message */
   const pb_tag_t tags[],               /* Tags */
   size_t size);                        /* Tag count */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_message_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_message_t
 pb_message_create_from_cursor(
   struct pb_cursor_t *cursor);         /* Cursor */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_message_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_message_t
 pb_message_create_from_field(
   const pb_descriptor_t *descriptor,   /* Descriptor */
   struct pb_field_t *field);           /* Bytes field */
@@ -100,28 +100,28 @@ pb_message_match(
   pb_tag_t tag,                        /* Tag */
   const void *value);                  /* Pointer holding value */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_error_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_message_get(
   pb_message_t *message,               /* Message */
   pb_tag_t tag,                        /* Tag */
   void *value);                        /* Pointer receiving value */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_error_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_message_put(
   pb_message_t *message,               /* Message */
   pb_tag_t tag,                        /* Tag */
   const void *value);                  /* Pointer holding value */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_error_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_message_erase(
   pb_message_t *message,               /* Message */
   pb_tag_t tag);                       /* Tag */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_error_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_message_clear(
   pb_message_t *message);              /* Message */
 

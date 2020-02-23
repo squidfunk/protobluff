@@ -51,8 +51,8 @@ typedef struct pb_decoder_t {
  * Interface
  * ------------------------------------------------------------------------- */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_decoder_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_decoder_t
 pb_decoder_create(
   const pb_descriptor_t
     *descriptor,                       /* Descriptor */
@@ -62,8 +62,8 @@ PB_EXPORT void
 pb_decoder_destroy(
   pb_decoder_t *decoder);              /* Decoder */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_error_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_decoder_decode(
   const pb_decoder_t *decoder,         /* Decoder */
   pb_decoder_handler_f handler,        /* Handler */

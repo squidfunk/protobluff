@@ -44,30 +44,30 @@ typedef struct pb_buffer_t {
  * Interface
  * ------------------------------------------------------------------------- */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_buffer_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_buffer_t
 pb_buffer_create(
   const uint8_t data[],                /* Raw data */
   size_t size);                        /* Raw data size */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_buffer_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_buffer_t
 pb_buffer_create_with_allocator(
   pb_allocator_t *allocator,           /* Allocator */
   const uint8_t data[],                /* Raw data */
   size_t size);                        /* Raw data size */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_buffer_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_buffer_t
 pb_buffer_create_empty(void);
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_buffer_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_buffer_t
 pb_buffer_create_empty_with_allocator(
   pb_allocator_t *allocator);          /* Allocator */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_buffer_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_buffer_t
 pb_buffer_create_zero_copy(
   uint8_t data[],                      /* Raw data */
   size_t size);                        /* Raw data size */

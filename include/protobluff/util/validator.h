@@ -41,8 +41,8 @@ typedef struct pb_validator_t {
  * Interface
  * ------------------------------------------------------------------------- */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_error_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_validator_check(
   const pb_validator_t *validator,     /* Validator */
   const pb_buffer_t *buffer);          /* Buffer */

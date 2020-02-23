@@ -32,12 +32,12 @@
  * Interface
  * ------------------------------------------------------------------------- */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_allocator_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_allocator_t
 pb_chunk_allocator_create();
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_allocator_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_allocator_t
 pb_chunk_allocator_create_with_capacity(
   size_t capacity);                    /* Chunk capacity */
 

@@ -49,8 +49,8 @@ typedef struct pb_oneof_t {
  * Interface
  * ------------------------------------------------------------------------- */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_oneof_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_oneof_t
 pb_oneof_create(
   const pb_oneof_descriptor_t
     *descriptor,                       /* Oneof descriptor */
@@ -64,8 +64,8 @@ PB_EXPORT pb_tag_t
 pb_oneof_case(
   pb_oneof_t *oneof);                  /* Oneof */
 
-PB_WARN_UNUSED_RESULT
-PB_EXPORT pb_error_t
+PB_EXPORT PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_oneof_clear(
   pb_oneof_t *oneof);                  /* Oneof */
 
