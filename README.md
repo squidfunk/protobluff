@@ -214,7 +214,7 @@ but some special types like maps and the `Any` type need to be implemented.
 
 ## License
 
-Copyright (c) 2013-2016 Martin Donath
+Copyright (c) 2013-2020 Martin Donath
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to
