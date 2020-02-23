@@ -56,8 +56,8 @@ pb_buffer_grow(
  * \param[in]     size   Raw data size
  * \return               Buffer
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_buffer_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_buffer_t
 pb_buffer_create_zero_copy_internal(uint8_t data[], size_t size) {
   pb_buffer_t buffer = {
     .allocator = &allocator_zero_copy,
@@ -72,8 +72,8 @@ pb_buffer_create_zero_copy_internal(uint8_t data[], size_t size) {
  *
  * \return Buffer
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_buffer_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_buffer_t
 pb_buffer_create_invalid(void) {
   pb_buffer_t buffer = {};
   return buffer;

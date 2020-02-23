@@ -84,8 +84,8 @@ pb_stream_skip_jump[];
  * \param[in] buffer Buffer
  * \return           Stream
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_stream_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_stream_t
 pb_stream_create(const pb_buffer_t *buffer) {
   assert(buffer);
   assert(pb_buffer_valid(buffer));
@@ -103,8 +103,8 @@ pb_stream_create(const pb_buffer_t *buffer) {
  * \param[in] offset Offset
  * \return           Stream
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_stream_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_stream_t
 pb_stream_create_at(const pb_buffer_t *buffer, size_t offset) {
   assert(buffer);
   assert(pb_buffer_valid(buffer));
@@ -194,8 +194,8 @@ pb_stream_empty(const pb_stream_t *stream) {
  * \param[out]    value  Pointer receiving value
  * \return               Error code
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_error_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_stream_read(pb_stream_t *stream, pb_type_t type, void *value) {
   assert(pb_stream_read_jump[type]);
   return pb_stream_read_jump[type](stream, type, value);
@@ -208,8 +208,8 @@ pb_stream_read(pb_stream_t *stream, pb_type_t type, void *value) {
  * \param[in]     wiretype Wiretype
  * \return                 Error code
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_error_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_stream_skip(pb_stream_t *stream, pb_wiretype_t wiretype) {
   assert(pb_stream_skip_jump[wiretype]);
   return pb_stream_skip_jump[wiretype](stream);

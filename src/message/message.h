@@ -42,8 +42,8 @@
  *
  * \return Message
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_message_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_message_t
 pb_message_create_invalid(void) {
   pb_message_t message = {
     .descriptor = NULL,
@@ -58,8 +58,8 @@ pb_message_create_invalid(void) {
  * \param[in] message Message
  * \return            Message copy
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_message_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_message_t
 pb_message_copy(const pb_message_t *message) {
   assert(message);
   return *message;
@@ -107,8 +107,8 @@ pb_message_aligned(const pb_message_t *message) {
  * \param[in,out] message Message
  * \return                Error code
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_error_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_message_align(pb_message_t *message) {
   assert(message);
   return !pb_part_aligned(&(message->part))

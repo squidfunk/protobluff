@@ -56,8 +56,8 @@ pb_cursor_align(
  * \param[in] message Message
  * \return            Cursor
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_cursor_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_cursor_t
 pb_cursor_create_without_tag(pb_message_t *message) {
   assert(message);
   return pb_cursor_create_unsafe(message, 0);
@@ -68,8 +68,8 @@ pb_cursor_create_without_tag(pb_message_t *message) {
  *
  * \return Cursor
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_cursor_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_cursor_t
 pb_cursor_create_invalid(void) {
   pb_cursor_t cursor = {
     .message = pb_message_create_invalid(),
@@ -84,8 +84,8 @@ pb_cursor_create_invalid(void) {
  * \param[in] cursor Cursor
  * \return           Cursor copy
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_cursor_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_cursor_t
 pb_cursor_copy(const pb_cursor_t *cursor) {
   assert(cursor);
   return *cursor;

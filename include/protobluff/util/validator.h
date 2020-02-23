@@ -57,8 +57,8 @@ pb_validator_check(
  * \param[in] descriptor Descriptor
  * \return               Validator
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_validator_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_validator_t
 pb_validator_create(const pb_descriptor_t *descriptor) {
   assert(descriptor);
   pb_validator_t validator = {

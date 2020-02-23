@@ -1,3 +1,7 @@
+protobluff-1.1.1 (2020-02-23)
+
+  * Fixed compilation error when including in C++ units
+
 protobluff-1.1.0 (2019-07-11)
 
   * Fixed generator compatibility issues with protobuf 3.6+

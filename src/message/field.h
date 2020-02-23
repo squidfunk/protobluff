@@ -52,8 +52,8 @@ pb_field_create_without_default(
  *
  * \return Field
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_field_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_field_t
 pb_field_create_invalid(void) {
   pb_field_t field = {
     .descriptor = NULL,
@@ -68,8 +68,8 @@ pb_field_create_invalid(void) {
  * \param[in] field Field
  * \return          Field copy
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_field_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_field_t
 pb_field_copy(const pb_field_t *field) {
   assert(field);
   return *field;
@@ -117,8 +117,8 @@ pb_field_aligned(const pb_field_t *field) {
  * \param[in,out] field Field
  * \return              Error code
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_error_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_field_align(pb_field_t *field) {
   assert(field);
   return !pb_part_aligned(&(field->part))

@@ -70,8 +70,8 @@ typedef struct pb_allocator_t {
  * \param[in]     size      Bytes to be allocated
  * \return                  Memory block
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE void *
+PB_INLINE PB_WARN_UNUSED_RESULT
+void *
 pb_allocator_allocate(pb_allocator_t *allocator, size_t size) {
   assert(allocator && size);
   return allocator->proc.allocate(allocator->data, size);
@@ -85,8 +85,8 @@ pb_allocator_allocate(pb_allocator_t *allocator, size_t size) {
  * \param[in]     size      Bytes to be allocated
  * \return                  Memory block
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE void *
+PB_INLINE PB_WARN_UNUSED_RESULT
+void *
 pb_allocator_resize(pb_allocator_t *allocator, void *block, size_t size) {
   assert(allocator && size);
   return allocator->proc.resize(allocator->data, block, size);

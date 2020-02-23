@@ -59,30 +59,31 @@ and look like this (excerpt):
 ``` c
 ...
 /* Person : create */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_message_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_message_t
 person_create(pb_journal_t *journal) {
   return pb_message_create(&person_descriptor, journal);
 }
 
 /* Person : destroy */
-PB_INLINE void
+PB_INLINE
+void
 person_destroy(pb_message_t *message) {
   assert(pb_message_descriptor(message) == &person_descriptor);
   return pb_message_destroy(message);
 }
 
 /* Person.name : get */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_error_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_error_t
 person_get_name(pb_message_t *message, pb_string_t *value) {
   assert(pb_message_descriptor(message) == &person_descriptor);
   return pb_message_get(message, 1, value);
 }
 
 /* Person.name : put */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_error_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_error_t
 person_put_name(pb_message_t *message, const pb_string_t *value) {
   assert(pb_message_descriptor(message) == &person_descriptor);
   return pb_message_put(message, 1, value);

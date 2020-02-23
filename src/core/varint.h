@@ -231,8 +231,8 @@ pb_varint_pack(pb_type_t type, uint8_t data[], const void *value) {
  * \param[out] value  Pointer receiving value
  * \return            Bytes read
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE size_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+size_t
 pb_varint_unpack(
     pb_type_t type, const uint8_t data[], size_t left, void *value) {
   assert(pb_varint_unpack_jump[type]);

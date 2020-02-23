@@ -329,8 +329,8 @@ pb_descriptor_extension(const pb_descriptor_t *descriptor) {
  * \param[in] descriptor Descriptor
  * \return               Descriptor iterator
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_descriptor_iter_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_descriptor_iter_t
 pb_descriptor_iter_create(const pb_descriptor_t *descriptor) {
   assert(descriptor);
   pb_descriptor_iter_t it = {
@@ -356,8 +356,8 @@ pb_descriptor_iter_destroy(pb_descriptor_iter_t *it) {
  * \param[in,out] it Descriptor iterator
  * \return           Test result
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE int
+PB_INLINE PB_WARN_UNUSED_RESULT
+int
 pb_descriptor_iter_begin(pb_descriptor_iter_t *it) {
   assert(it);
   return !pb_descriptor_empty(it->descriptor)
@@ -371,8 +371,8 @@ pb_descriptor_iter_begin(pb_descriptor_iter_t *it) {
  * \param[in,out] it Descriptor iterator
  * \return           Test result
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE int
+PB_INLINE PB_WARN_UNUSED_RESULT
+int
 pb_descriptor_iter_end(pb_descriptor_iter_t *it) {
   assert(it);
   return !pb_descriptor_empty(it->descriptor)
@@ -386,8 +386,8 @@ pb_descriptor_iter_end(pb_descriptor_iter_t *it) {
  * \param[in,out] it Descriptor iterator
  * \return           Test result
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE int
+PB_INLINE PB_WARN_UNUSED_RESULT
+int
 pb_descriptor_iter_prev(pb_descriptor_iter_t *it) {
   assert(it && it->pos != SIZE_MAX);
   assert(!pb_descriptor_empty(it->descriptor));
@@ -402,8 +402,8 @@ pb_descriptor_iter_prev(pb_descriptor_iter_t *it) {
  * \param[in,out] it Descriptor iterator
  * \return           Test result
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE int
+PB_INLINE PB_WARN_UNUSED_RESULT
+int
 pb_descriptor_iter_next(pb_descriptor_iter_t *it) {
   assert(it && it->pos != SIZE_MAX);
   assert(!pb_descriptor_empty(it->descriptor));
@@ -496,8 +496,8 @@ pb_enum_descriptor_empty(const pb_enum_descriptor_t *descriptor) {
  * \param[in] descriptor Enum descriptor
  * \return               Enum descriptor iterator
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_enum_descriptor_iter_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_enum_descriptor_iter_t
 pb_enum_descriptor_iter_create(const pb_enum_descriptor_t *descriptor) {
   assert(descriptor);
   pb_enum_descriptor_iter_t it = {
@@ -523,8 +523,8 @@ pb_enum_descriptor_iter_destroy(pb_enum_descriptor_iter_t *it) {
  * \param[in,out] it Enum descriptor iterator
  * \return           Test result
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE int
+PB_INLINE PB_WARN_UNUSED_RESULT
+int
 pb_enum_descriptor_iter_begin(pb_enum_descriptor_iter_t *it) {
   assert(it);
   return !pb_enum_descriptor_empty(it->descriptor)
@@ -538,8 +538,8 @@ pb_enum_descriptor_iter_begin(pb_enum_descriptor_iter_t *it) {
  * \param[in,out] it Enum descriptor iterator
  * \return           Test result
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE int
+PB_INLINE PB_WARN_UNUSED_RESULT
+int
 pb_enum_descriptor_iter_end(pb_enum_descriptor_iter_t *it) {
   assert(it);
   return !pb_enum_descriptor_empty(it->descriptor)
@@ -553,8 +553,8 @@ pb_enum_descriptor_iter_end(pb_enum_descriptor_iter_t *it) {
  * \param[in,out] it Enum descriptor iterator
  * \return           Test result
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE int
+PB_INLINE PB_WARN_UNUSED_RESULT
+int
 pb_enum_descriptor_iter_prev(pb_enum_descriptor_iter_t *it) {
   assert(it && it->pos != SIZE_MAX);
   assert(!pb_enum_descriptor_empty(it->descriptor));
@@ -569,8 +569,8 @@ pb_enum_descriptor_iter_prev(pb_enum_descriptor_iter_t *it) {
  * \param[in,out] it Enum descriptor iterator
  * \return           Test result
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE int
+PB_INLINE PB_WARN_UNUSED_RESULT
+int
 pb_enum_descriptor_iter_next(pb_enum_descriptor_iter_t *it) {
   assert(it && it->pos != SIZE_MAX);
   assert(!pb_enum_descriptor_empty(it->descriptor));
@@ -637,8 +637,8 @@ pb_oneof_descriptor_empty(const pb_oneof_descriptor_t *descriptor) {
  * \param[in] descriptor Oneof descriptor
  * \return               Oneof descriptor iterator
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_oneof_descriptor_iter_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_oneof_descriptor_iter_t
 pb_oneof_descriptor_iter_create(const pb_oneof_descriptor_t *descriptor) {
   assert(descriptor);
   pb_oneof_descriptor_iter_t it = {
@@ -664,8 +664,8 @@ pb_oneof_descriptor_iter_destroy(pb_oneof_descriptor_iter_t *it) {
  * \param[in,out] it Oneof descriptor iterator
  * \return           Test result
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE int
+PB_INLINE PB_WARN_UNUSED_RESULT
+int
 pb_oneof_descriptor_iter_begin(pb_oneof_descriptor_iter_t *it) {
   assert(it);
   return !pb_oneof_descriptor_empty(it->descriptor)
@@ -679,8 +679,8 @@ pb_oneof_descriptor_iter_begin(pb_oneof_descriptor_iter_t *it) {
  * \param[in,out] it Oneof descriptor iterator
  * \return           Test result
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE int
+PB_INLINE PB_WARN_UNUSED_RESULT
+int
 pb_oneof_descriptor_iter_end(pb_oneof_descriptor_iter_t *it) {
   assert(it);
   return !pb_oneof_descriptor_empty(it->descriptor)
@@ -694,8 +694,8 @@ pb_oneof_descriptor_iter_end(pb_oneof_descriptor_iter_t *it) {
  * \param[in,out] it Oneof descriptor iterator
  * \return           Test result
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE int
+PB_INLINE PB_WARN_UNUSED_RESULT
+int
 pb_oneof_descriptor_iter_prev(pb_oneof_descriptor_iter_t *it) {
   assert(it && it->pos != SIZE_MAX);
   assert(!pb_oneof_descriptor_empty(it->descriptor));
@@ -710,8 +710,8 @@ pb_oneof_descriptor_iter_prev(pb_oneof_descriptor_iter_t *it) {
  * \param[in,out] it Oneof descriptor iterator
  * \return           Test result
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE int
+PB_INLINE PB_WARN_UNUSED_RESULT
+int
 pb_oneof_descriptor_iter_next(pb_oneof_descriptor_iter_t *it) {
   assert(it && it->pos != SIZE_MAX);
   assert(!pb_oneof_descriptor_empty(it->descriptor));

@@ -90,8 +90,8 @@ pb_part_clear(
  *
  * \return Part
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_part_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_part_t
 pb_part_create_invalid(void) {
   pb_part_t part = {
     .version = PB_PART_INVALID
@@ -105,8 +105,8 @@ pb_part_create_invalid(void) {
  * \param[in] part Part
  * \return         Part copy
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_part_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_part_t
 pb_part_copy(const pb_part_t *part) {
   assert(part);
   return *part;
@@ -162,8 +162,8 @@ pb_part_aligned(const pb_part_t *part) {
  * \param[in,out] part Part
  * \return             Error code
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_error_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_error_t
 pb_part_align(pb_part_t *part) {
   assert(part);
   assert(pb_part_valid(part) && !pb_part_aligned(part));

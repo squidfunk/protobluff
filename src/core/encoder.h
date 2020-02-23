@@ -37,8 +37,8 @@
  *
  * \return Encoder
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_encoder_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_encoder_t
 pb_encoder_create_invalid(void) {
   pb_encoder_t encoder = {
     .descriptor = NULL,

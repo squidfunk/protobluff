@@ -37,8 +37,8 @@
  *
  * \return Oneof
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_oneof_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_oneof_t
 pb_oneof_create_invalid(void) {
   pb_oneof_t oneof = {
     .descriptor = NULL,

@@ -80,8 +80,8 @@ pb_journal_align(
  *
  * \return Journal
  */
-PB_WARN_UNUSED_RESULT
-PB_INLINE pb_journal_t
+PB_INLINE PB_WARN_UNUSED_RESULT
+pb_journal_t
 pb_journal_create_invalid(void) {
   pb_journal_t journal = {};
   return journal;
