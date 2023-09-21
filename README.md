@@ -1,18 +1,12 @@
-# protobluff
-
-[![Travis][travis-image]][travis-link]
 [![Codecov][codecov-image]][codecov-link]
-[![Gitter][gitter-image]][gitter-link]
 [![Release][release-image]][release-link]
 
-  [travis-image]: https://travis-ci.org/squidfunk/protobluff.svg?branch=master
-  [travis-link]: https://travis-ci.org/squidfunk/protobluff
   [codecov-image]: https://img.shields.io/codecov/c/github/squidfunk/protobluff/master.svg
   [codecov-link]: https://codecov.io/gh/squidfunk/protobluff
-  [gitter-image]: https://badges.gitter.im/squidfunk/protobluff.svg
-  [gitter-link]: https://gitter.im/squidfunk/protobluff
   [release-image]: https://img.shields.io/github/release/squidfunk/protobluff.svg
   [release-link]: https://github.com/squidfunk/protobluff/releases/latest
+
+# protobluff
 
 protobluff is a modular Protocol Buffers implementation for C.
 
